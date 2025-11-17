@@ -1,6 +1,3 @@
-# Core dependencies for benchmark evaluation
-jinja2>=3.0.0
-
 # LLM API integration (optional, required for automated benchmarking)
 litellm>=1.0.0
 

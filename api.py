@@ -4,7 +4,7 @@ Flask API server for Jac Benchmark Control Panel
 Provides REST endpoints for the benchmark suite
 """
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from pathlib import Path

@@ -9,7 +9,6 @@ import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 from datetime import datetime
-from jinja2 import Environment, FileSystemLoader
 import os
 
 # Load environment variables from .env file
@@ -1777,12 +1776,12 @@ def main():
         print()
         benchmark = JacBenchmark()
         results = benchmark.run_benchmark(responses_file)
-        benchmark.generate_report(results)
+        print(f"Evaluation complete. Results: {results['summary']['overall_percentage']:.1f}%")
     
     elif command == "eval-all":
         evaluator = MultiDocEvaluator()
         evaluator.evaluate_all()
-        evaluator.generate_comparison_report()
+        print("Evaluation complete. Use the control panel to view detailed results.")
     
     elif command == "gen":
         output = sys.argv[2] if len(sys.argv) > 2 else "test_prompts.json"
