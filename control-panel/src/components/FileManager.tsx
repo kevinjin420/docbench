@@ -7,7 +7,6 @@ interface TestFile {
   path: string
   size: number
   modified: number
-  stash?: string
 }
 
 interface Stash {
@@ -20,8 +19,6 @@ interface Stash {
 interface Props {
   files: TestFile[]
   stashes: Stash[]
-  onEvaluate?: (filePath: string) => void
-  onEvaluateAll?: () => void
   onStash: () => void
   onClean: () => void
   onRefresh: () => void
@@ -33,14 +30,11 @@ const API_BASE = 'http://localhost:5000/api'
 export default function FileManager({
   files,
   stashes,
-  onEvaluate,
-  onEvaluateAll,
   onStash,
   onClean,
   onRefresh,
   onDelete
 }: Props) {
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<'name' | 'size' | 'modified'>('modified')
   const [expandedStashes, setExpandedStashes] = useState<Set<string>>(new Set())
   const [stashFiles, setStashFiles] = useState<Map<string, TestFile[]>>(new Map())
@@ -51,7 +45,6 @@ export default function FileManager({
   const [compareResults, setCompareResults] = useState<any>(null)
   const [stashSummaries, setStashSummaries] = useState<Map<string, any>>(new Map())
 
-  // Fetch summaries for all stashes on load
   useEffect(() => {
     stashes.forEach(stash => {
       if (!stashSummaries.has(stash.name)) {
@@ -59,22 +52,6 @@ export default function FileManager({
       }
     })
   }, [stashes])
-
-  const handleSelectFile = (path: string) => {
-    setSelectedFiles(prev =>
-      prev.includes(path)
-        ? prev.filter(p => p !== path)
-        : [...prev, path]
-    )
-  }
-
-  const handleSelectAll = () => {
-    if (selectedFiles.length === files.length) {
-      setSelectedFiles([])
-    } else {
-      setSelectedFiles(files.map(f => f.path))
-    }
-  }
 
   const sortedFiles = [...files].sort((a, b) => {
     switch (sortBy) {
@@ -236,11 +213,6 @@ export default function FileManager({
 
       <div className="flex gap-2 mb-4 flex-wrap items-center justify-between">
         <div className="flex gap-2">
-          {onEvaluateAll && (
-            <button onClick={onEvaluateAll} className="px-4 py-2.5 bg-terminal-accent text-black rounded text-sm font-semibold hover:bg-green-500 cursor-pointer">
-              Evaluate All
-            </button>
-          )}
           <button onClick={onStash} className="px-4 py-2.5 bg-terminal-border text-gray-300 border border-gray-600 rounded text-sm font-semibold hover:bg-zinc-700 cursor-pointer">
             Stash Results
           </button>
@@ -269,7 +241,7 @@ export default function FileManager({
           sortedFiles.map(file => (
             <div
               key={file.path}
-              className="grid grid-cols-[1fr_auto_auto] gap-4 items-center p-3 mb-2 rounded border bg-zinc-900 border-terminal-border"
+              className="grid grid-cols-[1fr_auto] gap-4 items-center p-3 mb-2 rounded border bg-zinc-900 border-terminal-border"
             >
               <div className="flex-1">
                 <div className="text-gray-300 font-medium mb-1 text-sm">{file.name}</div>
@@ -278,15 +250,6 @@ export default function FileManager({
                   <span>{formatDate(file.modified)}</span>
                 </div>
               </div>
-
-              {onEvaluate && (
-                <button
-                  onClick={() => onEvaluate(file.path)}
-                  className="px-3 py-1.5 bg-terminal-border text-terminal-accent border border-terminal-accent rounded text-xs font-semibold hover:bg-terminal-accent hover:text-black cursor-pointer"
-                >
-                  Evaluate
-                </button>
-              )}
 
               {onDelete && (
                 <button
@@ -437,7 +400,7 @@ export default function FileManager({
                       files.map(file => (
                         <div
                           key={file.path}
-                          className="grid grid-cols-[1fr_auto_auto] gap-4 items-center p-3 mb-2 rounded border bg-zinc-900 border-terminal-border"
+                          className="grid grid-cols-[1fr_auto] gap-4 items-center p-3 mb-2 rounded border bg-zinc-900 border-terminal-border"
                         >
                           <div className="flex-1">
                             <div className="text-gray-300 font-medium mb-1 text-sm">{file.name}</div>
@@ -446,15 +409,6 @@ export default function FileManager({
                               <span>{formatDate(file.modified)}</span>
                             </div>
                           </div>
-
-                          {onEvaluate && (
-                            <button
-                              onClick={() => onEvaluate(file.path)}
-                              className="px-3 py-1.5 bg-terminal-border text-terminal-accent border border-terminal-accent rounded text-xs font-semibold hover:bg-terminal-accent hover:text-black cursor-pointer"
-                            >
-                              Evaluate
-                            </button>
-                          )}
 
                           {onDelete && (
                             <button

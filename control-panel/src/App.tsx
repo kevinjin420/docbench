@@ -23,7 +23,6 @@ interface TestFile {
   path: string
   size: number
   modified: number
-  stash?: string
 }
 
 interface Stash {
