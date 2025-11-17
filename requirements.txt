@@ -1,0 +1,17 @@
+# Core dependencies for benchmark evaluation
+jinja2>=3.0.0
+
+# LLM API integration (optional, required for automated benchmarking)
+litellm>=1.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Web API server
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+python-socketio>=5.11.0
+
+# For formatting and colored output (optional)
+# rich>=13.0.0

@@ -1,2 +1,32 @@
-.pyc
-__pycache__
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test results and debug files
+tests/debug-*.txt
+tests/*.json
+tests/failed_responses/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+venv/

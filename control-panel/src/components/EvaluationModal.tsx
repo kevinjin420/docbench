@@ -1,0 +1,299 @@
+interface EvaluationResult {
+  status: string
+  directory: string
+  files_evaluated: number
+  stashName?: string
+  results: {
+    [filename: string]: {
+      error?: string
+      summary?: {
+        overall_percentage: number
+        total_score: number
+        total_max: number
+        tests_completed: number
+        patched_count: number
+        category_breakdown?: {
+          [category: string]: {
+            percentage: number
+            score: number
+            max: number
+            count: number
+          }
+        }
+      }
+    }
+  }
+}
+
+interface Props {
+  isOpen: boolean
+  onClose: () => void
+  results: EvaluationResult | null
+}
+
+export default function EvaluationModal({ isOpen, onClose, results }: Props) {
+  if (!isOpen || !results) return null
+
+  const fileResults = Object.entries(results.results || {}).filter(([_, result]: [string, any]) =>
+    result.summary && !result.error
+  )
+
+  // Model display name mappings
+  const modelDisplayNames: Record<string, string> = {
+    'claude-sonnet': 'Claude Sonnet 4.5',
+    'claude-opus': 'Claude Opus 4',
+    'claude-haiku': 'Claude Haiku 3.5',
+    'gemini-flash': 'Gemini 2.0 Flash',
+    'gemini-pro': 'Gemini 2.5 Pro',
+    'gpt-4': 'GPT-4o',
+    'gpt-4-mini': 'GPT-4o Mini',
+    'o1': 'O1',
+    'o1-mini': 'O1 Mini'
+  }
+
+  // Parse metadata from filenames (format: variant-model-suite-timestamp.txt)
+  // Example: mini_v3-claude-sonnet-full-20251116_230045.txt
+  const fileMetadata = Object.keys(results.results || {}).map(filename => {
+    const nameWithoutExt = filename.replace('.txt', '')
+    const parts = nameWithoutExt.split('-')
+
+    if (parts.length >= 4) {
+      // Find timestamp (last part with underscore)
+      const timestampIdx = parts.length - 1
+      if (parts[timestampIdx].includes('_')) {
+        const suite = parts[timestampIdx - 1]
+        const variant = parts[0]
+        const model = parts.slice(1, timestampIdx - 1).join('-')
+        return { variant, model, suite }
+      }
+    }
+    return null
+  }).filter(Boolean)
+
+  // Check if all files have the same metadata
+  const allSameMetadata = fileMetadata.length > 0 && fileMetadata.every(m =>
+    m?.variant === fileMetadata[0]?.variant &&
+    m?.model === fileMetadata[0]?.model &&
+    m?.suite === fileMetadata[0]?.suite
+  )
+
+  const commonMetadata = allSameMetadata && fileMetadata.length > 0 ? fileMetadata[0] : null
+
+  // Format display names
+  const getDisplayModel = (model: string) => modelDisplayNames[model] || model
+  const getDisplayVariant = (variant: string) => {
+    // Convert mini_v3 -> Mini v3, core_v2 -> Core v2
+    return variant.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+  const getDisplaySuite = (suite: string) => {
+    return suite.charAt(0).toUpperCase() + suite.slice(1)
+  }
+
+  const totalStats = fileResults.reduce((acc, [_, result]: [string, any]) => {
+    const summary = result.summary
+    return {
+      totalScore: acc.totalScore + summary.total_score,
+      totalMax: acc.totalMax + summary.total_max,
+      totalTests: acc.totalTests + summary.tests_completed,
+      totalPatched: acc.totalPatched + summary.patched_count,
+      count: acc.count + 1
+    }
+  }, { totalScore: 0, totalMax: 0, totalTests: 0, totalPatched: 0, count: 0 })
+
+  const averagePercentage = totalStats.totalMax > 0
+    ? (totalStats.totalScore / totalStats.totalMax) * 100
+    : 0
+
+  // Aggregate category statistics across all files
+  const categoryStats = fileResults.reduce((acc: any, [_, result]: [string, any]) => {
+    const breakdown = result.summary?.category_breakdown || {}
+    Object.entries(breakdown).forEach(([category, data]: [string, any]) => {
+      if (!acc[category]) {
+        acc[category] = { score: 0, max: 0, count: 0 }
+      }
+      acc[category].score += data.score
+      acc[category].max += data.max
+      acc[category].count += data.count
+    })
+    return acc
+  }, {})
+
+  // Calculate percentages and sort to find worst categories
+  const categoryPercentages = Object.entries(categoryStats).map(([category, data]: [string, any]) => ({
+    category,
+    percentage: data.max > 0 ? (data.score / data.max) * 100 : 0,
+    score: data.score,
+    max: data.max,
+    count: data.count
+  })).sort((a, b) => a.percentage - b.percentage)
+
+  const worstCategories = categoryPercentages.slice(0, 5)
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-8" onClick={onClose}>
+      <div className="bg-terminal-surface border-2 border-terminal-accent rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-terminal-surface border-b border-terminal-border p-6 flex justify-between items-center">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-terminal-accent text-2xl font-bold m-0">Evaluation Results</h2>
+              {commonMetadata && (
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <span>-</span>
+                  <span className="text-blue-400 font-semibold">{getDisplayModel(commonMetadata.model)}</span>
+                  <span>-</span>
+                  <span className="text-purple-400 font-semibold">{getDisplayVariant(commonMetadata.variant)}</span>
+                  <span>-</span>
+                  <span className="text-orange-400 font-semibold">{getDisplaySuite(commonMetadata.suite)}</span>
+                  <span>-</span>
+                  <span className="text-terminal-accent font-semibold">x{results.files_evaluated}</span>
+                </div>
+              )}
+            </div>
+            <p className="text-gray-400 text-sm mt-1">
+              {results.stashName ? `Stash: ${results.stashName}` : 'Current Directory'} • {results.files_evaluated} files
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl leading-none cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          {totalStats.count > 1 && (
+            <div className="mb-8 p-6 bg-gradient-to-r from-zinc-800 to-zinc-900 border-2 border-terminal-accent rounded-lg">
+              <h3 className="text-terminal-accent text-xl font-bold mb-4">Total Summary</h3>
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <div>
+                  <div className="text-gray-400 text-sm mb-2">Average Performance</div>
+                  <div className="flex items-baseline gap-3">
+                    <div className="text-terminal-accent text-4xl font-bold">
+                      {averagePercentage.toFixed(1)}%
+                    </div>
+                    <div className="text-gray-500 text-lg">
+                      {totalStats.totalScore.toFixed(1)} / {totalStats.totalMax}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-terminal-surface p-3 rounded border border-terminal-border">
+                    <div className="text-gray-500 uppercase text-xs mb-1">Total Tests</div>
+                    <div className="text-terminal-accent font-bold text-2xl">{totalStats.totalTests}</div>
+                  </div>
+                  {totalStats.totalPatched > 0 && (
+                    <div className="bg-terminal-surface p-3 rounded border border-orange-600">
+                      <div className="text-gray-500 uppercase text-xs mb-1">Total Patched</div>
+                      <div className="text-orange-400 font-bold text-2xl">{totalStats.totalPatched}</div>
+                    </div>
+                  )}
+                  <div className="bg-terminal-surface p-3 rounded border border-terminal-border">
+                    <div className="text-gray-500 uppercase text-xs mb-1">Files Evaluated</div>
+                    <div className="text-terminal-accent font-bold text-2xl">{totalStats.count}</div>
+                  </div>
+                </div>
+              </div>
+
+              {worstCategories.length > 0 && (
+                <div className="border-t border-terminal-border pt-4">
+                  <h4 className="text-red-400 text-sm font-bold mb-3 uppercase">Five Worst Categories</h4>
+                  <div className="space-y-2">
+                    {worstCategories.map((cat, idx) => (
+                      <div key={cat.category} className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-red-950 border border-red-600 rounded text-red-400 text-xs font-bold flex-shrink-0">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 bg-terminal-surface rounded p-2 border border-red-900">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-gray-300 text-sm font-medium">{cat.category}</span>
+                            <span className="text-red-400 text-sm font-bold">{cat.percentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{cat.score.toFixed(1)} / {cat.max}</span>
+                            <span>•</span>
+                            <span>{cat.count} tests</span>
+                          </div>
+                          <div className="mt-1 h-1 bg-red-950 rounded overflow-hidden">
+                            <div
+                              className="h-full bg-red-500"
+                              style={{ width: `${cat.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {Object.entries(results.results || {}).map(([filename, result]: [string, any]) => {
+            if (result.error) {
+              return (
+                <div key={filename} className="mb-4 p-4 bg-red-950 border border-red-600 rounded">
+                  <div className="text-red-400 font-semibold">{filename}</div>
+                  <div className="text-red-300 text-sm mt-1">Error: {result.error}</div>
+                </div>
+              )
+            }
+
+            if (!result.summary) return null
+
+            return (
+              <div key={filename} className="mb-6 p-4 bg-zinc-900 border border-terminal-border rounded">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="text-gray-300 font-semibold">{filename}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-terminal-accent text-2xl font-bold">
+                      {result.summary.overall_percentage.toFixed(1)}%
+                    </div>
+                    <div className="text-gray-500 text-sm">
+                      {result.summary.total_score} / {result.summary.total_max}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="bg-terminal-surface p-3 rounded border border-terminal-border">
+                    <div className="text-gray-500 uppercase mb-1">Tests</div>
+                    <div className="text-terminal-accent font-bold text-lg">{result.summary.tests_completed}</div>
+                  </div>
+                  {result.summary.patched_count > 0 && (
+                    <div className="bg-terminal-surface p-3 rounded border border-orange-600">
+                      <div className="text-gray-500 uppercase mb-1">Patched</div>
+                      <div className="text-orange-400 font-bold text-lg">{result.summary.patched_count}</div>
+                    </div>
+                  )}
+                </div>
+
+                {result.summary.category_breakdown && Object.keys(result.summary.category_breakdown).length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-gray-400 text-xs uppercase mb-2">Categories</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(result.summary.category_breakdown).map(([cat, data]: [string, any]) => (
+                        <div key={cat} className="bg-terminal-surface p-2 rounded text-xs">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-400">{cat}</span>
+                            <span className="text-terminal-accent">{data.percentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1 bg-terminal-border rounded overflow-hidden">
+                            <div
+                              className="h-full bg-terminal-accent"
+                              style={{ width: `${data.percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
