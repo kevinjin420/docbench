@@ -147,7 +147,7 @@ export default function CompareModal({ isOpen, onClose, results }: Props) {
             </div>
           </div>
 
-          <div className="mb-8 p-6 bg-gradient-to-r from-zinc-800 to-zinc-900 border-2 border-terminal-accent rounded-lg">
+          <div className="mb-8 p-6 bg-linear-to-r from-zinc-800 to-zinc-900 border-2 border-terminal-accent rounded-lg">
             <h3 className="text-terminal-accent text-xl font-bold mb-4">Difference</h3>
             <div className="flex items-baseline gap-3">
               <div className={`text-4xl font-bold ${scoreDiff >= 0 ? 'text-green-500' : 'text-red-500'}`}>

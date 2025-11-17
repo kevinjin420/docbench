@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import EvaluationModal from './EvaluationModal'
 import CompareModal from './CompareModal'
 
@@ -7,6 +7,13 @@ interface TestFile {
   path: string
   size: number
   modified: number
+  metadata?: {
+    model: string
+    model_full: string
+    variant: string
+    test_suite: string
+    total_tests: string
+  }
 }
 
 interface Stash {
@@ -14,6 +21,13 @@ interface Stash {
   path: string
   file_count: number
   created: number
+  metadata?: {
+    model: string
+    model_full: string
+    variant: string
+    test_suite: string
+    total_tests: string
+  }
 }
 
 interface Props {
@@ -35,7 +49,26 @@ export default function FileManager({
   onRefresh,
   onDelete
 }: Props) {
-  const [sortBy, setSortBy] = useState<'name' | 'size' | 'modified'>('modified')
+  const [sortBy, setSortBy] = useState<'size' | 'modified' | 'model-variant'>(() => {
+    const saved = localStorage.getItem('fileManager_sortBy')
+    return (saved as any) || 'modified'
+  })
+
+  const handleSortChange = (newSort: 'size' | 'modified' | 'model-variant') => {
+    setSortBy(newSort)
+    localStorage.setItem('fileManager_sortBy', newSort)
+  }
+
+  const [stashSortBy, setStashSortBy] = useState<'created' | 'model-variant'>(() => {
+    const saved = localStorage.getItem('fileManager_stashSortBy')
+    return (saved as any) || 'created'
+  })
+
+  const handleStashSortChange = (newSort: 'created' | 'model-variant') => {
+    setStashSortBy(newSort)
+    localStorage.setItem('fileManager_stashSortBy', newSort)
+  }
+
   const [expandedStashes, setExpandedStashes] = useState<Set<string>>(new Set())
   const [stashFiles, setStashFiles] = useState<Map<string, TestFile[]>>(new Map())
   const [showEvalModal, setShowEvalModal] = useState(false)
@@ -43,24 +76,34 @@ export default function FileManager({
   const [selectedStashForCompare, setSelectedStashForCompare] = useState<string | null>(null)
   const [showCompareModal, setShowCompareModal] = useState(false)
   const [compareResults, setCompareResults] = useState<any>(null)
-  const [stashSummaries, setStashSummaries] = useState<Map<string, any>>(new Map())
-
-  useEffect(() => {
-    stashes.forEach(stash => {
-      if (!stashSummaries.has(stash.name)) {
-        fetchStashSummary(stash.name)
-      }
-    })
-  }, [stashes])
 
   const sortedFiles = [...files].sort((a, b) => {
     switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name)
       case 'size':
         return b.size - a.size
       case 'modified':
         return b.modified - a.modified
+      case 'model-variant': {
+        // Use metadata from API if available
+        const hasMetaA = a.metadata && a.metadata.model && a.metadata.variant
+        const hasMetaB = b.metadata && b.metadata.model && b.metadata.variant
+
+        // If neither has metadata, sort by name
+        if (!hasMetaA && !hasMetaB) {
+          return a.name.localeCompare(b.name)
+        }
+
+        // If only one has metadata, prioritize the one with metadata
+        if (!hasMetaA) return 1
+        if (!hasMetaB) return -1
+
+        // Both have metadata - sort by model first
+        const modelCompare = a.metadata!.model.localeCompare(b.metadata!.model)
+        if (modelCompare !== 0) return modelCompare
+
+        // Then by variant
+        return a.metadata!.variant.localeCompare(b.metadata!.variant)
+      }
       default:
         return 0
     }
@@ -96,28 +139,6 @@ export default function FileManager({
     }
 
     setExpandedStashes(newExpanded)
-  }
-
-  const fetchStashSummary = async (stashName: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/evaluate-directory`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directory: stashName })
-      })
-
-      const data = await res.json()
-
-      if (data.status === 'success') {
-        setStashSummaries(prev => {
-          const newSummaries = new Map(prev)
-          newSummaries.set(stashName, data)
-          return newSummaries
-        })
-      }
-    } catch (error) {
-      console.error(`Failed to fetch summary for ${stashName}:`, error)
-    }
   }
 
   const deleteStash = async (stashName: string, e: React.MouseEvent) => {
@@ -223,9 +244,9 @@ export default function FileManager({
 
         <div className="flex items-center gap-2">
           <label className="text-gray-400 text-sm">Sort by:</label>
-          <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="px-2 py-1.5 bg-terminal-surface border border-terminal-border rounded text-gray-300 text-sm cursor-pointer focus:outline-none focus:border-terminal-accent">
+          <select value={sortBy} onChange={e => handleSortChange(e.target.value as any)} className="px-2 py-1.5 bg-terminal-surface border border-terminal-border rounded text-gray-300 text-sm cursor-pointer focus:outline-none focus:border-terminal-accent">
             <option value="modified">Date Modified</option>
-            <option value="name">Name</option>
+            <option value="model-variant">Model + Variant</option>
             <option value="size">Size</option>
           </select>
         </div>
@@ -278,11 +299,42 @@ export default function FileManager({
 
       {stashes.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-terminal-accent text-lg mb-4 pb-2 border-b border-terminal-border">Stashed Results</h3>
-          {stashes.map(stash => {
+          <div className="flex justify-between items-center mb-4 pb-2 border-b border-terminal-border">
+            <h3 className="text-terminal-accent text-lg m-0">Stashed Results</h3>
+            <div className="flex items-center gap-2">
+              <label className="text-gray-400 text-sm">Sort by:</label>
+              <select value={stashSortBy} onChange={e => handleStashSortChange(e.target.value as any)} className="px-2 py-1.5 bg-terminal-surface border border-terminal-border rounded text-gray-300 text-sm cursor-pointer focus:outline-none focus:border-terminal-accent">
+                <option value="created">Time Stashed</option>
+                <option value="model-variant">Model + Variant</option>
+              </select>
+            </div>
+          </div>
+          {[...stashes].sort((a, b) => {
+            switch (stashSortBy) {
+              case 'created':
+                return b.created - a.created
+              case 'model-variant': {
+                const hasMetaA = a.metadata && a.metadata.model && a.metadata.variant
+                const hasMetaB = b.metadata && b.metadata.model && b.metadata.variant
+
+                if (!hasMetaA && !hasMetaB) {
+                  return a.name.localeCompare(b.name)
+                }
+
+                if (!hasMetaA) return 1
+                if (!hasMetaB) return -1
+
+                const modelCompare = a.metadata!.model.localeCompare(b.metadata!.model)
+                if (modelCompare !== 0) return modelCompare
+
+                return a.metadata!.variant.localeCompare(b.metadata!.variant)
+              }
+              default:
+                return 0
+            }
+          }).map(stash => {
             const isExpanded = expandedStashes.has(stash.name)
             const files = stashFiles.get(stash.name) || []
-            const summary = stashSummaries.get(stash.name)
 
             // Model display name mappings
             const modelDisplayNames: Record<string, string> = {
@@ -297,29 +349,18 @@ export default function FileManager({
               'o1-mini': 'O1 Mini'
             }
 
-            // Parse metadata from stash files (if summary is loaded)
-            let metadata: { model: string; variant: string; suite: string } | null = null
-            if (summary?.results) {
-              const firstFilename = Object.keys(summary.results)[0]
-              if (firstFilename) {
-                const nameWithoutExt = firstFilename.replace('.txt', '')
-                const parts = nameWithoutExt.split('-')
+            // Use metadata from API manifest
+            let metadata: { model: string; variant: string; suite: string; tests: string } | null = null
+            if (stash.metadata) {
+              const displayModel = modelDisplayNames[stash.metadata.model] || stash.metadata.model
+              const displayVariant = stash.metadata.variant.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+              const displaySuite = stash.metadata.test_suite.charAt(0).toUpperCase() + stash.metadata.test_suite.slice(1)
 
-                if (parts.length >= 4) {
-                  const timestampIdx = parts.length - 1
-                  if (parts[timestampIdx].includes('_')) {
-                    const suite = parts[timestampIdx - 1]
-                    const variant = parts[0]
-                    const model = parts.slice(1, timestampIdx - 1).join('-')
-
-                    // Format display names
-                    const displayModel = modelDisplayNames[model] || model
-                    const displayVariant = variant.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                    const displaySuite = suite.charAt(0).toUpperCase() + suite.slice(1)
-
-                    metadata = { model: displayModel, variant: displayVariant, suite: displaySuite }
-                  }
-                }
+              metadata = {
+                model: displayModel,
+                variant: displayVariant,
+                suite: displaySuite,
+                tests: stash.metadata.total_tests
               }
             }
 

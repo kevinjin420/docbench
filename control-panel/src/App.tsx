@@ -23,6 +23,13 @@ interface TestFile {
   path: string
   size: number
   modified: number
+  metadata?: {
+    model: string
+    model_full: string
+    variant: string
+    test_suite: string
+    total_tests: string
+  }
 }
 
 interface Stash {
@@ -30,6 +37,13 @@ interface Stash {
   path: string
   file_count: number
   created: number
+  metadata?: {
+    model: string
+    model_full: string
+    variant: string
+    test_suite: string
+    total_tests: string
+  }
 }
 
 function AppContent() {

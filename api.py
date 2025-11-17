@@ -21,6 +21,8 @@ from benchmark import (
     clean_test_results,
     compare_directories
 )
+from db import EvaluationCache, BenchmarkRunHistory
+from stash_manifest import read_stash_manifest
 
 app = Flask(__name__)
 CORS(app, origins='*', resources={r"/*": {"origins": "*"}})
@@ -39,6 +41,31 @@ RELEASE_DIR = Path('release')
 
 # Store running benchmarks
 running_benchmarks = {}
+
+# Cached benchmark evaluation function using SQLite
+def get_cached_benchmark_result(file_path):
+    """
+    Get cached benchmark result or compute if not cached.
+    Cache automatically invalidates when file is modified.
+    """
+    file_path_obj = Path(file_path)
+    if not file_path_obj.exists():
+        return None
+
+    # Try to get from cache
+    result = EvaluationCache.get(file_path)
+    if result is not None:
+        return result
+
+    # Compute result if not cached
+    try:
+        benchmark = JacBenchmark()
+        result = benchmark.run_benchmark(str(file_path))
+        EvaluationCache.set(file_path, result)
+        return result
+    except Exception as e:
+        print(f"Error evaluating {file_path}: {e}")
+        return {'error': str(e)}
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -122,25 +149,41 @@ def get_stats():
 
 @app.route('/api/test-files', methods=['GET'])
 def get_test_files():
-    """Get list of test result files"""
+    """Get list of test result files with metadata"""
     try:
+        from stash_manifest import extract_file_metadata
+
         test_files = list(TESTS_DIR.glob('*.txt'))
-        files = [
-            {
+        files = []
+
+        for f in test_files:
+            file_data = {
                 'name': f.name,
                 'path': str(f),
                 'size': f.stat().st_size,
                 'modified': f.stat().st_mtime
             }
-            for f in test_files
-        ]
+
+            # Extract metadata from file
+            metadata = extract_file_metadata(f)
+            if metadata:
+                file_data['metadata'] = {
+                    'model': metadata.get('model_alias', 'unknown'),
+                    'model_full': metadata.get('model', 'unknown'),
+                    'variant': metadata.get('variant', 'unknown'),
+                    'test_suite': metadata.get('test_suite', 'unknown'),
+                    'total_tests': str(metadata.get('total_tests', 0))
+                }
+
+            files.append(file_data)
+
         return jsonify({'files': files})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stashes', methods=['GET'])
 def get_stashes():
-    """Get list of stashed test result directories"""
+    """Get list of stashed test result directories with metadata"""
     try:
         excluded_dirs = {'reports', '__pycache__', '.git', '.vscode', 'failed_responses'}
         stash_dirs = [d for d in TESTS_DIR.iterdir() if d.is_dir() and d.name not in excluded_dirs]
@@ -148,12 +191,26 @@ def get_stashes():
 
         for stash_dir in sorted(stash_dirs, key=lambda x: x.name, reverse=True):
             files = list(stash_dir.glob('*.txt'))
-            stashes.append({
+
+            # Read manifest if available
+            manifest = read_stash_manifest(stash_dir)
+
+            stash_data = {
                 'name': stash_dir.name,
                 'path': str(stash_dir),
                 'file_count': len(files),
                 'created': stash_dir.stat().st_mtime
-            })
+            }
+
+            # Add manifest data if available
+            if manifest and 'display' in manifest:
+                stash_data['metadata'] = manifest['display']
+
+                # Use stash timestamp from manifest if available (more accurate)
+                if manifest.get('stash_timestamp'):
+                    stash_data['created'] = manifest['stash_timestamp']
+
+            stashes.append(stash_data)
 
         return jsonify({'stashes': stashes})
     except Exception as e:
@@ -225,13 +282,9 @@ def evaluate_directory():
 
         results = {}
         for test_file in test_files:
-            try:
-                benchmark = JacBenchmark()
-                result = benchmark.run_benchmark(str(test_file))
+            result = get_cached_benchmark_result(str(test_file))
+            if result:
                 results[test_file.name] = result
-            except Exception as e:
-                print(f"Error evaluating {test_file.name}: {e}")
-                results[test_file.name] = {'error': str(e)}
 
         return jsonify({
             'status': 'success',
@@ -260,6 +313,7 @@ def run_benchmark():
     run_id = f"{model}_{variant}_{int(os.times().elapsed * 1000)}"
 
     def run_in_background():
+        runner = None
         try:
             running_benchmarks[run_id] = {'status': 'running', 'progress': 'Initializing...'}
             socketio.emit('benchmark_update', {
@@ -269,6 +323,19 @@ def run_benchmark():
             })
 
             runner = LLMBenchmarkRunner()
+            model_id = runner.MODEL_MAPPING.get(model, model)
+
+            # Save run metadata to database
+            BenchmarkRunHistory.create_run(
+                run_id=run_id,
+                model=model,
+                model_id=model_id,
+                variant=variant,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                test_limit=test_limit,
+                concurrency=concurrency
+            )
 
             # Run with concurrent execution and progress callbacks
             def progress_callback(completed, total, message, batch_num=None, num_batches=None):
@@ -298,11 +365,22 @@ def run_benchmark():
                 progress_callback=progress_callback
             )
 
+            output_file = result.get('output_file')
+
             running_benchmarks[run_id] = {
                 'status': 'completed',
                 'result': result,
                 'progress': 'Done'
             }
+
+            # Update database with completion
+            BenchmarkRunHistory.update_run(
+                run_id=run_id,
+                status='completed',
+                output_file=output_file,
+                result=result
+            )
+
             socketio.emit('benchmark_update', {
                 'run_id': run_id,
                 'status': 'completed',
@@ -314,6 +392,14 @@ def run_benchmark():
                 'error': str(e),
                 'progress': 'Failed'
             }
+
+            # Update database with failure
+            BenchmarkRunHistory.update_run(
+                run_id=run_id,
+                status='failed',
+                error_message=str(e)
+            )
+
             socketio.emit('benchmark_update', {
                 'run_id': run_id,
                 'status': 'failed',
@@ -343,8 +429,9 @@ def evaluate():
         return jsonify({'error': 'file is required'}), 400
 
     try:
-        benchmark = JacBenchmark()
-        results = benchmark.run_benchmark(file_path)
+        results = get_cached_benchmark_result(file_path)
+        if not results or 'error' in results:
+            return jsonify({'error': results.get('error', 'Failed to evaluate file')}), 500
 
         return jsonify({
             'summary': results['summary'],
@@ -460,23 +547,19 @@ def compare_stashes():
             category_data = {}
 
             for test_file in test_files:
-                try:
-                    benchmark = JacBenchmark()
-                    result = benchmark.run_benchmark(str(test_file))
+                result = get_cached_benchmark_result(str(test_file))
 
-                    if result and result.get('summary'):
-                        summary = result['summary']
-                        overall_pct = summary.get('overall_percentage', 0)
-                        scores.append(overall_pct)
+                if result and result.get('summary') and 'error' not in result:
+                    summary = result['summary']
+                    overall_pct = summary.get('overall_percentage', 0)
+                    scores.append(overall_pct)
 
-                        # Collect category scores
-                        breakdown = summary.get('category_breakdown', {})
-                        for category, cat_data in breakdown.items():
-                            if category not in category_data:
-                                category_data[category] = []
-                            category_data[category].append(cat_data.get('percentage', 0))
-                except Exception as e:
-                    print(f"Error evaluating {test_file}: {e}")
+                    # Collect category scores
+                    breakdown = summary.get('category_breakdown', {})
+                    for category, cat_data in breakdown.items():
+                        if category not in category_data:
+                            category_data[category] = []
+                        category_data[category].append(cat_data.get('percentage', 0))
 
             avg_score = sum(scores) / len(scores) if scores else 0
             category_averages = {cat: sum(vals) / len(vals) for cat, vals in category_data.items()}
@@ -515,6 +598,49 @@ def compare_stashes():
     except Exception as e:
         import traceback
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/run-history', methods=['GET'])
+def get_run_history():
+    """Get recent benchmark run history"""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        runs = BenchmarkRunHistory.get_recent_runs(limit=limit)
+        return jsonify({'runs': runs})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/run-history/<run_id>', methods=['GET'])
+def get_run_details(run_id):
+    """Get detailed information about a specific run"""
+    try:
+        run = BenchmarkRunHistory.get_run(run_id)
+        if not run:
+            return jsonify({'error': 'Run not found'}), 404
+        return jsonify(run)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cache/stats', methods=['GET'])
+def get_cache_stats():
+    """Get cache statistics"""
+    try:
+        cache_stats = EvaluationCache.get_stats()
+        run_stats = BenchmarkRunHistory.get_stats()
+        return jsonify({
+            'cache': cache_stats,
+            'runs': run_stats
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cache/clear', methods=['POST'])
+def clear_cache():
+    """Clear evaluation cache"""
+    try:
+        EvaluationCache.clear_all()
+        return jsonify({'status': 'success', 'message': 'Cache cleared'})
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

@@ -1699,6 +1699,13 @@ def stash_test_results():
 
     if not moved_files:
         print("  (No test files found to stash)")
+    else:
+        # Generate manifest for the stash
+        try:
+            from stash_manifest import generate_stash_manifest
+            generate_stash_manifest(stash_dir)
+        except Exception as e:
+            print(f"Warning: Could not generate stash manifest: {e}")
 
 
 def clean_test_results():

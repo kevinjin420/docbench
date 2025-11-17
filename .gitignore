@@ -24,6 +24,9 @@ tests/debug-*.txt
 tests/*.json
 tests/failed_responses/
 
+# Database
+benchmark.db
+
 # Distribution / packaging
 *.egg-info/
 dist/
