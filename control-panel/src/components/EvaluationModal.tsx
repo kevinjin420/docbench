@@ -1,3 +1,6 @@
+import { useRef, useState } from "react";
+import { toBlob } from "html-to-image";
+
 interface EvaluationResult {
 	status: string;
 	directory: string;
@@ -32,6 +35,12 @@ interface Props {
 }
 
 export default function EvaluationModal({ isOpen, onClose, results }: Props) {
+	const captureRef = useRef<HTMLDivElement>(null);
+	const fileRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+	const [copying, setCopying] = useState(false);
+	const [copied, setCopied] = useState(false);
+	const [copiedFiles, setCopiedFiles] = useState<Set<string>>(new Set());
+
 	if (!isOpen || !results) return null;
 
 	const fileResults = Object.entries(results.results || {}).filter(
@@ -149,6 +158,71 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 
 	const worstCategories = categoryPercentages.slice(0, 5);
 
+	const copyToClipboard = async () => {
+		if (!captureRef.current || copying || copied) return;
+
+		setCopying(true);
+		setCopied(false);
+		try {
+			const blob = await toBlob(captureRef.current, {
+				backgroundColor: "#1a1a1a",
+				pixelRatio: 2,
+			});
+
+			if (blob) {
+				try {
+					await navigator.clipboard.write([
+						new ClipboardItem({
+							"image/png": blob,
+						}),
+					]);
+					setCopied(true);
+					setTimeout(() => setCopied(false), 2000);
+				} catch (err) {
+					console.error("Failed to copy to clipboard:", err);
+				}
+			}
+		} catch (err) {
+			console.error("Failed to capture image:", err);
+		} finally {
+			setCopying(false);
+		}
+	};
+
+	const copyFileResult = async (filename: string) => {
+		const element = fileRefsRef.current.get(filename);
+		if (!element || copiedFiles.has(filename)) return;
+
+		try {
+			const blob = await toBlob(element, {
+				backgroundColor: "#1a1a1a",
+				pixelRatio: 2,
+			});
+
+			if (blob) {
+				try {
+					await navigator.clipboard.write([
+						new ClipboardItem({
+							"image/png": blob,
+						}),
+					]);
+					setCopiedFiles(new Set([...copiedFiles, filename]));
+					setTimeout(() => {
+						setCopiedFiles((prev) => {
+							const next = new Set(prev);
+							next.delete(filename);
+							return next;
+						});
+					}, 2000);
+				} catch (err) {
+					console.error("Failed to copy to clipboard:", err);
+				}
+			}
+		} catch (err) {
+			console.error("Failed to capture image:", err);
+		}
+	};
+
 	return (
 		<div
 			className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-8"
@@ -194,15 +268,57 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 							• {results.files_evaluated} files
 						</p>
 					</div>
-					<button
-						onClick={onClose}
-						className="text-gray-400 hover:text-white text-2xl leading-none cursor-pointer"
-					>
-						×
-					</button>
+					<div className="flex gap-3 items-center">
+						<button
+							onClick={copyToClipboard}
+							className="p-2 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"
+							title="Copy evaluation as image"
+						>
+							<svg
+								className={`h-5 w-5 ${
+									copied
+										? "opacity-0 scale-0"
+										: "opacity-100 scale-100"
+								}`}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+								/>
+							</svg>
+							<svg
+								className={`h-5 w-5 absolute inset-0 m-auto ${
+									copied
+										? "opacity-100 scale-100"
+										: "opacity-0 scale-0"
+								}`}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+						</button>
+						<button
+							onClick={onClose}
+							className="w-9 h-9 flex items-center justify-center border border-gray-600 text-gray-400 rounded hover:border-white hover:text-white text-xl leading-none cursor-pointer transition-colors"
+						>
+							×
+						</button>
+					</div>
 				</div>
 
-				<div className="p-6">
+				<div ref={captureRef} className="p-6">
 					{totalStats.count > 1 && (
 						<div className="mb-8 p-6 bg-linear-to-r from-zinc-800 to-zinc-900 border-2 border-terminal-accent rounded-lg">
 							<h3 className="text-terminal-accent text-xl font-bold mb-4">
@@ -328,26 +444,77 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 
 							if (!result.summary) return null;
 
+							const isFileCopied = copiedFiles.has(filename);
+
 							return (
 								<div
 									key={filename}
+									ref={(el) => {
+										if (el) {
+											fileRefsRef.current.set(filename, el);
+										}
+									}}
 									className="mb-6 p-4 bg-zinc-900 border border-terminal-border rounded"
 								>
 									<div className="flex justify-between items-start mb-3">
 										<div className="text-gray-300 font-semibold">
 											{filename}
 										</div>
-										<div className="flex items-center gap-2">
-											<div className="text-terminal-accent text-2xl font-bold">
-												{result.summary.overall_percentage.toFixed(
-													1
-												)}
-												%
+										<div className="flex items-center gap-3">
+											<div className="flex items-center gap-2">
+												<div className="text-terminal-accent text-2xl font-bold">
+													{result.summary.overall_percentage.toFixed(
+														1
+													)}
+													%
+												</div>
+												<div className="text-gray-500 text-sm">
+													{result.summary.total_score} /{" "}
+													{result.summary.total_max}
+												</div>
 											</div>
-											<div className="text-gray-500 text-sm">
-												{result.summary.total_score} /{" "}
-												{result.summary.total_max}
-											</div>
+											<button
+												onClick={() =>
+													copyFileResult(filename)
+												}
+												className="p-1.5 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"
+												title="Copy file result as image"
+											>
+												<svg
+													className={`h-4 w-4 ${
+														isFileCopied
+															? "opacity-0 scale-0"
+															: "opacity-100 scale-100"
+													}`}
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+													/>
+												</svg>
+												<svg
+													className={`h-4 w-4 absolute inset-0 m-auto ${
+														isFileCopied
+															? "opacity-100 scale-100"
+															: "opacity-0 scale-0"
+													}`}
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M5 13l4 4L19 7"
+													/>
+												</svg>
+											</button>
 										</div>
 									</div>
 
