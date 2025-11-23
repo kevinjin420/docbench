@@ -16,7 +16,8 @@ def register_routes(app, socketio=None, running_benchmarks=None):
                 'name': m.get('name'),
                 'context_length': m.get('context_length'),
                 'pricing': m.get('pricing'),
-                'architecture': m.get('architecture')
+                'architecture': m.get('architecture'),
+                'top_provider': m.get('top_provider')
             }
             for m in models
         ]

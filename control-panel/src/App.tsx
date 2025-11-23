@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
-import BenchmarkView from './components/BenchmarkView'
-import FileManager from './components/FileManager'
-import StatsPanel from './components/StatsPanel'
+import BenchmarkView from '@/views/BenchmarkView'
+import FileManager from '@/views/FileManager'
+import StatsPanel from '@/views/StatsPanel'
 
 const API_BASE = 'http://localhost:5050/api'
 
@@ -144,46 +144,30 @@ function AppContent() {
       await fetchStashes()
     } catch (error) {
       console.error('Failed to stash results:', error)
-      alert('Failed to stash results')
     }
   }
 
   const cleanResults = async () => {
-    if (!confirm('Delete all test files from tests/ directory? (Stashed results will NOT be deleted)\n\nThis cannot be undone.')) return
-
     try {
       await fetch(`${API_BASE}/clean`, { method: 'POST' })
       await fetchTestFiles()
       await fetchStashes()
     } catch (error) {
       console.error('Failed to clean results:', error)
-      alert('Failed to clean results')
     }
   }
 
   const clearDatabase = async () => {
-    if (!confirm('Clear ALL data from the PostgreSQL database?\n\nThis will delete:\n- All benchmark results\n- All benchmark runs\n- All collections\n\nThis cannot be undone!')) return
-
     try {
-      const res = await fetch(`${API_BASE}/clear-db`, { method: 'POST' })
-      const data = await res.json()
-
-      if (data.status === 'success') {
-        alert(data.message)
-        await fetchTestFiles()
-        await fetchStashes()
-      } else {
-        alert(`Failed: ${data.error}`)
-      }
+      await fetch(`${API_BASE}/clear-db`, { method: 'POST' })
+      await fetchTestFiles()
+      await fetchStashes()
     } catch (error) {
       console.error('Failed to clear database:', error)
-      alert('Failed to clear database')
     }
   }
 
   const deleteFile = async (filePath: string) => {
-    if (!confirm(`Delete ${filePath.split('/').pop()}?`)) return
-
     try {
       await fetch(`${API_BASE}/delete-file`, {
         method: 'POST',
@@ -193,7 +177,6 @@ function AppContent() {
       await fetchTestFiles()
     } catch (error) {
       console.error('Failed to delete file:', error)
-      alert('Failed to delete file')
     }
   }
 

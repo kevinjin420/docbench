@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import EvaluationModal from './EvaluationModal'
-import CompareModal from './CompareModal'
+import EvaluationModal from '@/components/EvaluationModal'
+import CompareModal from '@/components/CompareModal'
 
 interface TestFile {
   name: string
@@ -137,7 +137,7 @@ export default function FileManager({
         } catch (error) {
           console.error(`Failed to fetch stash files for ${stashName}:`, error)
         }
-      }
+    }
     }
 
     setExpandedStashes(newExpanded)
@@ -145,41 +145,29 @@ export default function FileManager({
 
   const deleteStash = async (stashName: string, e: React.MouseEvent) => {
     e.stopPropagation()
-
-    if (!confirm(`Delete entire stash "${stashName}" and all its files?`)) return
-
     try {
-      await fetch(`${API_BASE}/stash/${stashName}`, {
-        method: 'DELETE'
-      })
+      await fetch(`${API_BASE}/stash/${stashName}`, { method: 'DELETE' })
       onRefresh()
     } catch (error) {
       console.error(`Failed to delete stash ${stashName}:`, error)
-      alert('Failed to delete stash')
     }
   }
 
   const evaluateStash = async (stashName: string, e: React.MouseEvent) => {
     e.stopPropagation()
-
     try {
-      const res = await fetch(`${API_BASE}/evaluate-directory`, {
+      const res = await fetch(`${API_BASE}/evaluate-collection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directory: stashName })
+        body: JSON.stringify({ collection: stashName })
       })
-
       const data = await res.json()
-
       if (data.status === 'success') {
         setEvalResults({ ...data, stashName })
         setShowEvalModal(true)
-      } else {
-        alert(`Evaluation failed: ${data.error}`)
       }
     } catch (error) {
       console.error(`Failed to evaluate stash ${stashName}:`, error)
-      alert('Failed to evaluate stash')
     }
   }
 
@@ -190,38 +178,20 @@ export default function FileManager({
 
   const compareWithSelected = async (stashName: string, e: React.MouseEvent) => {
     e.stopPropagation()
-
-    if (!selectedStashForCompare) {
-      alert('Please select a stash to compare first')
-      return
-    }
-
-    if (selectedStashForCompare === stashName) {
-      alert('Cannot compare a stash with itself')
-      return
-    }
-
+    if (!selectedStashForCompare || selectedStashForCompare === stashName) return
     try {
       const res = await fetch(`${API_BASE}/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          stash1: selectedStashForCompare,
-          stash2: stashName
-        })
+        body: JSON.stringify({ stash1: selectedStashForCompare, stash2: stashName })
       })
-
       const data = await res.json()
-
       if (data.status === 'success') {
         setCompareResults(data)
         setShowCompareModal(true)
-      } else {
-        alert(`Comparison failed: ${data.error}`)
       }
     } catch (error) {
       console.error(`Failed to compare stashes:`, error)
-      alert('Failed to compare stashes')
     }
   }
 
@@ -260,7 +230,7 @@ export default function FileManager({
       <div className="max-h-[500px] overflow-y-auto mb-4">
         {sortedFiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-gray-500 text-center">
-            <p className="text-base text-gray-400 mb-2">No test files found</p>
+            <p className="text-base text-gray-400 mb-2">No uncategorized test files found</p>
             <span className="text-sm text-gray-600">Run a benchmark to generate test results</span>
           </div>
         ) : (
@@ -305,7 +275,7 @@ export default function FileManager({
       {stashes.length > 0 && (
         <div className="mt-8">
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-terminal-border">
-            <h3 className="text-terminal-accent text-lg m-0">Stashed Results</h3>
+            <h3 className="text-terminal-accent text-lg m-0">Collections</h3>
             <div className="flex items-center gap-2">
               <label className="text-gray-400 text-sm">Sort by:</label>
               <select value={stashSortBy} onChange={e => handleStashSortChange(e.target.value as any)} className="px-2 py-1.5 bg-terminal-surface border border-terminal-border rounded text-gray-300 text-sm cursor-pointer focus:outline-none focus:border-terminal-accent">

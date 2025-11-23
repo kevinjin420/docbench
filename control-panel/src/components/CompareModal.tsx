@@ -6,6 +6,7 @@ interface CompareResult {
 	stash1: {
 		name: string;
 		average_score: number;
+		std_dev: number;
 		scores: number[];
 		file_count: number;
 		category_averages: { [key: string]: number };
@@ -14,6 +15,7 @@ interface CompareResult {
 	stash2: {
 		name: string;
 		average_score: number;
+		std_dev: number;
 		scores: number[];
 		file_count: number;
 		category_averages: { [key: string]: number };
@@ -229,6 +231,11 @@ export default function CompareModal({ isOpen, onClose, results }: Props) {
 							<div className="text-terminal-accent text-4xl font-bold">
 								{stash1.average_score.toFixed(1)}%
 							</div>
+							{stash1.std_dev > 0 && (
+								<div className="text-gray-500 text-sm mt-1">
+									SD: {stash1.std_dev.toFixed(2)}
+								</div>
+							)}
 						</div>
 
 						<div className="p-6 bg-zinc-900 border border-terminal-border rounded">
@@ -259,6 +266,11 @@ export default function CompareModal({ isOpen, onClose, results }: Props) {
 							<div className="text-terminal-accent text-4xl font-bold">
 								{stash2.average_score.toFixed(1)}%
 							</div>
+							{stash2.std_dev > 0 && (
+								<div className="text-gray-500 text-sm mt-1">
+									SD: {stash2.std_dev.toFixed(2)}
+								</div>
+							)}
 						</div>
 					</div>
 

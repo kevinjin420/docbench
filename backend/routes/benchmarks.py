@@ -2,7 +2,7 @@
 from flask import jsonify, request
 import threading
 import traceback
-import os
+import uuid
 from pathlib import Path
 from backend.services import LLMService, EvaluatorService
 from database import BenchmarkRunService, BenchmarkResultService
@@ -24,7 +24,7 @@ def register_routes(app, socketio, running_benchmarks):
         if not model or not variant:
             return jsonify({'error': 'model and variant are required'}), 400
 
-        run_id = f"{model}_{variant}_{int(os.times().elapsed * 1000)}"
+        run_id = f"{model}_{variant}_{uuid.uuid4().hex[:8]}"
 
         def run_in_background():
             try:
@@ -37,16 +37,26 @@ def register_routes(app, socketio, running_benchmarks):
                     temperature=temperature, max_tokens=max_tokens, test_limit=test_limit, concurrency=1
                 )
 
-                def progress_callback(completed, total, message, batch_num=None, num_batches=None):
+                def progress_callback(completed, total, message, batch_num=None, num_batches=None, failed=0, batch_statuses=None):
                     progress_text = f'{message} ({completed}/{total} tests)'
-                    running_benchmarks[run_id]['progress'] = progress_text
+                    running_benchmarks[run_id].update({
+                        'progress': progress_text,
+                        'completed': completed,
+                        'total': total,
+                        'failed': failed,
+                        'batch_num': batch_num,
+                        'num_batches': num_batches,
+                        'batch_statuses': batch_statuses,
+                    })
                     update_data = {
                         'run_id': run_id, 'status': 'running', 'progress': progress_text,
-                        'completed': completed, 'total': total
+                        'completed': completed, 'total': total, 'failed': failed
                     }
                     if batch_num is not None:
                         update_data['batch_num'] = batch_num
                         update_data['num_batches'] = num_batches
+                    if batch_statuses is not None:
+                        update_data['batch_statuses'] = batch_statuses
                     socketio.emit('benchmark_update', update_data)
 
                 result = llm_service.run_benchmark_concurrent(
@@ -112,18 +122,13 @@ def register_routes(app, socketio, running_benchmarks):
                     'overall_percentage': eval_result['percentage'],
                     'category_breakdown': eval_result['evaluation_results'],
                     'level_breakdown': eval_result.get('level_breakdown', {}),
-                    'tests_completed': eval_result.get('tests_completed', 0),
-                    'patched_count': eval_result.get('patched_count', 0)
+                    'tests_completed': eval_result.get('tests_completed', 0)
                 },
                 'total_tests': result.get('total_tests', 0)
             })
 
         category_breakdown = eval_results.get('category_breakdown', {})
         tests_completed = sum(len(c.get('tests', [])) for c in category_breakdown.values())
-        patched_count = sum(
-            1 for c in category_breakdown.values()
-            for t in c.get('tests', []) if t.get('was_patched')
-        )
 
         return jsonify({
             'summary': {
@@ -132,8 +137,66 @@ def register_routes(app, socketio, running_benchmarks):
                 'overall_percentage': result['percentage'],
                 'category_breakdown': category_breakdown,
                 'level_breakdown': eval_results.get('level_breakdown', {}),
-                'tests_completed': tests_completed,
-                'patched_count': patched_count
+                'tests_completed': tests_completed
             },
             'total_tests': result.get('total_tests', 0)
+        })
+
+    @app.route('/api/evaluate-collection', methods=['POST'])
+    def evaluate_collection():
+        data = request.json
+        collection_name = data.get('collection')
+        if not collection_name:
+            return jsonify({'error': 'collection is required'}), 400
+
+        results = BenchmarkResultService.get_collection_results(collection_name)
+        if not results:
+            return jsonify({'error': 'Collection not found or empty'}), 404
+
+        evaluated = {}
+        for result in results:
+            run_id = result['run_id']
+            eval_results = result.get('evaluation_results')
+            needs_eval = not eval_results or 'category_breakdown' not in eval_results
+
+            if needs_eval:
+                evaluator = EvaluatorService()
+                eval_result = evaluator.evaluate_responses(result['responses'])
+                BenchmarkResultService.update_evaluation(
+                    run_id=run_id,
+                    evaluation_results={
+                        'category_breakdown': eval_result['evaluation_results'],
+                        'level_breakdown': eval_result.get('level_breakdown', {})
+                    },
+                    total_score=eval_result['total_score'],
+                    max_score=eval_result['max_score'],
+                    percentage=eval_result['percentage']
+                )
+                evaluated[run_id] = {
+                    'summary': {
+                        'overall_percentage': eval_result['percentage'],
+                        'total_score': eval_result['total_score'],
+                        'total_max': eval_result['max_score'],
+                        'tests_completed': eval_result.get('tests_completed', 0),
+                        'category_breakdown': eval_result['evaluation_results']
+                    }
+                }
+            else:
+                category_breakdown = eval_results.get('category_breakdown', {})
+                tests_completed = sum(len(c.get('tests', [])) for c in category_breakdown.values())
+                evaluated[run_id] = {
+                    'summary': {
+                        'overall_percentage': result.get('percentage', 0),
+                        'total_score': result.get('total_score', 0),
+                        'total_max': result.get('max_score', 0),
+                        'tests_completed': tests_completed,
+                        'category_breakdown': category_breakdown
+                    }
+                }
+
+        return jsonify({
+            'status': 'success',
+            'collection': collection_name,
+            'files_evaluated': len(evaluated),
+            'results': evaluated
         })

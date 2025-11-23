@@ -3,6 +3,7 @@
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Callable
 from datetime import datetime
 
@@ -13,6 +14,8 @@ from database import BenchmarkResultService, DocumentationService
 
 class LLMService:
     """Service for running LLM benchmarks via OpenRouter"""
+
+    _models_cache: Optional[Dict[str, Dict]] = None
 
     def __init__(self, tests_file: str = "tests.json"):
         self.tests = self._load_tests(tests_file)
@@ -51,10 +54,18 @@ class LLMService:
             response = requests.get('https://openrouter.ai/api/v1/models', headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data.get('data', [])
+            models = data.get('data', [])
+            LLMService._models_cache = {m['id']: m for m in models}
+            return models
         except Exception as e:
             print(f"Warning: Failed to fetch models from OpenRouter: {e}")
             return []
+
+    def _get_model_data(self, model_id: str) -> Optional[Dict]:
+        """Get model data from cache, fetching if needed"""
+        if LLMService._models_cache is None:
+            self.fetch_available_models()
+        return (LLMService._models_cache or {}).get(model_id)
 
     def get_available_variants(self) -> List[str]:
         """Get list of available documentation variants"""
@@ -62,21 +73,14 @@ class LLMService:
         return [v['name'] for v in variants_data]
 
     def _get_max_tokens_for_model(self, model_id: str) -> int:
-        """Get appropriate max_tokens for a given model"""
-        if 'haiku' in model_id.lower():
-            return 8192
-        elif 'claude' in model_id.lower():
-            return 16000
-        elif 'gemini' in model_id.lower():
-            return 65536
-        elif 'gpt-4o-mini' in model_id.lower():
-            return 16000
-        elif 'gpt-4o' in model_id.lower():
-            return 16000
-        elif 'o1' in model_id.lower():
-            return 100000
-        else:
-            return 8192
+        """Get max_tokens from model's top_provider.max_completion_tokens"""
+        model_data = self._get_model_data(model_id)
+        if model_data:
+            top_provider = model_data.get('top_provider', {})
+            max_tokens = top_provider.get('max_completion_tokens')
+            if max_tokens:
+                return max_tokens
+        return 8192
 
     def _build_response_format(self, tests: List[Dict]) -> Dict:
         """Build JSON schema for structured output enforcement via OpenRouter"""
@@ -177,7 +181,7 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
         responses = json.loads(response_text)
 
         test_suite_type = "small" if test_limit else "full"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         safe_model_name = model_id.replace('/', '-')
         run_id = f"{safe_model_name}-{variant}-{test_suite_type}-{timestamp}"
 
@@ -203,6 +207,35 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
             'responses': responses
         }
 
+    def _run_batch(self, model_id: str, doc_content: str, batch: List[Dict],
+                   temperature: float, max_tokens: int, batch_num: int,
+                   status_callback: Optional[Callable] = None) -> tuple:
+        """Run a single batch API call with retries. Returns (batch_num, responses, error, retries)"""
+        max_retries = 3
+        for retry in range(max_retries + 1):
+            try:
+                if status_callback:
+                    status_callback(batch_num, "running", retry, max_retries)
+                if retry > 0:
+                    time.sleep(2 ** retry)
+                prompt = self._construct_prompt(doc_content, batch)
+                response = self.client.chat.completions.create(
+                    model=model_id,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    response_format=self._build_response_format(batch)
+                )
+                if status_callback:
+                    status_callback(batch_num, "completed", retry, max_retries)
+                return (batch_num, json.loads(response.choices[0].message.content.strip()), None, retry)
+            except Exception as e:
+                if retry >= max_retries:
+                    if status_callback:
+                        status_callback(batch_num, "failed", retry, max_retries)
+                    return (batch_num, {}, str(e), retry)
+        return (batch_num, {}, "Unknown error", max_retries)
+
     def run_benchmark_concurrent(
         self,
         model_id: str,
@@ -213,7 +246,7 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
         batch_size: int = 45,
         progress_callback: Optional[Callable] = None
     ) -> Dict:
-        """Run batched benchmark"""
+        """Run batched benchmark with parallel API calls"""
         if temperature is None:
             temperature = float(os.getenv('DEFAULT_TEMPERATURE', '0.1'))
         if max_tokens is None:
@@ -225,46 +258,67 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
 
         tests_to_use = self.tests[:test_limit] if test_limit else self.tests
         num_batches = (len(tests_to_use) + batch_size - 1) // batch_size
-        responses = {}
 
-        for batch_num in range(num_batches):
-            start_idx = batch_num * batch_size
+        batches = []
+        for i in range(num_batches):
+            start_idx = i * batch_size
             end_idx = min(start_idx + batch_size, len(tests_to_use))
-            batch = tests_to_use[start_idx:end_idx]
+            batches.append((i + 1, tests_to_use[start_idx:end_idx]))
 
+        batch_statuses = {i + 1: {"status": "pending", "retry": 0, "max_retries": 2} for i in range(num_batches)}
+
+        def batch_status_callback(batch_num, status, retry, max_retries):
+            batch_statuses[batch_num] = {"status": status, "retry": retry, "max_retries": max_retries}
             if progress_callback:
-                progress_callback(start_idx, len(tests_to_use), f"Batch {batch_num + 1}/{num_batches}",
-                                batch_num=batch_num + 1, num_batches=num_batches)
-
-            max_retries = 2
-            for retry in range(max_retries + 1):
-                try:
-                    if retry > 0:
-                        time.sleep(2 ** retry)
-                    prompt = self._construct_prompt(doc_content, batch)
-                    response = self.client.chat.completions.create(
-                        model=model_id,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                        response_format=self._build_response_format(batch)
-                    )
-                    response_text = response.choices[0].message.content.strip()
-                    batch_responses = json.loads(response_text)
-                    responses.update(batch_responses)
-                    break
-                except Exception as e:
-                    if retry >= max_retries:
-                        raise
+                progress_callback(
+                    completed * batch_size, len(tests_to_use), f"Batch {batch_num} {status}",
+                    batch_num=completed, num_batches=num_batches, failed=failed,
+                    batch_statuses=batch_statuses
+                )
 
         if progress_callback:
-            progress_callback(len(tests_to_use), len(tests_to_use), "Completed")
+            progress_callback(0, len(tests_to_use), f"Running {num_batches} batches in parallel",
+                            batch_num=0, num_batches=num_batches, batch_statuses=batch_statuses)
+
+        responses = {}
+        completed = 0
+        failed = 0
+        errors = []
+
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            futures = [
+                executor.submit(self._run_batch, model_id, doc_content, batch, temperature, max_tokens, batch_num, batch_status_callback)
+                for batch_num, batch in batches
+            ]
+
+            for future in as_completed(futures):
+                batch_num, batch_responses, error, retries = future.result()
+                if error:
+                    failed += 1
+                    errors.append(f"Batch {batch_num}: {error}")
+                else:
+                    responses.update(batch_responses)
+                completed += 1
+
+                if progress_callback:
+                    progress_callback(
+                        completed * batch_size, len(tests_to_use), f"Batch {completed}/{num_batches}",
+                        batch_num=completed, num_batches=num_batches, failed=failed,
+                        batch_statuses=batch_statuses
+                    )
+
+        final_status = "Completed"
+        if failed > 0:
+            final_status = f"Completed | Failed: {failed}"
+
+        if progress_callback:
+            progress_callback(len(tests_to_use), len(tests_to_use), final_status, failed=failed, batch_statuses=batch_statuses)
 
         if not responses:
-            raise RuntimeError("No responses generated - all batches failed")
+            raise RuntimeError(f"No responses generated - all batches failed: {'; '.join(errors)}")
 
         test_suite_type = "small" if test_limit else "full"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         safe_model_name = model_id.replace('/', '-')
         run_id = f"{safe_model_name}-{variant}-{test_suite_type}-{timestamp}"
 
@@ -289,5 +343,7 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
             'variant': variant,
             'num_responses': len(responses),
             'test_suite': test_suite_type,
-            'responses': responses
+            'responses': responses,
+            'failed_batches': failed,
+            'errors': errors if errors else None
         }

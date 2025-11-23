@@ -14,7 +14,6 @@ interface EvaluationResult {
 				total_score: number;
 				total_max: number;
 				tests_completed: number;
-				patched_count: number;
 				category_breakdown?: {
 					[category: string]: {
 						percentage: number;
@@ -106,6 +105,10 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 		return suite.charAt(0).toUpperCase() + suite.slice(1);
 	};
 
+	const percentages = fileResults.map(([_, result]: [string, any]) =>
+		result.summary.overall_percentage
+	);
+
 	const totalStats = fileResults.reduce(
 		(acc, [_, result]: [string, any]) => {
 			const summary = result.summary;
@@ -113,17 +116,24 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 				totalScore: acc.totalScore + summary.total_score,
 				totalMax: acc.totalMax + summary.total_max,
 				totalTests: acc.totalTests + summary.tests_completed,
-				totalPatched: acc.totalPatched + summary.patched_count,
 				count: acc.count + 1,
 			};
 		},
-		{ totalScore: 0, totalMax: 0, totalTests: 0, totalPatched: 0, count: 0 }
+		{ totalScore: 0, totalMax: 0, totalTests: 0, count: 0 }
 	);
 
 	const averagePercentage =
 		totalStats.totalMax > 0
 			? (totalStats.totalScore / totalStats.totalMax) * 100
 			: 0;
+
+	const stdDev = (() => {
+		if (percentages.length < 2) return 0;
+		const mean = percentages.reduce((a, b) => a + b, 0) / percentages.length;
+		const squaredDiffs = percentages.map(p => Math.pow(p - mean, 2));
+		const variance = squaredDiffs.reduce((a, b) => a + b, 0) / percentages.length;
+		return Math.sqrt(variance);
+	})();
 
 	// Aggregate category statistics across all files
 	const categoryStats = fileResults.reduce(
@@ -224,11 +234,11 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 
 	return (
 		<div
-			className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-8"
+			className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
 			onClick={onClose}
 		>
 			<div
-				className="bg-terminal-surface border-2 border-terminal-accent rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+				className="bg-terminal-surface border-2 border-terminal-accent rounded-lg max-w-5xl w-auto max-h-[90vh] overflow-y-auto"
 				onClick={(e) => e.stopPropagation()}
 			>
 				<div className="sticky top-0 bg-terminal-surface border-b border-terminal-border p-6 flex justify-between items-center">
@@ -336,6 +346,11 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 											{totalStats.totalScore.toFixed(1)} /{" "}
 											{totalStats.totalMax}
 										</div>
+										{stdDev > 0 && (
+											<div className="text-gray-500 text-sm mt-1">
+												SD: {stdDev.toFixed(2)}
+											</div>
+										)}
 									</div>
 								</div>
 								<div className="grid grid-cols-2 gap-3">
@@ -347,16 +362,6 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 											{totalStats.totalTests}
 										</div>
 									</div>
-									{totalStats.totalPatched > 0 && (
-										<div className="bg-terminal-surface p-3 rounded border border-orange-600">
-											<div className="text-gray-500 uppercase text-xs mb-1">
-												Total Patched
-											</div>
-											<div className="text-orange-400 font-bold text-2xl">
-												{totalStats.totalPatched}
-											</div>
-										</div>
-									)}
 									<div className="bg-terminal-surface p-3 rounded border border-terminal-border">
 										<div className="text-gray-500 uppercase text-xs mb-1">
 											Files Evaluated
@@ -526,19 +531,6 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 												{result.summary.tests_completed}
 											</div>
 										</div>
-										{result.summary.patched_count > 0 && (
-											<div className="bg-terminal-surface p-3 rounded border border-orange-600">
-												<div className="text-gray-500 uppercase mb-1">
-													Patched
-												</div>
-												<div className="text-orange-400 font-bold text-lg">
-													{
-														result.summary
-															.patched_count
-													}
-												</div>
-											</div>
-										)}
 									</div>
 
 									{result.summary.category_breakdown &&

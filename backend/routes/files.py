@@ -35,7 +35,26 @@ def register_routes(app, socketio=None, running_benchmarks=None):
     @app.route('/api/test-files', methods=['GET'])
     def get_test_files():
         limit = request.args.get('limit', 50, type=int)
-        results = BenchmarkResultService.get_recent(limit=limit)
+        with get_db() as session:
+            query = session.query(BenchmarkResult).filter(
+                BenchmarkResult.collection_id.is_(None)
+            ).order_by(BenchmarkResult.created_at.desc()).limit(limit)
+            results = [
+                {
+                    'id': r.id,
+                    'run_id': r.run_id,
+                    'model': r.model,
+                    'variant': r.variant,
+                    'test_suite': r.test_suite,
+                    'total_tests': r.total_tests,
+                    'total_score': r.total_score,
+                    'max_score': r.max_score,
+                    'percentage': r.percentage,
+                    'created_at': r.created_at,
+                    'responses': r.responses,
+                }
+                for r in query.all()
+            ]
         return jsonify({'files': [_format_result(r) for r in results]})
 
     @app.route('/api/stashes', methods=['GET'])
@@ -83,3 +102,11 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         if deleted:
             return jsonify({'status': 'success'})
         return jsonify({'error': 'Result not found'}), 404
+
+    @app.route('/api/clean', methods=['POST'])
+    def clean():
+        with get_db() as session:
+            deleted = session.query(BenchmarkResult).filter(
+                BenchmarkResult.collection_id.is_(None)
+            ).delete()
+        return jsonify({'status': 'success', 'deleted': deleted})

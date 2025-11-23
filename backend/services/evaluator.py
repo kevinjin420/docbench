@@ -101,19 +101,13 @@ class EvaluatorService:
         results = []
         category_scores = {}
         level_scores = {}
-        patched_count = 0
 
         for test_case in self.tests:
             test_id = test_case["id"]
             if test_id in responses:
                 code = responses[test_id]
-
-                patched_code, was_patched = patch_missing_braces(code)
-                if was_patched:
-                    patched_count += 1
-
+                patched_code, _ = patch_missing_braces(code)
                 result = self.evaluate_code(patched_code, test_case)
-                result["was_patched"] = was_patched
                 results.append(result)
 
                 category = test_case["category"]
@@ -142,7 +136,6 @@ class EvaluatorService:
                 "overall_percentage": round(overall_percentage, 2),
                 "tests_completed": len(results),
                 "tests_total": len(self.tests),
-                "patched_count": patched_count,
                 "category_breakdown": {
                     cat: {
                         "score": round(scores["score"], 2),
@@ -169,19 +162,13 @@ class EvaluatorService:
         results = []
         category_scores = {}
         level_scores = {}
-        patched_count = 0
 
         for test_case in self.tests:
             test_id = test_case["id"]
             if test_id in responses:
                 code = responses[test_id]
-
-                patched_code, was_patched = patch_missing_braces(code)
-                if was_patched:
-                    patched_count += 1
-
+                patched_code, _ = patch_missing_braces(code)
                 result = self.evaluate_code(patched_code, test_case)
-                result["was_patched"] = was_patched
                 results.append(result)
 
                 category = test_case["category"]
@@ -225,8 +212,7 @@ class EvaluatorService:
             "total_score": round(total_score, 2),
             "max_score": total_max,
             "percentage": round(overall_percentage, 2),
-            "tests_completed": len(results),
-            "patched_count": patched_count
+            "tests_completed": len(results)
         }
 
     def get_test_stats(self) -> Dict[str, Any]:
