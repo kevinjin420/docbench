@@ -79,6 +79,24 @@ export default function FileManager({
   const [showCompareModal, setShowCompareModal] = useState(false)
   const [compareResults, setCompareResults] = useState<any>(null)
 
+  const downloadGraph = async (url: string, filename: string, format: 'svg' | 'png') => {
+    try {
+      const res = await fetch(`${url}?format=${format}`)
+      const blob = await res.blob()
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename.replace(/\.(svg|png)$/, `.${format}`)
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } catch (error) {
+      console.error('Failed to download graph:', error)
+    }
+  }
+
+  const exportCollectionsGraph = (format: 'svg' | 'png') => {
+    downloadGraph(`${API_BASE}/graph/collections`, `collections-benchmark.${format}`, format)
+  }
+
   const sortedFiles = [...files].sort((a, b) => {
     switch (sortBy) {
       case 'size':
@@ -207,13 +225,25 @@ export default function FileManager({
       <div className="flex gap-2 mb-4 flex-wrap items-center justify-between">
         <div className="flex gap-2">
           <button onClick={onStash} className="px-4 py-2.5 bg-terminal-border text-gray-300 border border-gray-600 rounded text-sm font-semibold hover:bg-zinc-700 cursor-pointer">
-            Stash Results
+            Stash Uncategorized
           </button>
+          <div className="flex">
+            <button onClick={() => exportCollectionsGraph('svg')} className="px-3 py-2.5 bg-blue-900 text-white border border-blue-700 rounded-l text-sm font-semibold hover:bg-blue-800 cursor-pointer">
+              SVG
+            </button>
+            <button onClick={() => exportCollectionsGraph('png')} className="px-3 py-2.5 bg-blue-900 text-white border-l-0 border border-blue-700 rounded-r text-sm font-semibold hover:bg-blue-800 cursor-pointer">
+              PNG
+            </button>
+          </div>
           <button onClick={onClean} className="px-4 py-2.5 bg-red-900 text-white rounded text-sm font-semibold hover:bg-red-800 cursor-pointer">
-            Clean All Results
+            Delete Uncategorized
           </button>
-          <button onClick={onClearDb} className="px-4 py-2.5 bg-red-950 text-white border border-red-800 rounded text-sm font-semibold hover:bg-red-900 cursor-pointer">
-            Clear Database
+          <button onClick={() => {
+            if (window.confirm('Are you sure you want to nuke the database? This will delete all benchmark results and cannot be undone.')) {
+              onClearDb()
+            }
+          }} className="px-4 py-2.5 bg-red-950 text-white border border-red-800 rounded text-sm font-semibold hover:bg-red-900 cursor-pointer">
+            Nuke Database
           </button>
         </div>
 

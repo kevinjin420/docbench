@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 
+const API_BASE = "http://localhost:5050/api";
+
 interface CompareResult {
 	status: string;
 	stash1: {
@@ -133,6 +135,25 @@ export default function CompareModal({ isOpen, onClose, results }: Props) {
 		}
 	};
 
+	const exportGraph = async (format: "svg" | "png") => {
+		if (!stash1 || !stash2) return;
+		try {
+			const res = await fetch(`${API_BASE}/graph/compare?format=${format}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ stash1: stash1.name, stash2: stash2.name }),
+			});
+			const blob = await res.blob();
+			const link = document.createElement("a");
+			link.href = URL.createObjectURL(blob);
+			link.download = `compare-${stash1.name}-vs-${stash2.name}.${format}`;
+			link.click();
+			URL.revokeObjectURL(link.href);
+		} catch (err) {
+			console.error("Failed to export graph:", err);
+		}
+	};
+
 	return (
 		<div
 			className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-8"
@@ -152,6 +173,22 @@ export default function CompareModal({ isOpen, onClose, results }: Props) {
 						</p>
 					</div>
 					<div className="flex gap-3 items-center">
+						<div className="flex">
+							<button
+								onClick={() => exportGraph("svg")}
+								className="px-2 py-1 border border-blue-500 text-blue-500 rounded-l hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+								title="Export as SVG"
+							>
+								SVG
+							</button>
+							<button
+								onClick={() => exportGraph("png")}
+								className="px-2 py-1 border border-blue-500 border-l-0 text-blue-500 rounded-r hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+								title="Export as PNG"
+							>
+								PNG
+							</button>
+						</div>
 						<button
 							onClick={copyToClipboard}
 							className="p-2 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"

@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 
+const API_BASE = "http://localhost:5050/api";
+
 interface EvaluationResult {
 	status: string;
 	directory: string;
@@ -198,6 +200,25 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 		}
 	};
 
+	const exportGraph = async (format: "svg" | "png") => {
+		if (!results?.stashName) return;
+		try {
+			const res = await fetch(`${API_BASE}/graph/evaluation?format=${format}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ collection: results.stashName }),
+			});
+			const blob = await res.blob();
+			const link = document.createElement("a");
+			link.href = URL.createObjectURL(blob);
+			link.download = `${results.stashName}-evaluation.${format}`;
+			link.click();
+			URL.revokeObjectURL(link.href);
+		} catch (err) {
+			console.error("Failed to export graph:", err);
+		}
+	};
+
 	const copyFileResult = async (filename: string) => {
 		const element = fileRefsRef.current.get(filename);
 		if (!element || copiedFiles.has(filename)) return;
@@ -278,6 +299,24 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 						</p>
 					</div>
 					<div className="flex gap-3 items-center">
+						{results?.stashName && (
+							<div className="flex">
+								<button
+									onClick={() => exportGraph("svg")}
+									className="px-2 py-1 border border-blue-500 text-blue-500 rounded-l hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+									title="Export as SVG"
+								>
+									SVG
+								</button>
+								<button
+									onClick={() => exportGraph("png")}
+									className="px-2 py-1 border border-blue-500 border-l-0 text-blue-500 rounded-r hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+									title="Export as PNG"
+								>
+									PNG
+								</button>
+							</div>
+						)}
 						<button
 							onClick={copyToClipboard}
 							className="p-2 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"
