@@ -2,7 +2,9 @@
 """Plot batch size vs score from exported CSV data."""
 
 import argparse
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -69,7 +71,9 @@ def plot_batch_vs_score(
         plt.savefig(output, dpi=150, bbox_inches='tight')
         print(f"Saved plot to {output}")
     else:
-        plt.show()
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+            plt.savefig(f.name, dpi=150, bbox_inches='tight')
+            subprocess.run(['xdg-open', f.name], check=False)
 
 
 def _plot_group(ax, df, color, label, aggregate, show_points, show_trend, show_error_bars):
@@ -91,6 +95,10 @@ def _plot_group(ax, df, color, label, aggregate, show_points, show_trend, show_e
                        capsize=4, capthick=1.5, markersize=8, linewidth=2, zorder=5)
         else:
             ax.plot(x, y, 's-', color=mean_color, label=f'{label} (mean)' if label else 'Mean', markersize=8, linewidth=2, zorder=5)
+
+        for xi, yi in zip(x, y):
+            ax.annotate(f'{yi:.1f}%', (xi, yi), textcoords='offset points', xytext=(0, 10),
+                       ha='center', fontsize=9, fontweight='bold')
     else:
         if show_points:
             ax.scatter(df['batch_size'], df['percentage'], color=color, label=label, s=50, alpha=0.7)

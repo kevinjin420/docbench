@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import BenchmarkView from '@/views/BenchmarkView'
 import FileManager from '@/views/FileManager'
 import StatsPanel from '@/views/StatsPanel'
+import BaselineView from '@/views/BaselineView'
 
 const API_BASE = 'http://localhost:5050/api'
 
@@ -201,7 +202,7 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-terminal-bg text-gray-300">
       <header className="bg-terminal-surface border-b border-terminal-border px-8 py-4">
         <div className="max-w-screen-2xl mx-auto flex justify-between items-center">
-          <h1 className="text-terminal-accent text-xl font-semibold">Jac Benchmark Control Panel</h1>
+          <h1 className="text-terminal-accent text-xl font-semibold">Jaseci DocBench</h1>
 
           <nav className="flex gap-2">
             <Link
@@ -238,6 +239,16 @@ function AppContent() {
               }`}
             >
               Statistics
+            </Link>
+            <Link
+              to="/baselines"
+              className={`px-5 py-2.5 rounded border text-sm transition-all cursor-pointer ${
+                location.pathname === '/baselines'
+                  ? 'bg-zinc-800 border-terminal-accent text-terminal-accent'
+                  : 'border-terminal-border text-gray-400 hover:bg-zinc-800 hover:border-gray-600 hover:text-white'
+              }`}
+            >
+              Baselines
             </Link>
           </nav>
         </div>
@@ -284,6 +295,17 @@ function AppContent() {
                     <h3 className="text-gray-300 text-xl mb-2">Loading Statistics...</h3>
                   </div>
                 )
+              }
+            />
+            <Route
+              path="/baselines"
+              element={
+                <BaselineView
+                  models={models}
+                  variants={variants}
+                  testFiles={testFiles}
+                  onBenchmarkComplete={handleBenchmarkComplete}
+                />
               }
             />
           </Routes>

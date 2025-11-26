@@ -30,7 +30,8 @@ def _format_result(result, collection=None):
         'score': result.get('total_score'),
         'max_score': result.get('max_score'),
         'percentage': result.get('percentage'),
-        'collection': collection or result.get('collection')
+        'collection': collection or result.get('collection'),
+        'evaluation_status': result.get('evaluation_status', 'completed')
     }
 
 
@@ -58,6 +59,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
                     'percentage': r.percentage,
                     'created_at': r.created_at,
                     'responses': r.responses,
+                    'evaluation_status': r.evaluation_status or 'completed'
                 }
                 for r in query.all()
             ]

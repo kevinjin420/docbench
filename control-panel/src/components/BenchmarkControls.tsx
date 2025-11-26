@@ -1,4 +1,6 @@
 import type { Model, Variant } from "@/utils/types";
+import ModelSelector from "./ModelSelector";
+import DocumentationSelector from "./DocumentationSelector";
 
 interface Props {
 	models: Model[];
@@ -39,93 +41,26 @@ export default function BenchmarkControls({
 	onRun,
 	onCancel,
 }: Props) {
-	const groupedVariants = variants.reduce(
-		(groups: Record<string, Variant[]>, variant) => {
-			const match = variant.name.match(/[_-]v(\d+)/);
-			const version = match ? `v${match[1]}` : "other";
-			if (!groups[version]) groups[version] = [];
-			groups[version].push(variant);
-			return groups;
-		},
-		{}
-	);
-
-	const sortedVersions = Object.keys(groupedVariants).sort((a, b) => {
-		if (a === "other") return 1;
-		if (b === "other") return -1;
-		return parseInt(b.substring(1)) - parseInt(a.substring(1));
-	});
-
-	const isImageModel = (m: Model) => {
-		const id = m.id.toLowerCase();
-		const name = m.name.toLowerCase();
-		if (id.includes("image") || name.includes("image")) return true;
-		const outputs = m.architecture?.output_modalities || [];
-		return outputs.includes("image") && !outputs.includes("text");
-	};
-
-	const textModels = models.filter((m) => !isImageModel(m));
-	const findModel = (patterns: string[], exclude: string[] = []) =>
-		textModels.find((m) =>
-			patterns.every((p) => m.id.includes(p)) &&
-			exclude.every((e) => !m.id.includes(e))
-		);
-	const popular = [
-		findModel(["claude", "sonnet"]),
-		findModel(["claude", "haiku"]),
-		findModel(["gemini", "pro"]),
-		findModel(["gemini", "flash"]),
-		findModel(["openai", "gpt-5"]),
-		findModel(["openai", "4o-mini"], ["audio", "search"]),
-		findModel(["openai", "4o"], ["mini", "audio", "search"]),
-	].filter(Boolean) as Model[];
-	const otherModels = textModels.filter((m) => !popular.includes(m));
-
 	return (
 		<div className="flex gap-3 items-center justify-between">
 			<div className="flex gap-3 items-center flex-wrap">
-				<select
-					value={selectedModel}
-					onChange={(e) => setSelectedModel(e.target.value)}
-					disabled={isRunning}
-					className="flex-1 max-w-[400px] px-3 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm min-w-[120px] focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					<optgroup label="Popular">
-						{popular.map((m) => (
-							<option key={m.id} value={m.id}>
-								{m.name}
-							</option>
-						))}
-					</optgroup>
-					<optgroup label="All Models">
-						{otherModels.map((m) => (
-							<option key={m.id} value={m.id}>
-								{m.name}
-							</option>
-						))}
-					</optgroup>
-				</select>
+				<div className="flex-1 min-w-[300px]">
+					<ModelSelector
+						models={models}
+						selectedModel={selectedModel}
+						onSelect={setSelectedModel}
+						disabled={isRunning}
+					/>
+				</div>
 
-				<select
-					value={selectedVariant}
-					onChange={(e) => setSelectedVariant(e.target.value)}
-					disabled={isRunning}
-					className="flex-1 max-w-[200px] px-3 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm min-w-[120px] focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{sortedVersions.map((version) => (
-						<optgroup
-							key={version}
-							label={version.toUpperCase()}
-							className="bg-zinc-900 text-terminal-accent font-semibold text-sm"
-						>
-							{groupedVariants[version].map((v) => (
-								<option key={v.name} value={v.name} className="bg-zinc-900 text-gray-300">
-									{v.name} ({v.size_kb} KB)
-								</option>
-							))}
-						</optgroup>
-					))}
-				</select>
+				<div className="flex-1 min-w-[250px]">
+					<DocumentationSelector
+						variants={variants}
+						selectedVariant={selectedVariant}
+						onSelect={setSelectedVariant}
+						disabled={isRunning}
+					/>
+				</div>
 
 				<span>temp</span>
 				<input

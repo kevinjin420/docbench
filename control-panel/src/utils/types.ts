@@ -28,6 +28,7 @@ export interface TestFile {
 	path: string;
 	size: number;
 	modified: number;
+	evaluation_status?: "pending" | "evaluating" | "completed" | "failed";
 	metadata?: {
 		model: string;
 		model_full: string;

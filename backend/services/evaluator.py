@@ -1,8 +1,11 @@
 """Code evaluation service for Jac benchmarks"""
 
 import json
+import os
+import subprocess
+import tempfile
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 from ..utils.syntax import SyntaxChecker, patch_missing_braces
 
@@ -20,7 +23,57 @@ class EvaluatorService:
         with open(tests_path, 'r') as f:
             return json.load(f)
 
-    def evaluate_code(self, code: str, test_case: Dict) -> Dict:
+    def jac_check(self, code: str) -> Tuple[bool, List[str], List[str]]:
+        """
+        Run jac check on code and return (is_valid, errors, warnings).
+        Uses jaclang's syntax checker for validation.
+        """
+        errors = []
+        warnings = []
+
+        with tempfile.NamedTemporaryFile(
+            mode='w', suffix='.jac', delete=False
+        ) as f:
+            f.write(code)
+            temp_path = f.name
+
+        try:
+            result = subprocess.run(
+                ['jac', 'check', temp_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            output = result.stdout + result.stderr
+
+            for line in output.split('\n'):
+                line = line.strip()
+                if line.startswith('Error:') or ('error' in line.lower() and ':' in line):
+                    errors.append(line)
+                elif line.startswith('Warning:'):
+                    warnings.append(line)
+
+            is_valid = result.returncode == 0
+
+        except subprocess.TimeoutExpired:
+            errors.append("Syntax check timed out")
+            is_valid = False
+        except FileNotFoundError:
+            # jac not installed, skip validation
+            is_valid = True
+        except Exception as e:
+            errors.append(f"Syntax check failed: {str(e)}")
+            is_valid = False
+        finally:
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+
+        return is_valid, errors, warnings
+
+    def evaluate_code(self, code: str, test_case: Dict, use_jac_check: bool = True) -> Dict:
         """Evaluate generated code against test requirements with strict validation"""
         score = 0
         max_score = test_case["points"]
@@ -37,7 +90,7 @@ class EvaluatorService:
                 failed_checks.append(f"[FAIL] Missing required element: '{element}'")
 
         forbidden_found = 0
-        for element in test_case["forbidden_elements"]:
+        for element in test_case.get("forbidden_elements", []):
             if element in code:
                 forbidden_found += 1
                 failed_checks.append(f"[FAIL] Contains forbidden element: '{element}'")
@@ -45,7 +98,7 @@ class EvaluatorService:
                 passed_checks.append(f"[PASS] Correctly avoided: '{element}'")
 
         total_required = len(test_case["required_elements"])
-        total_forbidden = len(test_case["forbidden_elements"])
+        total_forbidden = len(test_case.get("forbidden_elements", []))
 
         if total_required > 0:
             required_score = (required_found / total_required) * max_score
@@ -59,11 +112,24 @@ class EvaluatorService:
 
         score = max(0, required_score - forbidden_penalty)
 
+        # Legacy syntax checks
         syntax_checks = SyntaxChecker.check_syntax(code)
-
         syntax_errors = len([c for c in syntax_checks if c.startswith('[WARN]')])
         syntax_penalty = min(syntax_errors * 0.10 * max_score, max_score * 0.50)
         score = max(0, score - syntax_penalty)
+
+        # jac check validation (50% penalty for invalid syntax)
+        jac_valid = True
+        jac_errors = []
+        jac_warnings = []
+        if use_jac_check:
+            jac_valid, jac_errors, jac_warnings = self.jac_check(code)
+            if not jac_valid:
+                jac_penalty = max_score * 0.5
+                score = max(0, score - jac_penalty)
+                failed_checks.append(f"[FAIL] jac check failed: {len(jac_errors)} errors")
+            else:
+                passed_checks.append("[PASS] jac check passed")
 
         return {
             "test_id": test_case["id"],
@@ -78,6 +144,9 @@ class EvaluatorService:
             "failed_checks": failed_checks,
             "syntax_feedback": syntax_checks,
             "syntax_errors": syntax_errors,
+            "jac_valid": jac_valid,
+            "jac_errors": jac_errors,
+            "jac_warnings": jac_warnings,
             "code": code
         }
 

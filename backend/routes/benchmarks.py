@@ -65,8 +65,57 @@ def register_routes(app, socketio, running_benchmarks):
                     test_limit=test_limit, batch_size=batch_size, progress_callback=progress_callback
                 )
 
+                # Trigger evaluation immediately
+                actual_run_id = result.get('run_id', run_id)
+                print(f"[EVAL] Starting evaluation for {actual_run_id}", flush=True)
+                socketio.emit('benchmark_update', {'run_id': run_id, 'status': 'evaluating', 'progress': 'Evaluating responses...'})
+
+                from database import BenchmarkResultService, TestCaseEvaluationService
+                result_data = BenchmarkResultService.get_by_run_id(actual_run_id)
+
+                if result_data:
+                    try:
+                        print(f"[EVAL] Setting evaluation status to 'evaluating' for {actual_run_id}", flush=True)
+                        BenchmarkResultService.set_evaluation_status(actual_run_id, 'evaluating')
+
+                        print(f"[EVAL] Creating evaluator and evaluating responses...", flush=True)
+                        evaluator = EvaluatorService()
+                        eval_result = evaluator.evaluate_responses(result_data['responses'])
+
+                        print(f"[EVAL] Updating evaluation results: {eval_result['percentage']:.2f}%", flush=True)
+                        # Update evaluation
+                        BenchmarkResultService.update_evaluation(
+                            run_id=actual_run_id,
+                            evaluation_results={
+                                'category_breakdown': eval_result['evaluation_results'],
+                                'level_breakdown': eval_result.get('level_breakdown', {})
+                            },
+                            total_score=eval_result['total_score'],
+                            max_score=eval_result['max_score'],
+                            percentage=eval_result['percentage']
+                        )
+
+                        # Apply baseline correction if available
+                        try:
+                            from backend.services.baseline_service import BaselineService
+                            BaselineService.apply_baseline_correction(
+                                run_id=actual_run_id,
+                                model=result_data['model'],
+                                doc_variant=result_data['variant']
+                            )
+                        except Exception as e:
+                            print(f"[EVAL] Could not apply baseline correction: {e}", flush=True)
+
+                        print(f"[EVAL] ✓ Evaluation completed successfully for {actual_run_id}", flush=True)
+                    except Exception as e:
+                        print(f"[EVAL] Evaluation failed for {actual_run_id}: {e}", flush=True)
+                        traceback.print_exc()
+                        BenchmarkResultService.set_evaluation_status(actual_run_id, 'failed')
+                else:
+                    print(f"[EVAL] Could not find result data for {actual_run_id}", flush=True)
+
                 running_benchmarks[run_id] = {'status': 'completed', 'result': result, 'progress': 'Done'}
-                BenchmarkRunService.complete(run_id=result.get('run_id', run_id), result_id=None)
+                BenchmarkRunService.complete(run_id=actual_run_id, result_id=None)
                 socketio.emit('benchmark_update', {'run_id': run_id, 'status': 'completed', 'result': result})
 
             except Exception as e:
@@ -98,6 +147,22 @@ def register_routes(app, socketio, running_benchmarks):
         if not result:
             return jsonify({'error': 'Result not found'}), 404
 
+        # Check evaluation status
+        eval_status = result.get('evaluation_status')
+        if eval_status == 'evaluating':
+            return jsonify({
+                'status': 'evaluating',
+                'message': 'Evaluation in progress. Please wait...',
+                'run_id': run_id
+            }), 202  # 202 Accepted
+
+        if eval_status == 'failed':
+            return jsonify({
+                'status': 'failed',
+                'message': 'Evaluation failed',
+                'run_id': run_id
+            }), 500
+
         eval_results = result.get('evaluation_results')
         needs_eval = not eval_results or 'category_breakdown' not in eval_results
 
@@ -116,11 +181,26 @@ def register_routes(app, socketio, running_benchmarks):
                 percentage=eval_result['percentage']
             )
 
+            # Apply baseline correction if available
+            try:
+                from backend.services.baseline_service import BaselineService
+                BaselineService.apply_baseline_correction(
+                    run_id=run_id,
+                    model=result['model'],
+                    doc_variant=result['variant']
+                )
+                # Refresh result to get baseline correction
+                result = BenchmarkResultService.get_by_run_id(run_id)
+            except Exception as e:
+                app.logger.warning(f"Could not apply baseline correction: {e}")
+
             return jsonify({
                 'summary': {
                     'total_score': eval_result['total_score'],
                     'total_max': eval_result['max_score'],
                     'overall_percentage': eval_result['percentage'],
+                    'baseline_corrected_percentage': result.get('baseline_corrected_percentage'),
+                    'learning_bonus': result.get('learning_bonus'),
                     'category_breakdown': eval_result['evaluation_results'],
                     'level_breakdown': eval_result.get('level_breakdown', {}),
                     'tests_completed': eval_result.get('tests_completed', 0)
@@ -136,6 +216,9 @@ def register_routes(app, socketio, running_benchmarks):
                 'total_tests': result.get('total_tests', 0),
                 'batch_size': result.get('batch_size'),
                 'num_batches': result.get('num_batches'),
+                'baseline_id': result.get('baseline_id'),
+                'baseline_corrected_percentage': result.get('baseline_corrected_percentage'),
+                'learning_bonus': result.get('learning_bonus'),
                 'created_at': result.get('created_at'),
                 'evaluated_at': result.get('evaluated_at'),
                 'status': result.get('status')

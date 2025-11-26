@@ -82,18 +82,26 @@ class BenchmarkResult(Base):
 
     # Status
     status = Column(String(32), nullable=False, default='completed', index=True)
+    evaluation_status = Column(String(32), nullable=True, default='pending', index=True)  # pending, evaluating, completed, failed
 
     # Collection grouping (for organizing multiple runs)
     collection_id = Column(Integer, ForeignKey('collections.id'), nullable=True, index=True)
 
+    # Baseline correction (for TRUE documentation quality)
+    baseline_id = Column(Integer, ForeignKey('documentation_baselines.id'), nullable=True, index=True)
+    baseline_corrected_percentage = Column(Float, nullable=True)  # TRUE doc quality
+    learning_bonus = Column(Float, nullable=True)  # In-context learning inflation
+
     # Relationships
     collection_obj = relationship('Collection', back_populates='results')
+    baseline = relationship('DocumentationBaseline', foreign_keys=[baseline_id])
 
     __table_args__ = (
         Index('idx_model_variant', 'model', 'variant'),
         Index('idx_created_at_desc', created_at.desc()),
         Index('idx_score_desc', total_score.desc()),
         Index('idx_collection_id', 'collection_id'),
+        Index('idx_baseline_id', 'baseline_id'),
     )
 
 
@@ -167,6 +175,92 @@ class DocumentationVariant(Base):
     created_at = Column(Float, nullable=False)
     updated_at = Column(Float, nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
+
+
+class TestCaseEvaluation(Base):
+    """Individual test case evaluation results"""
+    __tablename__ = 'test_case_evaluations'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Foreign key to parent benchmark result
+    benchmark_result_id = Column(Integer, ForeignKey('benchmark_results.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    # Test identification
+    test_id = Column(String(256), nullable=False, index=True)
+    test_category = Column(String(128), nullable=True, index=True)
+    test_level = Column(String(32), nullable=True, index=True)
+    test_description = Column(Text, nullable=True)
+
+    # Generated response
+    code_response = Column(Text, nullable=False)
+
+    # Evaluation results
+    passed = Column(Boolean, nullable=False, index=True)
+    score = Column(Float, nullable=False)
+    max_score = Column(Float, nullable=False)
+
+    # Detailed checks
+    passed_checks = Column(get_json_type(), nullable=True)
+    failed_checks = Column(get_json_type(), nullable=True)
+
+    # Additional evaluation details
+    evaluation_details = Column(get_json_type(), nullable=True)
+
+    # Timestamps
+    evaluated_at = Column(Float, nullable=False, index=True)
+
+    # Relationship
+    benchmark_result = relationship('BenchmarkResult', backref='test_evaluations')
+
+    __table_args__ = (
+        Index('idx_test_benchmark', 'benchmark_result_id', 'test_id'),
+        Index('idx_test_category', 'test_category'),
+    )
+
+
+class DocumentationBaseline(Base):
+    """
+    Baseline scores for model+documentation combinations.
+
+    Baselines are established by running batch=1 evaluation to measure
+    TRUE documentation quality without in-context learning inflation.
+    """
+    __tablename__ = 'documentation_baselines'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # What was tested
+    model = Column(String(256), nullable=False, index=True)
+    documentation_variant = Column(String(128), nullable=False, index=True)
+
+    # Reference to the batch=1 run that established this baseline
+    baseline_run_id = Column(String(256), ForeignKey('benchmark_results.run_id'))
+
+    # Baseline scores
+    baseline_percentage = Column(Float, nullable=False)
+    baseline_total_score = Column(Float, nullable=False)
+    baseline_max_score = Column(Float, nullable=False)
+
+    # Category-level baselines for granular analysis
+    category_baselines = Column(get_json_type(), nullable=False)
+    # {
+    #   "Walkers": {"baseline": 74.5, "max": 10, "score": 7.45},
+    #   "File Operations": {"baseline": 65.9, "max": 15, "score": 9.88},
+    #   ...
+    # }
+
+    # Metadata
+    test_suite = Column(String(32), nullable=False)
+    total_tests = Column(Integer, nullable=False)
+    created_at = Column(Float, nullable=False, index=True)
+
+    # Only one active baseline per model+doc pair
+    is_active = Column(Boolean, default=True, index=True)
+
+    __table_args__ = (
+        Index('idx_baselines_model_doc', 'model', 'documentation_variant'),
+    )
 
 
 # Database connection configuration

@@ -464,6 +464,48 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 									</div>
 								</div>
 							)}
+
+							{categoryPercentages.length > 0 && (
+								<div className="border-t border-terminal-border pt-4 mt-4">
+									<h4 className="text-terminal-accent text-sm font-bold mb-3 uppercase">
+										All Category Averages
+									</h4>
+									<div className="grid grid-cols-2 gap-2">
+										{categoryPercentages
+											.sort((a, b) => b.percentage - a.percentage)
+											.map((cat) => (
+												<div
+													key={cat.category}
+													className="bg-terminal-surface p-2 rounded border border-terminal-border"
+												>
+													<div className="flex justify-between items-center mb-1">
+														<span className="text-gray-300 text-sm font-medium truncate mr-2">
+															{cat.category}
+														</span>
+														<span className="text-terminal-accent text-sm font-bold shrink-0">
+															{cat.percentage.toFixed(1)}%
+														</span>
+													</div>
+													<div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+														<span>
+															{cat.score.toFixed(1)} / {cat.max}
+														</span>
+														<span>•</span>
+														<span>{cat.count} tests</span>
+													</div>
+													<div className="h-1 bg-terminal-border rounded overflow-hidden">
+														<div
+															className="h-full bg-terminal-accent"
+															style={{
+																width: `${cat.percentage}%`,
+															}}
+														/>
+													</div>
+												</div>
+											))}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
 
