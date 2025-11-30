@@ -27,9 +27,14 @@ class CondensationResult:
 
 
 class LLMCondenser:
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, stage_config: Dict = None):
         self.config = config
-        self.llm_config = config['llm']
+        self.llm_config = config['llm'].copy()
+        
+        # Apply stage-specific overrides if present
+        if stage_config and 'llm' in stage_config:
+            self.llm_config.update(stage_config['llm'])
+            
         # Make condensation_config optional for new topic-based pipeline
         self.condensation_config = config.get('condensation', {})
         self.provider = self.llm_config['provider']

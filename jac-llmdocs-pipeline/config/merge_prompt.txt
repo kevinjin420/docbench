@@ -10,6 +10,12 @@ MERGE RULES:
     *   `import:py` (Python imports)
     *   `spawn` (including spawning on lists/groups)
     *   `has x: type` (Explicit type annotations)
+    *   `&` (Reference operator)
+    *   `.edges` (Node property)
+    *   `str "..."` (Semantic String)
+    *   `async`, `await`
+    *   `assert` (Testing/Validation)
+    *   `save`, `load` (Persistence)
 4.  **PRESERVE CODE STRUCTURE:** Keep clear, multi-line code blocks.
 5.  **RETAIN AGENT PATTERNS:** Keep examples of "Agent Loops" (using `while` with `by llm()`).
 6.  **NO FLUFF:** Remove intro/outro text.

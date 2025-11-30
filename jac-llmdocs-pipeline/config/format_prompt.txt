@@ -4,7 +4,20 @@ CRITICAL: Your ONLY job is to provide RAW, UNFORMATTED TEXT. DO NOT apply any Ma
 
 RULES:
 1.  **PRESERVE ALL INFORMATION:** Every detail, syntax, example, parameter must remain.
-2.  **NO MARKDOWN:** Do NOT use headers, lists, bolding, italics, or code blocks. Output plain text only.
+2.  **PROTECT KEYWORDS:** Do NOT delete or alter:
+    *   `import:py`
+    *   `spawn`
+    *   `file.open`, `file.read`
+    *   `json.dumps`, `json.loads`
+    *   `logging`
+    *   `has <name>: <type>`
+    *   `&` (Reference)
+    *   `.edges`
+    *   `str "..."`
+    *   `async`, `await`
+    *   `assert`
+    *   `save`, `load`
+3.  **NO MARKDOWN:** Do NOT use headers, lists, bolding, italics, or code blocks. Output plain text only.
 3.  **CONDENSE MEANING:** Condense the meaning into the fewest possible words, keeping the technical accuracy.
 4.  **ELIMINATE REDUNDANCY:** Remove all repeated information.
 5.  **NO FLUFF:** Remove conversational text, introductions, conclusions. Get straight to the facts.

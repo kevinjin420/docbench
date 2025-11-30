@@ -39,14 +39,27 @@ class TopicBasedPipeline:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        # Initialize LLM condenser
-        self.condenser = LLMCondenser(self.config)
-
-        # Initialize pipeline components
-        self.extractor = TopicExtractor(self.condenser, self.config)
-        self.merger = TopicMerger(self.condenser, self.config)
-        self.hierarchical_merger = HierarchicalMerger(self.condenser, self.config)
-        self.compressor = UltraCompressor(self.condenser, self.config)
+        # Initialize pipeline components with stage-specific condensers
+        
+        # Stage 1: Extraction
+        extraction_config = self.config.get('extraction', {})
+        extractor_condenser = LLMCondenser(self.config, extraction_config)
+        self.extractor = TopicExtractor(extractor_condenser, self.config)
+        
+        # Stage 2: Topic Merge
+        merge_config = self.config.get('merge', {})
+        merger_condenser = LLMCondenser(self.config, merge_config)
+        self.merger = TopicMerger(merger_condenser, self.config)
+        
+        # Stage 3: Hierarchical Merge
+        hierarchical_config = self.config.get('hierarchical_merge', {})
+        hierarchical_condenser = LLMCondenser(self.config, hierarchical_config)
+        self.hierarchical_merger = HierarchicalMerger(hierarchical_condenser, self.config)
+        
+        # Stage 4: Ultra Compression
+        compression_config = self.config.get('ultra_compression', {})
+        compressor_condenser = LLMCondenser(self.config, compression_config)
+        self.compressor = UltraCompressor(compressor_condenser, self.config)
 
         # Setup directories
         self.source_dir = Path(self.config['source_dir'])

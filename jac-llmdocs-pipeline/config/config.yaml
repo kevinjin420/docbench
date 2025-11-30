@@ -51,6 +51,11 @@ processing:
 extraction:
   # Output directory for extracted topics (organized by topic)
   output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/1_extracted"
+  
+  # Optional: Override LLM for this stage
+  llm:
+    model: "google/gemini-2.5-flash"
+    temperature: 0.1
 
 # Stage 2: Topic Merging
 merge:
@@ -60,13 +65,23 @@ merge:
   # Output directory for merged topics (one file per topic)
   output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/2_merged"
 
-# Stage 3: Hierarchical Merge (NEW)
+  # Optional: Override LLM for this stage
+  llm:
+    model: "anthropic/claude-sonnet-4.5"
+    temperature: 0.1
+
+# Stage 3: Hierarchical Merge
 hierarchical_merge:
   # Output directory for intermediate and final merged files
   output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/3_hierarchical"
   
   # Number of files to merge into one per pass (e.g., 4 -> 1)
   ratio: 2
+
+  # Optional: Override LLM for this stage
+  llm:
+    model: "openai/gpt-5.1"
+    temperature: 0.1
 
 # Stage 4: Final Formatting and Combining
 ultra_compression:
@@ -75,3 +90,8 @@ ultra_compression:
 
   # Output directory
   output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/4_final"
+
+  # Optional: Override LLM for this stage
+  llm:
+    model: "google/gemini-3-pro-preview"
+    temperature: 0.0

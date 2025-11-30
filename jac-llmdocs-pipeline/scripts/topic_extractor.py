@@ -273,7 +273,6 @@ class TopicExtractor:
         print(f"Output: {self.output_dir}")
         print(f"Files to process: {len(md_files)}")
         print(f"Topics: {len(self.topics_config)}")
-        print(f"Strategy: ONE LLM call per file (not per topic!)")
 
         # Process files in parallel
         parallel = self.config.get('processing', {}).get('parallel', True)
@@ -321,7 +320,7 @@ class TopicExtractor:
         print(f"\nExtraction complete:")
         print(f"  Files processed: {len(results)}")
         print(f"  Files failed: {len(errors)}")
-        print(f"  Total LLM calls: {total_llm_calls} (was {len(md_files) * 10}+ in old version!)")
+        print(f"  Total LLM calls: {total_llm_calls}")
         print(f"  Total extractions: {total_extracted}")
         print(f"  Output: ONE file per topic in {self.output_dir}")
 
