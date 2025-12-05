@@ -25,14 +25,14 @@ tests/*.json
 tests/failed_responses/
 
 # Database
-benchmark.db
+docbench/benchmark.db
 
 # Distribution / packaging
 *.egg-info/
 dist/
 build/
 
-venv/
+docbench/venv/
 # JAC LLM Docs Pipeline - Intermediate outputs
 # jac-llmdocs-pipeline/output/1_condensed/
 # jac-llmdocs-pipeline/output/2_merged/stage_*/

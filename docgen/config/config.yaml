@@ -47,7 +47,7 @@ processing:
 # Stage 1: Topic Extraction
 extraction:
   # Output directory for extracted topics (organized by topic)
-  output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/1_extracted"
+  output_dir: "output/1_extracted"
   
   # Optional: Override LLM for this stage
   # llm:
@@ -60,7 +60,7 @@ merge:
   max_workers: 16
 
   # Output directory for merged topics (one file per topic)
-  output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/2_merged"
+  output_dir: "output/2_merged"
 
   # Optional: Override LLM for this stage
   # llm:
@@ -70,7 +70,7 @@ merge:
 # Stage 3: Hierarchical Merge
 hierarchical_merge:
   # Output directory for intermediate and final merged files
-  output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/3_hierarchical"
+  output_dir: "output/3_hierarchical"
   
   # Number of files to merge into one per pass (e.g., 4 -> 1)
   ratio: 2
@@ -86,7 +86,7 @@ ultra_compression:
   output_file: "jac_docs_final.txt"
 
   # Output directory
-  output_dir: "/home/kevinjin/jaseci-llmdocs/jac-llmdocs-pipeline/output/4_final"
+  output_dir: "output/4_final"
 
   # Optional: Override LLM for this stage
   # llm:

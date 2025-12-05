@@ -6,8 +6,8 @@ from typing import Dict
 from dotenv import load_dotenv
 
 # Load .env
-root = Path(__file__).parents[2]
-if (root / ".env").exists(): load_dotenv(root / ".env")
+docgen_dir = Path(__file__).parents[1]
+if (docgen_dir / ".env").exists(): load_dotenv(docgen_dir / ".env")
 
 class LLM:
     def __init__(self, config: Dict, stage_cfg: Dict = None):
