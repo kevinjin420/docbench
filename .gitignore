@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
 
 # Environment variables
 .env
@@ -24,6 +25,12 @@ tests/debug-*.txt
 tests/*.json
 tests/failed_responses/
 
+# Logs
+*.log
+
+# Exports
+collections-export-*.csv
+
 # Database
 docbench/benchmark.db
 
@@ -32,7 +39,10 @@ docbench/benchmark.db
 dist/
 build/
 
+# Virtual environments
+venv/
 docbench/venv/
+docgen/venv/
 # JAC LLM Docs Pipeline - Intermediate outputs
 # jac-llmdocs-pipeline/output/1_condensed/
 # jac-llmdocs-pipeline/output/2_merged/stage_*/
