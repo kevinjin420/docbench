@@ -1,13 +1,10 @@
-
 interface Props {
   stats: any
-  apiKeys: any
+  apiKeyConfigured: boolean
 }
 
-export default function StatsPanel({ stats, apiKeys }: Props) {
-  console.log('[StatsPanel] Rendering with stats:', stats)
+export default function StatsPanel({ stats, apiKeyConfigured }: Props) {
   if (!stats) {
-    console.log('[StatsPanel] No stats data, returning null')
     return null
   }
 
@@ -25,11 +22,11 @@ export default function StatsPanel({ stats, apiKeys }: Props) {
         <h3 className="text-terminal-accent text-base mb-4 font-semibold">API Keys</h3>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-3">
           <div className={`flex items-center gap-2 px-4 py-3 rounded border text-sm ${
-            apiKeys.OPENROUTER_API_KEY
+            apiKeyConfigured
               ? 'bg-green-950 border-terminal-accent text-terminal-accent'
               : 'bg-red-950 border-red-600 text-red-400'
           }`}>
-            <span className="text-sm">{apiKeys.OPENROUTER_API_KEY ? 'OK' : 'Missing'}</span>
+            <span className="text-sm">{apiKeyConfigured ? 'OK' : 'Missing'}</span>
             <span className="text-sm">OpenRouter</span>
           </div>
         </div>

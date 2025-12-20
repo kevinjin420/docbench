@@ -18,12 +18,9 @@ export interface Model {
 
 export interface Variant {
 	name: string;
-	file?: string;
-	size?: number;
+	url: string;
+	size_bytes: number;
 	size_kb: number;
-	version?: string;
-	url?: string;
-	size_bytes?: number;
 }
 
 export interface TestFile {

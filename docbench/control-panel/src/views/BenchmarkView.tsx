@@ -13,11 +13,12 @@ interface Props {
 	variants: Variant[];
 	testFiles: TestFile[];
 	onBenchmarkComplete: () => void;
+	apiKey: string;
 }
 
 let socket: Socket | null = null;
 
-export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete }: Props) {
+export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete, apiKey }: Props) {
 	const [selectedModel, setSelectedModel] = useState(() => {
 		return localStorage.getItem("benchmarkModel") || models[0]?.id || "";
 	});
@@ -232,10 +233,13 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		const startPromises = Array.from({ length: queueSize }, async (_, i) => {
 			const res = await fetch(`${API_BASE}/benchmark/run`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
 				body: JSON.stringify(payload),
 			});
 			const data = await res.json();
+			if (!res.ok) {
+				throw new Error(data.error || "Failed to start benchmark");
+			}
 			runIds[i] = data.run_id;
 			runState[data.run_id] = { batches: 0, completed: 0, done: false, failed: false, evaluating: false, index: i };
 			currentEvalStatuses[(i + 1).toString()] = "pending";
@@ -380,7 +384,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		try {
 			const res = await fetch(`${API_BASE}/benchmark/rerun-batch`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
 				body: JSON.stringify({ run_id: targetRunId, batch_num: batchNum }),
 			});
 			const data = await res.json();
@@ -483,6 +487,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 					isRunning={isRunning}
 					onRun={runBenchmark}
 					onCancel={cancelBenchmark}
+					canRun={!!apiKey && models.length > 0}
 				/>
 				<ProgressBar
 					status={statusDisplay}

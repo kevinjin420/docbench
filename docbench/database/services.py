@@ -352,8 +352,21 @@ class DocumentationService:
     """Service for managing documentation variants"""
 
     @staticmethod
-    def create_variant(variant_name: str, url: str, version: str, description: Optional[str] = None):
-        """Create a new documentation variant with URL"""
+    def create_variant(variant_name: str, url: str):
+        """Create a new documentation variant with URL and fetch content"""
+        import requests
+
+        content = None
+        size_bytes = 0
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            content = response.text
+            size_bytes = len(content.encode('utf-8'))
+        except Exception as e:
+            print(f"Warning: Could not fetch content from {url}: {e}")
+
+        current_time = time.time()
         with get_db() as session:
             existing = session.query(DocumentationVariant).filter_by(
                 variant_name=variant_name
@@ -361,17 +374,20 @@ class DocumentationService:
 
             if existing:
                 existing.url = url
-                existing.version = version
-                existing.description = description
-                existing.updated_at = time.time()
+                existing.content = content
+                existing.size_bytes = size_bytes
+                existing.cached_at = current_time if content else None
+                existing.updated_at = current_time
             else:
                 variant = DocumentationVariant(
                     variant_name=variant_name,
                     url=url,
-                    version=version,
-                    description=description,
-                    created_at=time.time(),
-                    updated_at=time.time(),
+                    content=content,
+                    size_bytes=size_bytes,
+                    cached_at=current_time if content else None,
+                    cache_ttl=3600,
+                    created_at=current_time,
+                    updated_at=current_time,
                     is_active=True
                 )
                 session.add(variant)
@@ -431,7 +447,6 @@ class DocumentationService:
             return [
                 {
                     'name': v.variant_name,
-                    'version': v.version,
                     'url': v.url,
                     'size_bytes': v.size_bytes or 0,
                     'size_kb': round((v.size_bytes or 0) / 1024, 2)

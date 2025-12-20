@@ -20,6 +20,7 @@ interface Props {
 	isRunning: boolean;
 	onRun: () => void;
 	onCancel: () => void;
+	canRun?: boolean;
 }
 
 export default function BenchmarkControls({
@@ -40,6 +41,7 @@ export default function BenchmarkControls({
 	isRunning,
 	onRun,
 	onCancel,
+	canRun = true,
 }: Props) {
 	return (
 		<div className="flex gap-3 items-center justify-between">
@@ -117,7 +119,7 @@ export default function BenchmarkControls({
 				{!isRunning ? (
 					<button
 						onClick={onRun}
-						disabled={!selectedModel || !selectedVariant}
+						disabled={!canRun || !selectedModel || !selectedVariant}
 						className="px-6 py-2 bg-terminal-accent text-black rounded text-sm font-semibold whitespace-nowrap hover:bg-green-500 disabled:bg-terminal-border disabled:text-gray-600 disabled:cursor-not-allowed cursor-pointer"
 					>
 						Run {queueSize}

@@ -8,8 +8,14 @@ def register_routes(app, socketio=None, running_benchmarks=None):
 
     @app.route('/api/models', methods=['GET'])
     def get_models():
-        llm_service = LLMService()
-        models = llm_service.fetch_available_models()
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'models': [], 'error': 'API key required'})
+        try:
+            llm_service = LLMService(api_key=api_key)
+            models = llm_service.fetch_available_models()
+        except RuntimeError as e:
+            return jsonify({'models': [], 'error': str(e)})
         formatted = [
             {
                 'id': m.get('id'),
@@ -33,14 +39,12 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         data = request.get_json()
         variant_name = data.get('variant_name')
         url = data.get('url')
-        version = data.get('version')
-        description = data.get('description')
 
-        if not variant_name or not url or not version:
-            return jsonify({'error': 'variant_name, url, and version are required'}), 400
+        if not variant_name or not url:
+            return jsonify({'error': 'variant_name and url are required'}), 400
 
         try:
-            DocumentationService.create_variant(variant_name, url, version, description)
+            DocumentationService.create_variant(variant_name, url)
             return jsonify({'success': True, 'message': 'Variant created successfully'})
         except Exception as e:
             return jsonify({'error': str(e)}), 500

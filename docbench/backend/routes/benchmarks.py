@@ -15,6 +15,10 @@ def register_routes(app, socketio, running_benchmarks):
 
     @app.route('/api/benchmark/run', methods=['POST'])
     def run_benchmark():
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'error': 'API key required'}), 401
+
         data = request.json
         model = data.get('model')
         variant = data.get('variant')
@@ -33,7 +37,7 @@ def register_routes(app, socketio, running_benchmarks):
                 running_benchmarks[run_id] = {'status': 'running', 'progress': 'Initializing...'}
                 socketio.emit('benchmark_update', {'run_id': run_id, 'status': 'running', 'progress': 'Initializing...'})
 
-                llm_service = LLMService()
+                llm_service = LLMService(api_key=api_key)
                 BenchmarkRunService.create(
                     run_id=run_id, model=model, model_id=model, variant=variant,
                     temperature=temperature, max_tokens=max_tokens
@@ -222,6 +226,10 @@ def register_routes(app, socketio, running_benchmarks):
 
     @app.route('/api/benchmark/rerun-batch', methods=['POST'])
     def rerun_batch():
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'error': 'API key required'}), 401
+
         data = request.json
         run_id = data.get('run_id')
         batch_num = data.get('batch_num')
@@ -256,7 +264,7 @@ def register_routes(app, socketio, running_benchmarks):
                     'status': 'running'
                 })
 
-                llm_service = LLMService()
+                llm_service = LLMService(api_key=api_key)
                 batch_responses = llm_service.rerun_single_batch(
                     model, variant, temperature, max_tokens,
                     batch_num=batch_num, batch_size=batch_size

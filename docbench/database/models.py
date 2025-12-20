@@ -135,30 +135,18 @@ class BenchmarkRun(Base):
 
 
 class DocumentationVariant(Base):
-    """Documentation variants and versions"""
+    """Documentation variants"""
     __tablename__ = 'documentation_variants'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     variant_name = Column(String(128), unique=True, nullable=False, index=True)
-
-    # URL to fetch content from
     url = Column(String(512), nullable=False)
 
-    # Cached content (optional, fetched from URL)
+    # Cached content (fetched from URL)
     content = Column(Text, nullable=True)
     size_bytes = Column(Integer, nullable=True)
-
-    # Version info
-    version = Column(String(32), nullable=False)
-    release_date = Column(Float, nullable=True)
-
-    # Metadata
-    description = Column(Text, nullable=True)
-    doc_metadata = Column(get_json_type(), nullable=True)
-
-    # Cache info
     cached_at = Column(Float, nullable=True)
-    cache_ttl = Column(Integer, nullable=False, default=3600)  # Cache for 1 hour
+    cache_ttl = Column(Integer, nullable=False, default=3600)
 
     # Timestamps
     created_at = Column(Float, nullable=False)
@@ -221,15 +209,26 @@ def get_database_url() -> str:
 
 
 # Create engine with connection pooling
-engine = create_engine(
-    get_database_url(),
-    poolclass=QueuePool if 'postgresql' in get_database_url() else None,
-    pool_size=int(os.getenv('DB_POOL_SIZE', '10')),
-    max_overflow=int(os.getenv('DB_MAX_OVERFLOW', '20')),
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=os.getenv('SQL_ECHO', 'false').lower() == 'true'
-)
+def create_db_engine():
+    db_url = get_database_url()
+    is_postgres = 'postgresql' in db_url
+
+    engine_kwargs = {
+        'echo': os.getenv('SQL_ECHO', 'false').lower() == 'true'
+    }
+
+    if is_postgres:
+        engine_kwargs.update({
+            'poolclass': QueuePool,
+            'pool_size': int(os.getenv('DB_POOL_SIZE', '10')),
+            'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '20')),
+            'pool_pre_ping': True,
+            'pool_recycle': 3600,
+        })
+
+    return create_engine(db_url, **engine_kwargs)
+
+engine = create_db_engine()
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

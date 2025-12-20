@@ -24,8 +24,8 @@ interface Model {
 
 interface Variant {
   name: string
-  file: string
-  size: number
+  url: string
+  size_bytes: number
   size_kb: number
 }
 
@@ -62,31 +62,59 @@ function AppContent() {
   const [variants, setVariants] = useState<Variant[]>([])
   const [testFiles, setTestFiles] = useState<TestFile[]>([])
   const [stashes, setStashes] = useState<Stash[]>([])
-  const [apiKeys, setApiKeys] = useState<any>({})
   const [stats, setStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [openRouterKey, setOpenRouterKey] = useState(() => localStorage.getItem('openRouterApiKey') || '')
+  const [keyError, setKeyError] = useState('')
   const location = useLocation()
 
-  useEffect(() => {
-    Promise.all([
-      fetchModels(),
-      fetchVariants(),
-      fetchTestFiles(),
-      fetchStashes(),
-      fetchEnvStatus(),
-      fetchStats()
-    ]).finally(() => setIsLoading(false))
-  }, [])
+  const handleApiKeyChange = (key: string) => {
+    setOpenRouterKey(key)
+    if (key) {
+      localStorage.setItem('openRouterApiKey', key)
+    } else {
+      localStorage.removeItem('openRouterApiKey')
+    }
+    setKeyError('')
+  }
 
-  const fetchModels = async () => {
+  const fetchModels = async (apiKey?: string) => {
+    const key = apiKey ?? openRouterKey
+    if (!key) {
+      setModels([])
+      return
+    }
     try {
-      const res = await fetch(`${API_BASE}/models`)
+      const res = await fetch(`${API_BASE}/models`, { headers: { 'X-API-Key': key } })
       const data = await res.json()
-      setModels(data.models || [])
+      if (data.error) {
+        setKeyError(data.error)
+        setModels([])
+      } else {
+        setKeyError('')
+        setModels(data.models || [])
+      }
     } catch (error) {
       console.error('Failed to fetch models:', error)
     }
   }
+
+  useEffect(() => {
+    const savedKey = localStorage.getItem('openRouterApiKey') || ''
+    Promise.all([
+      fetchModels(savedKey),
+      fetchVariants(),
+      fetchTestFiles(),
+      fetchStashes(),
+      fetchStats()
+    ]).finally(() => setIsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (openRouterKey) {
+      fetchModels(openRouterKey)
+    }
+  }, [openRouterKey])
 
   const fetchVariants = async () => {
     try {
@@ -115,16 +143,6 @@ function AppContent() {
       setStashes(data.stashes || [])
     } catch (error) {
       console.error('Failed to fetch stashes:', error)
-    }
-  }
-
-  const fetchEnvStatus = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/env-status`)
-      const data = await res.json()
-      setApiKeys(data.keys || {})
-    } catch (error) {
-      console.error('Failed to fetch env status:', error)
     }
   }
 
@@ -202,6 +220,21 @@ function AppContent() {
         <div className="max-w-screen-2xl mx-auto flex justify-between items-center">
           <h1 className="text-terminal-accent text-xl font-semibold">Jaseci DocBench</h1>
 
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-gray-400 text-sm">API Key:</label>
+              <input
+                type="password"
+                value={openRouterKey}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
+                placeholder="OpenRouter API Key"
+                className={`w-64 px-3 py-1.5 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none focus:border-terminal-accent ${keyError ? 'border-red-500' : 'border-terminal-border'}`}
+              />
+              {keyError && <span className="text-red-500 text-xs">{keyError}</span>}
+              {openRouterKey && models.length > 0 && <span className="text-green-500 text-xs">Connected</span>}
+            </div>
+          </div>
+
           <nav className="flex gap-2">
             <Link
               to="/"
@@ -268,6 +301,7 @@ function AppContent() {
                   variants={variants}
                   testFiles={testFiles}
                   onBenchmarkComplete={handleBenchmarkComplete}
+                  apiKey={openRouterKey}
                 />
               }
             />
@@ -301,7 +335,7 @@ function AppContent() {
               path="/statistics"
               element={
                 stats ? (
-                  <StatsPanel stats={stats} apiKeys={apiKeys} />
+                  <StatsPanel stats={stats} apiKeyConfigured={!!openRouterKey && models.length > 0} />
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
                     <h3 className="text-gray-300 text-xl mb-2">Loading Statistics...</h3>

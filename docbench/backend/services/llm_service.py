@@ -20,15 +20,15 @@ class LLMService:
 
     _models_cache: Optional[Dict[str, Dict]] = None
 
-    def __init__(self, tests_file: str = "tests.json"):
+    def __init__(self, tests_file: str = "tests.json", api_key: Optional[str] = None):
         self.tests = self._load_tests(tests_file)
-        api_key = os.getenv('OPENROUTER_API_KEY')
-        if not api_key:
-            raise RuntimeError("OPENROUTER_API_KEY not found in environment")
+        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+        if not self.api_key:
+            raise RuntimeError("API key required: provide via header or OPENROUTER_API_KEY env var")
 
         self.client = openai.OpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=api_key,
+            api_key=self.api_key,
             default_headers={
                 "HTTP-Referer": "https://github.com/jaseci-llmdocs",
                 "X-Title": "Jac LLM Benchmark"
@@ -46,20 +46,13 @@ class LLMService:
         return DocumentationService.get_variant(variant)
 
     def fetch_available_models(self) -> List[Dict]:
-        """Fetch available models from OpenRouter API"""
-        import requests
-
-        api_key = os.getenv('OPENROUTER_API_KEY')
-        if not api_key:
+        """Fetch available models from OpenRouter API using the OpenAI client"""
+        if not self.api_key:
             return []
 
-        headers = {'Authorization': f'Bearer {api_key}'}
-
         try:
-            response = requests.get('https://openrouter.ai/api/v1/models', headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            models = data.get('data', [])
+            response = self.client.models.list()
+            models = [m.model_dump() for m in response.data]
             LLMService._models_cache = {m['id']: m for m in models}
             return models
         except Exception as e:
