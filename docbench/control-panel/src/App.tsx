@@ -178,10 +178,11 @@ function AppContent() {
                 value={openRouterKey}
                 onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder="OpenRouter API Key"
-                className={`w-64 px-3 py-1.5 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none focus:border-terminal-accent ${keyError ? 'border-red-500' : 'border-terminal-border'}`}
+                className={`w-64 px-3 py-1.5 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none ${
+                  keyError ? 'border-red-500' : openRouterKey && models.length > 0 ? 'border-green-500' : 'border-terminal-border focus:border-terminal-accent'
+                }`}
               />
               {keyError && <span className="text-red-500 text-xs">{keyError}</span>}
-              {openRouterKey && models.length > 0 && <span className="text-green-500 text-xs">Connected</span>}
             </div>
           </div>
 

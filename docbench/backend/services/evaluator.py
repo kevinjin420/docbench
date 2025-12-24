@@ -4,10 +4,13 @@ import json
 import os
 import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, List, Any, Tuple
 
 from ..utils.syntax import SyntaxChecker, patch_missing_braces
+
+MAX_WORKERS = os.cpu_count() or 4
 
 
 class EvaluatorService:
@@ -22,6 +25,13 @@ class EvaluatorService:
         tests_path = Path(tests_file)
         with open(tests_path, 'r') as f:
             return json.load(f)
+
+    def _get_jac_cmd(self) -> str:
+        """Get the jac command, preferring venv binary"""
+        jac_cmd = os.path.abspath("venv/bin/jac")
+        if os.path.exists(jac_cmd):
+            return jac_cmd
+        return "jac"
 
     def jac_check(self, code: str) -> Tuple[bool, List[str], List[str]]:
         """
@@ -38,8 +48,9 @@ class EvaluatorService:
             temp_path = f.name
 
         try:
+            jac_cmd = self._get_jac_cmd()
             result = subprocess.run(
-                ['jac', 'check', temp_path],
+                [jac_cmd, 'check', temp_path],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -60,7 +71,7 @@ class EvaluatorService:
             errors.append("Syntax check timed out")
             is_valid = False
         except FileNotFoundError:
-            # jac not installed, skip validation
+            warnings.append("jac command not found - skipping syntax validation")
             is_valid = True
         except Exception as e:
             errors.append(f"Syntax check failed: {str(e)}")
@@ -85,11 +96,7 @@ class EvaluatorService:
             temp_path = f.name
 
         try:
-            # Use absolute path to jac binary in venv if available, otherwise assume in PATH
-            jac_cmd = os.path.abspath("venv/bin/jac")
-            if not os.path.exists(jac_cmd):
-                jac_cmd = "jac"
-
+            jac_cmd = self._get_jac_cmd()
             result = subprocess.run(
                 [jac_cmd, "test", temp_path],
                 capture_output=True,
@@ -234,7 +241,7 @@ class EvaluatorService:
         }
 
     def run_benchmark(self, responses_file: str) -> Dict:
-        """Run benchmark on LLM responses from file"""
+        """Run benchmark on LLM responses from file - parallelized"""
         try:
             with open(responses_file, 'r') as f:
                 data = json.load(f)
@@ -254,15 +261,22 @@ class EvaluatorService:
         category_scores = {}
         level_scores = {}
 
+        tasks = []
         for test_case in self.tests:
             test_id = test_case["id"]
             if test_id in responses:
-                code = responses[test_id]
-                patched_code, _ = patch_missing_braces(code)
-                result = self.evaluate_code(patched_code, test_case)
+                tasks.append((test_case, responses[test_id]))
+
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(self._evaluate_single, tc, code): tc
+                for tc, code in tasks
+            }
+            for future in as_completed(futures):
+                result = future.result()
                 results.append(result)
 
-                category = test_case["category"]
+                category = result["category"]
                 if category not in category_scores:
                     category_scores[category] = {
                         "score": 0, "max": 0, "count": 0,
@@ -271,12 +285,12 @@ class EvaluatorService:
                 category_scores[category]["score"] += result["score"]
                 category_scores[category]["max"] += result["max_score"]
                 category_scores[category]["count"] += 1
-                
+
                 breakdown = result.get("score_breakdown", {})
                 for k, v in breakdown.items():
                     category_scores[category]["penalties"][k] += v
 
-                level = test_case["level"]
+                level = result["level"]
                 if level not in level_scores:
                     level_scores[level] = {"score": 0, "max": 0, "count": 0}
                 level_scores[level]["score"] += result["score"]
@@ -317,21 +331,33 @@ class EvaluatorService:
             }
         }
 
+    def _evaluate_single(self, test_case: Dict, code: str) -> Dict:
+        """Evaluate a single test case (for parallel execution)"""
+        patched_code, _ = patch_missing_braces(code)
+        return self.evaluate_code(patched_code, test_case)
+
     def evaluate_responses(self, responses: Dict[str, str]) -> Dict[str, Any]:
-        """Evaluate a dictionary of test responses (for API use)"""
+        """Evaluate a dictionary of test responses (for API use) - parallelized"""
         results = []
         category_scores = {}
         level_scores = {}
 
+        tasks = []
         for test_case in self.tests:
             test_id = test_case["id"]
             if test_id in responses:
-                code = responses[test_id]
-                patched_code, _ = patch_missing_braces(code)
-                result = self.evaluate_code(patched_code, test_case)
+                tasks.append((test_case, responses[test_id]))
+
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(self._evaluate_single, tc, code): tc
+                for tc, code in tasks
+            }
+            for future in as_completed(futures):
+                result = future.result()
                 results.append(result)
 
-                category = test_case["category"]
+                category = result["category"]
                 if category not in category_scores:
                     category_scores[category] = {
                         "score": 0, "max": 0, "count": 0,
@@ -340,12 +366,12 @@ class EvaluatorService:
                 category_scores[category]["score"] += result["score"]
                 category_scores[category]["max"] += result["max_score"]
                 category_scores[category]["count"] += 1
-                
+
                 breakdown = result.get("score_breakdown", {})
                 for k, v in breakdown.items():
                     category_scores[category]["penalties"][k] += v
 
-                level = test_case["level"]
+                level = result["level"]
                 if level not in level_scores:
                     level_scores[level] = {"score": 0, "max": 0, "count": 0}
                 level_scores[level]["score"] += result["score"]
