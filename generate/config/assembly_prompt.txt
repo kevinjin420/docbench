@@ -1,94 +1,134 @@
-You are assembling a concise Jac language reference from extracted signatures and examples.
+You are assembling a comprehensive Jac language reference from extracted signatures and examples.
 
-TARGET: 15-20KB reference document optimized for LLM code generation.
+TARGET: 20-30KB reference document. Include ALL language features - no gaps.
 
-STRUCTURE (follow exactly):
+MANDATORY SECTIONS (must include all):
 
-# Jac Language Reference
+## 1. Syntax & Types
+- Primitives: int, float, str, bool, bytes, any
+- Collections: list, dict, set, tuple, frozenset
+- Type unions: int | None, str | int
+- Type annotations: has x: type, -> return_type
+- Control flow: if/elif/else, for, while, match/case
+- Functions: def with params, returns, defaults
+- Lambdas: |params| -> type { body }
+- Entry point: with entry { }
 
-## Syntax & Types
-- Primitives, collections, enums
-- Control flow (if/for/while/match)
-- Functions and lambdas
+## 2. Imports
+- Simple: import os;
+- Multiple: import sys, json;
+- Alias: import datetime as dt;
+- From: import from math { sqrt, pi }
+- Python interop: import:py from module { func }
 
-## Archetypes
-- node: graph vertices with state and abilities
-- edge: typed relationships between nodes
-- walker: mobile computation that traverses graphs
-- obj: value objects (like Python classes)
-- enum: enumerations
+## 3. Archetypes
+- node: has, can, def, inheritance
+- edge: has, typed connections
+- walker: has, can with entry/exit, visit, spawn
+- obj: value objects, postinit
+- enum: enumerations with values
 
-## Graph Operations
-- Connect: ++>, <++>, +>:Edge:+>
-- Traverse: [-->], [<--], visit
-- Filter: [-->(`?Type)](?attr == val)
-- spawn, disengage, report
+## 4. Access Modifiers
+- :pub (public, default)
+- :priv (private)
+- :prot (protected)
 
-## Abilities & Events
-- can with Type entry/exit
-- here, self, visitor keywords
-- Execution order
+## 5. Graph Operations
+- Connect: ++>, <++, <++>, +>:Edge:+>, <+:Edge:+>
+- Disconnect: del, --> del
+- Traverse: [-->], [<--], [<-->]
+- Typed traverse: [-->:EdgeType:]
+- Node filter: [-->(`?NodeType)]
+- Attribute filter: (?attr == val)
+- Combined filters
 
-## AI Integration
-- by llm(), by llm(method=..., tools=...)
-- Semantic strings (sem)
-- Structured output
+## 6. Abilities & Events
+- can name with Type entry { }
+- can name with Type exit { }
+- can name with entry { } (generic)
+- Execution order (node entry -> walker entry -> walker exit -> node exit)
+- Keywords: self, here, visitor, root, `root
 
-## Cloud & API
-- jac serve, endpoints
-- __specs__ configuration
-- WebSocket, async
+## 7. Walker Control
+- spawn: walker() spawn node
+- visit: visit [-->], visit [-->] else { }
+- disengage: stop walker
+- report: return values
+- skip: skip current node
 
-## Persistence
-- save(), commit()
-- Permissions: grant, revoke
+## 8. AI Integration
+- by llm(): basic LLM function
+- by llm(method="Reason"): reasoning method
+- by llm(model=model_var): model selection
+- by llm(tools=[funcs]): tool use
+- glob llm = Model(model_name="...")
+- Semstrings: """description""" and :sem:
+- Structured output with enums/objects
+- Image/Video: Image(url=), Video(path=, fps=)
 
-## Patterns
-- 2-3 complete real-world examples
+## 9. File I/O & JSON
+- file.open(path, mode)
+- file.read(), file.write()
+- json.dumps(obj), json.loads(str)
 
-RULES:
+## 10. Cloud & API (jac serve)
+- jac serve file.jac
+- Walker as endpoint
+- __specs__: auth, methods, path
+- report for API response
+- WebSocket support
 
-1. ONE example per concept - pick the clearest from the extracted examples
-2. Signatures MUST be preserved exactly - these are from AST extraction
-3. Use inline syntax where possible: `node Name { has x: type; }`
-4. NO redundancy - each concept appears once
-5. Code examples should be 5-15 lines, complete and runnable
-6. Critical keywords MUST appear: ++>, -->, spawn, visit, report, by llm(), with entry
+## 11. Async & Concurrency
+- async walker
+- async def
+- await
+- Semaphores
 
-FORMAT:
-- Use ## for sections, ### for subsections
-- Inline syntax in backticks for short patterns
-- Code blocks for complete examples
-- Bullet points for lists of operators/keywords
+## 12. Persistence
+- Automatic persistence in jac-cloud
+- glob for global nodes
+- Root connectivity for persistence
 
-EXAMPLE OUTPUT STYLE:
+## 13. Testing
+- test { } blocks
+- assert statements
+- check statements
 
-## Archetypes
-`node Name { has attr: type; can ability with Walker entry { } }`
-`walker Name { has state: type; can ability with Node entry { visit [-->]; } }`
+## 14. Data Spatial Operations
+- References and paths
+- Edge operations
+- Node filtering
 
-```jac
-node Person {
-    has name: str;
-    has age: int;
-    can greet with Visitor entry {
-        print(f"Hello from {self.name}");
-    }
-}
+## 15. Standard Library
+- print, input
+- range, len, enumerate
+- str methods, list methods
+- Math operations
 
-walker Visitor {
-    can visit_person with Person entry {
-        print(f"Visiting {here.name}");
-        visit [-->];
-    }
-}
+## 16. Patterns (2-3 complete examples)
+- Graph traversal with collection
+- Search with early exit
+- AI-powered processing
+- API endpoint walker
 
-with entry {
-    p = Person(name="Alice", age=30);
-    root ++> p;
-    root spawn Visitor();
-}
-```
+FORMAT RULES:
+1. Use ### for subsections within ## sections
+2. Include signature pattern before each example: `syntax pattern`
+3. Use tables for operators and keywords
+4. Examples should be 5-25 lines, complete and runnable
+5. Include comments in examples only when clarifying non-obvious behavior
+6. Every operator mentioned must have an example
+7. Quick reference tables at the end
+
+CRITICAL - MUST PRESERVE EXACTLY:
+- Edge operators: ++>, <++, <++>, -->, <-->, +>, <+, +>:Edge:+>, <+:Edge:+>
+- Keywords: spawn, visit, disengage, report, skip, here, self, visitor, root, `root
+- Abilities: can, with entry, with exit
+- LLM: by llm(), glob llm, Model, Image, Video, :sem:
+- Types: has, def, ->, |
+- Specs: __specs__, static has
+- File: file.open, json.dumps, json.loads
+- Test: test { }, assert, check
 
 ---
 
@@ -97,4 +137,5 @@ EXTRACTED CONTENT:
 
 ---
 
-Generate the reference document. Be extremely concise. Every line must add value.
+Generate the complete reference. Cover ALL topics listed above. Target 20-30KB.
+Do not skip any section. Every section header listed above must appear in output.
