@@ -12,10 +12,8 @@ from datetime import datetime
 
 from ..pipeline.llm import LLM
 from ..pipeline.sanitizer import Sanitizer
-from ..pipeline.stage1_extract import Extractor
-from ..pipeline.stage2_merge import Merger
-from ..pipeline.stage3_reduce import Reducer
-from ..pipeline.stage4_compress import Compressor
+from ..pipeline.deterministic_extractor import DeterministicExtractor
+from ..pipeline.assembler import Assembler
 from ..pipeline.validator import Validator
 
 
@@ -33,6 +31,7 @@ class StageMetrics:
     progress: int = 0
     progress_total: int = 0
     progress_message: str = ""
+    extra: dict = field(default_factory=dict)
 
     @property
     def duration(self) -> float:
@@ -54,6 +53,15 @@ class StageMetrics:
 
 
 class PipelineRunner:
+    """
+    Lossless documentation pipeline runner.
+
+    Stages:
+    1. Fetch & Sanitize - Get docs, clean, extract skeletons (deterministic)
+    2. Extract - Categorize content, select best examples (deterministic)
+    3. Assemble - Single LLM call to generate final reference
+    """
+
     def __init__(self, config_path: Path, broadcast: Callable):
         self.root = Path(__file__).parents[2]
         with open(config_path) as f:
@@ -66,13 +74,13 @@ class PipelineRunner:
         self.loop = None
 
         self.sanitized_dir = self.root / "output" / "0_sanitized"
+        self.extracted_dir = self.root / "output" / "1_extracted"
+        self.final_dir = self.root / "output" / "2_final"
 
         self.stages: dict[str, StageMetrics] = {
             "fetch": StageMetrics(name="Fetch & Sanitize"),
-            "extract": StageMetrics(name="Topic Extraction"),
-            "merge": StageMetrics(name="Topic Merging"),
-            "reduce": StageMetrics(name="Hierarchical Reduction"),
-            "compress": StageMetrics(name="Final Minification"),
+            "extract": StageMetrics(name="Deterministic Extract"),
+            "assemble": StageMetrics(name="LLM Assembly"),
         }
 
         self.overall_start: Optional[float] = None
@@ -117,7 +125,7 @@ class PipelineRunner:
 
     def get_metrics(self) -> dict:
         total_input = self.stages["fetch"].input_size
-        total_output = self.stages["compress"].output_size
+        total_output = self.stages["assemble"].output_size
 
         return {
             "stages": {k: v.to_dict() for k, v in self.stages.items()},
@@ -146,6 +154,7 @@ class PipelineRunner:
             stage.files = []
             stage.progress = 0
             stage.progress_total = 0
+            stage.extra = {}
 
         await self.emit("pipeline_start", {"source": str(self.src)})
 
@@ -156,9 +165,7 @@ class PipelineRunner:
 
             await self._run_fetch()
             await self._run_extract()
-            await self._run_merge()
-            await self._run_reduce()
-            await self._run_compress()
+            await self._run_assemble()
 
             self.overall_end = time.time()
             await self.emit("pipeline_complete", self.get_metrics())
@@ -189,9 +196,7 @@ class PipelineRunner:
             stage_methods = {
                 "fetch": self._run_fetch,
                 "extract": self._run_extract,
-                "merge": self._run_merge,
-                "reduce": self._run_reduce,
-                "compress": self._run_compress,
+                "assemble": self._run_assemble,
             }
 
             await stage_methods[stage_name]()
@@ -203,6 +208,7 @@ class PipelineRunner:
             self.is_running = False
 
     async def _run_fetch(self):
+        """Stage 1: Fetch docs from sources and sanitize."""
         stage = self.stages["fetch"]
         stage.status = "running"
         stage.start_time = time.time()
@@ -230,6 +236,11 @@ class PipelineRunner:
                 {"name": f["path"], "size": f["cleaned_size"]}
                 for f in stats.get("files", [])[:20]
             ]
+            stage.extra = {
+                "jac_files": stats.get("jac_files", 0),
+                "jac_definitions": stats.get("jac_definitions", 0),
+                "sources": len(stats.get("sources", [])),
+            }
 
             stage.status = "complete"
             stage.end_time = time.time()
@@ -241,7 +252,8 @@ class PipelineRunner:
                     "kept": stats["kept_files"],
                     "excluded": stats["excluded_files"],
                     "empty": stats["empty_files"],
-                    "sources": len(stats.get("sources", []))
+                    "jac_files": stats.get("jac_files", 0),
+                    "jac_definitions": stats.get("jac_definitions", 0),
                 }
             })
 
@@ -255,6 +267,7 @@ class PipelineRunner:
             raise
 
     async def _run_extract(self):
+        """Stage 2: Deterministic extraction - categorize and select examples."""
         stage = self.stages["extract"]
         stage.status = "running"
         stage.start_time = time.time()
@@ -266,27 +279,46 @@ class PipelineRunner:
             stage.file_count = len(source_files)
 
             progress_cb = self._make_progress_callback("extract")
-            extractor = Extractor(
-                LLM(self.cfg, self.cfg.get('extraction')),
-                self.cfg,
-                on_progress=progress_cb
-            )
-            await asyncio.to_thread(
-                extractor.run, self.sanitized_dir, self.cfg['processing'].get('skip_patterns')
+            progress_cb(0, 3, "Initializing extractor...")
+
+            extractor = DeterministicExtractor(self.cfg)
+
+            progress_cb(1, 3, "Extracting signatures and examples...")
+            extracted = await asyncio.to_thread(
+                extractor.extract_from_directory, self.sanitized_dir
             )
 
-            out_dir = self.root / self.cfg['extraction']['output_dir']
-            if out_dir.exists():
-                out_files = list(out_dir.glob("*.md"))
-                stage.output_size = sum(f.stat().st_size for f in out_files)
-                stage.files = [
-                    {"name": f.name, "size": f.stat().st_size}
-                    for f in sorted(out_files, key=lambda x: x.stat().st_size, reverse=True)
-                ]
+            progress_cb(2, 3, "Selecting best examples...")
+            best_examples = extractor.select_best_examples(extracted, max_per_type=3)
+
+            progress_cb(3, 3, "Formatting output...")
+            formatted = extractor.format_for_assembly(extracted)
+
+            self.extracted_dir.mkdir(parents=True, exist_ok=True)
+            output_path = self.extracted_dir / "extracted_content.txt"
+            output_path.write_text(formatted)
+
+            stage.output_size = len(formatted)
+            stage.files = [{"name": output_path.name, "size": stage.output_size}]
+            stage.extra = {
+                "signatures": extracted.total_signatures,
+                "examples": extracted.total_examples,
+                "selected_examples": sum(len(v) for v in best_examples.values()),
+                "keywords_found": len(extracted.keywords_found),
+                "construct_types": len(extracted.examples),
+            }
+
+            # Store for assembly stage
+            self._extracted_content = extracted
+            self._extractor = extractor
 
             stage.status = "complete"
             stage.end_time = time.time()
-            await self.emit("stage_complete", {"stage": "extract", "metrics": stage.to_dict()})
+            await self.emit("stage_complete", {
+                "stage": "extract",
+                "metrics": stage.to_dict(),
+                "stats": stage.extra
+            })
 
         except Exception as e:
             stage.status = "error"
@@ -297,120 +329,66 @@ class PipelineRunner:
             await self.emit("stage_error", {"stage": "extract", "error": str(e)})
             raise
 
-    async def _run_merge(self):
-        stage = self.stages["merge"]
+    async def _run_assemble(self):
+        """Stage 3: Single LLM call to assemble final reference."""
+        stage = self.stages["assemble"]
         stage.status = "running"
         stage.start_time = time.time()
-        await self.emit("stage_start", {"stage": "merge"})
+        await self.emit("stage_start", {"stage": "assemble"})
 
         try:
-            in_dir = self.root / self.cfg['extraction']['output_dir']
-            in_files = list(in_dir.glob("*.md"))
-            stage.input_size = sum(f.stat().st_size for f in in_files)
-            stage.file_count = len(in_files)
+            # Get extracted content
+            if not hasattr(self, '_extracted_content'):
+                extractor = DeterministicExtractor(self.cfg)
+                self._extracted_content = extractor.extract_from_directory(self.sanitized_dir)
+                self._extractor = extractor
 
-            progress_cb = self._make_progress_callback("merge")
-            merger = Merger(
-                LLM(self.cfg, self.cfg.get('merge')),
-                self.cfg,
-                on_progress=progress_cb
+            extracted_path = self.extracted_dir / "extracted_content.txt"
+            stage.input_size = extracted_path.stat().st_size if extracted_path.exists() else 0
+
+            progress_cb = self._make_progress_callback("assemble")
+
+            llm = LLM(self.cfg, self.cfg.get('assembly', {}))
+            assembler = Assembler(llm, self.cfg, on_progress=progress_cb)
+
+            result = await asyncio.to_thread(
+                assembler.assemble, self._extracted_content, self._extractor
             )
-            await asyncio.to_thread(merger.run)
 
-            out_dir = self.root / self.cfg['merge']['output_dir']
-            if out_dir.exists():
-                out_files = list(out_dir.glob("*.txt"))
-                stage.output_size = sum(f.stat().st_size for f in out_files)
-                stage.files = [
-                    {"name": f.name, "size": f.stat().st_size}
-                    for f in sorted(out_files, key=lambda x: x.stat().st_size, reverse=True)
-                ]
+            self.final_dir.mkdir(parents=True, exist_ok=True)
+            output_path = self.final_dir / "jac_reference.txt"
+            output_path.write_text(result)
 
-            stage.status = "complete"
-            stage.end_time = time.time()
-            await self.emit("stage_complete", {"stage": "merge", "metrics": stage.to_dict()})
+            # Also save to release
+            release_dir = self.root.parent / "release"
+            release_dir.mkdir(exist_ok=True)
+            (release_dir / "candidate.txt").write_text(result)
 
-        except Exception as e:
-            stage.status = "error"
-            stage.error = str(e)
-            stage.end_time = time.time()
-            print(f"\n[MERGE ERROR] {e}", file=sys.stderr)
-            traceback.print_exc()
-            await self.emit("stage_error", {"stage": "merge", "error": str(e)})
-            raise
+            stage.output_size = len(result)
+            stage.files = [{"name": output_path.name, "size": stage.output_size}]
 
-    async def _run_reduce(self):
-        stage = self.stages["reduce"]
-        stage.status = "running"
-        stage.start_time = time.time()
-        await self.emit("stage_start", {"stage": "reduce"})
+            # Validate
+            validation_result = self.validator.validate_final(result)
+            patterns = self.validator.find_patterns(result)
 
-        try:
-            in_dir = self.root / self.cfg['merge']['output_dir']
-            in_files = list(in_dir.glob("*.txt"))
-            stage.input_size = sum(f.stat().st_size for f in in_files)
-            stage.file_count = len(in_files)
+            self.final_validation = {
+                "is_valid": validation_result.is_valid,
+                "issues": validation_result.issues,
+                "missing_patterns": validation_result.missing_patterns,
+                "patterns_found": len(patterns),
+                "patterns_total": len(self.validator.CRITICAL_PATTERNS),
+            }
 
-            progress_cb = self._make_progress_callback("reduce")
-            reducer = Reducer(
-                LLM(self.cfg, self.cfg.get('hierarchical_merge')),
-                self.cfg,
-                on_progress=progress_cb
-            )
-            result = await asyncio.to_thread(reducer.run)
-
-            if result:
-                out_path = Path(result['output_path'])
-                stage.output_size = out_path.stat().st_size
-                stage.files = [{"name": out_path.name, "size": stage.output_size}]
-
-            stage.status = "complete"
-            stage.end_time = time.time()
-            await self.emit("stage_complete", {"stage": "reduce", "metrics": stage.to_dict()})
-
-        except Exception as e:
-            stage.status = "error"
-            stage.error = str(e)
-            stage.end_time = time.time()
-            print(f"\n[REDUCE ERROR] {e}", file=sys.stderr)
-            traceback.print_exc()
-            await self.emit("stage_error", {"stage": "reduce", "error": str(e)})
-            raise
-
-    async def _run_compress(self):
-        stage = self.stages["compress"]
-        stage.status = "running"
-        stage.start_time = time.time()
-        await self.emit("stage_start", {"stage": "compress"})
-
-        try:
-            in_path = self.root / self.cfg['hierarchical_merge']['output_dir'] / "unified_doc.txt"
-            stage.input_size = in_path.stat().st_size
-
-            compressor = Compressor(None, self.cfg)
-            await asyncio.to_thread(compressor.run, in_path, "jac_docs_final.txt")
-
-            out_path = self.root / self.cfg['ultra_compression']['output_dir'] / "jac_docs_final.txt"
-            if out_path.exists():
-                stage.output_size = out_path.stat().st_size
-                stage.files = [{"name": out_path.name, "size": stage.output_size}]
-
-                content = out_path.read_text()
-                result = self.validator.validate_final(content)
-                patterns = self.validator.find_patterns(content)
-
-                self.final_validation = {
-                    "is_valid": result.is_valid,
-                    "issues": result.issues,
-                    "missing_patterns": result.missing_patterns,
-                    "patterns_found": len(patterns),
-                    "patterns_total": len(self.validator.CRITICAL_PATTERNS),
-                }
+            stage.extra = {
+                "validation": self.final_validation,
+                "output_path": str(output_path),
+                "release_path": str(release_dir / "candidate.txt"),
+            }
 
             stage.status = "complete"
             stage.end_time = time.time()
             await self.emit("stage_complete", {
-                "stage": "compress",
+                "stage": "assemble",
                 "metrics": stage.to_dict(),
                 "validation": self.final_validation
             })
@@ -419,5 +397,7 @@ class PipelineRunner:
             stage.status = "error"
             stage.error = str(e)
             stage.end_time = time.time()
-            await self.emit("stage_error", {"stage": "compress", "error": str(e)})
+            print(f"\n[ASSEMBLE ERROR] {e}", file=sys.stderr)
+            traceback.print_exc()
+            await self.emit("stage_error", {"stage": "assemble", "error": str(e)})
             raise

@@ -1,258 +1,529 @@
-## Abilities
+# Jac Language Reference
 
-### Definition & Syntax
-`can` or `def` defines logic blocks within archetypes (nodes, walkers, objects).
-- `can name(args) -> type { ... }` (Standard method)
-- `can name with [Type] [entry|exit] { ... }` (Event-triggered)
-- `impl archetype.name { ... }` (External implementation)
+## Syntax & Types
 
-### Event Triggers
-Logic triggered by graph traversal events. `here` refers to the current node/edge; `self` refers to the walker.
+### Primitives & Collections
 ```jac
-node N { can greet with Walker entry { print("Hi"); } }
-walker W {
-can visit_node with Node entry { visit [-->]; }
-can log_exit with root exit { report "done"; }
+has name: str;
+has age: int = 0;
+has score: float = 0.0;
+has active: bool = True;
+has items: list[str] = [];
+has data: dict[str, int] = {};
+has coords: tuple[int, int];
+has maybe_val: int | None = None;
+```
+
+### Control Flow
+```jac
+# Conditionals
+if age <= 12 { print("Child"); }
+elif age <= 19 { print("Teen"); }
+else { print("Adult"); }
+
+# Loops
+for item in items { print(item); }
+for i in range(10) { print(i); }
+while count > 0 { count -= 1; }
+
+# Match
+match value {
+    case 1 => print("one");
+    case 2 => print("two");
+    case _ => print("other");
 }
 ```
 
-### AI Delegation (`by llm()`)
-Delegates implementation to an LLM using types and docstrings.
+### Functions & Lambdas
 ```jac
-def summarize(text: str) -> str by llm();
-can get_hint(n: int) -> str by llm();
+def compute(x: int, y: int) -> int {
+    return x + y;
+}
+
+def greet { print("Hello!"); }  # No params/return
+
+# Lambda
+transform = |x: int| -> int { x * 2 };
 ```
 
-### Common Patterns
-- **Traversal:** `can fetch with root entry { notes = [-->(`?Note)]; visit [-->]; }`
-- **Edge Creation:** `can link with Profile entry { self ++> here; }`
-- **State Change:** `can reset() -> int { self.val = 0; return self.val; }`
-- **Filtering:** `[-->(`?Note)](?owner == self.id)` (Filter nodes during traversal)
-
-## AI Agents & Abilities
-`walker Name { has attr: type; can func(args) -> type [by llm(method=str, tools=[...], **params)]; }` `node Name { def func(args) -> type by llm(); }` `enum Type { VAL1, VAL2 }`
+### Entry Point
 ```jac
-walker Assistant {
-has goal: str;
-can chat(q: str) -> str by llm(method="ReAct", tools=[search]);
-can walk with entry { visit -->; report here; }
+with entry {
+    # Program starts here
+    print("Hello, Jac!");
+}
+```
+
+## Archetypes
+
+### Node - Graph Vertices
+`node Name { has attr: type; can ability with Walker entry { } }`
+
+```jac
+node Person {
+    has name: str;
+    has age: int;
+    
+    can greet with Visitor entry {
+        print(f"Hello from {self.name}");
+    }
+}
+```
+
+### Edge - Typed Relationships
+`edge Name { has attr: type = default; }`
+
+```jac
+edge Knows {
+    has since: int = 2024;
+    has strength: int = 5;
+}
+
+edge WorksAt {
+    has position: str;
+    has salary: float;
+}
+```
+
+### Walker - Mobile Computation
+`walker Name { has state: type; can ability with Node entry { visit [-->]; } }`
+
+```jac
+walker Collector {
+    has data: list = [];
+
+    can start with `root entry {
+        visit [-->];
+    }
+
+    can collect with Person entry {
+        self.data.append({"name": here.name});
+        visit [-->];
+    }
+}
+```
+
+### Obj - Value Objects
+```jac
+obj Rectangle {
+    has width: float;
+    has height: float;
+    has area: float by postinit;
+
+    def postinit() -> None {
+        self.area = self.width * self.height;
+    }
+
+    def scale(factor: float) -> None {
+        self.width *= factor;
+        self.height *= factor;
+    }
+}
+```
+
+### Enum - Enumerations
+```jac
+enum Role { ADMIN, USER, VIEWER }
+enum Sentiment { POSITIVE, NEGATIVE, NEUTRAL }
+```
+
+### Access Modifiers
+```jac
+obj Example {
+    has :priv secret: str;           # Private
+    has :pub public_val: int;        # Public (default)
+    def :priv helper() -> str { }    # Private method
+}
+```
+
+## Graph Operations
+
+### Connect Operators
+| Operator | Description |
+|----------|-------------|
+| `++>` | Create forward edge (returns list of target nodes) |
+| `<++` | Create backward edge |
+| `<++>` | Create bidirectional edges |
+| `+>:Edge:+>` | Forward edge with type |
+| `<+:Edge:+>` | Bidirectional typed edge |
+
+```jac
+with entry {
+    alice = Person(name="Alice", age=25);
+    bob = Person(name="Bob", age=30);
+    
+    root ++> alice;                           # Connect to root
+    alice ++> bob;                            # Forward edge
+    alice +>:Knows(since=2020):+> bob;       # Typed edge
+    alice <+:Knows(since=2020):+> bob;       # Bidirectional typed
+}
+```
+
+### Traverse Operators
+| Syntax | Description |
+|--------|-------------|
+| `[-->]` | All outgoing edges/nodes |
+| `[<--]` | All incoming edges/nodes |
+| `[<-->]` | Both directions |
+| `[-->:EdgeType:]` | Filter by edge type |
+| `[-->(\`?NodeType)]` | Filter by node type |
+
+### Filter Syntax
+```jac
+# Get connected nodes
+people = [root --> Person];
+
+# Filter by type
+adults = [root --> (`?Person)];
+
+# Filter by attribute
+seniors = [root --> (`?Person)](?age >= 65);
+
+# Filter by edge type
+friends = [alice -->:Knows:];
+
+# Combined
+close_friends = [alice -->:Knows:(`?Person)](?strength > 7);
+```
+
+### Visit & Traversal
+```jac
+walker Traverser {
+    can traverse with entry {
+        visit [-->];              # Visit forward connections
+        visit [<--];              # Visit backward connections
+        visit [<-->];             # Visit both directions
+        
+        visit [-->] else {        # Handle end of path
+            print("End of path");
+            disengage;
+        }
+    }
+}
+```
+
+### Spawn
+```jac
+with entry {
+    root ++> Person(name="Alice");
+    
+    # Spawn walker at node
+    w = Collector() spawn root;
+    
+    # Access walker state after traversal
+    print(w.data);
+}
+```
+
+## Abilities & Events
+
+### Keywords
+| Keyword | Description |
+|---------|-------------|
+| `self` | Current archetype instance |
+| `here` | Current node being visited |
+| `visitor` | Walker visiting the node |
+| `root` | Graph root node |
+| `` `root `` | Root node type for matching |
+
+### Entry/Exit Abilities
+```jac
+node Room {
+    has name: str;
+    
+    can welcome with Visitor entry {
+        print(f"Welcome to {self.name}");
+    }
+    
+    can farewell with Visitor exit {
+        print(f"Goodbye from {self.name}");
+    }
+}
+
+walker Visitor {
+    can start with `root entry {
+        visit [-->];
+    }
+    
+    can visit_room with Room entry {
+        print(f"Visiting {here.name}");
+        visit [-->];
+    }
+    
+    can leave_room with Room exit {
+        print(f"Leaving {here.name}");
+    }
+    
+    can finish with exit {
+        print("Walker finished");
+    }
+}
+```
+
+### Execution Order
+1. Node's generic `with entry` abilities
+2. Node's `with WalkerType entry` abilities  
+3. Walker's `with NodeType entry` abilities
+4. Walker's `with NodeType exit` abilities
+5. Node's `with WalkerType exit` abilities
+6. Node's generic `with exit` abilities
+
+### Control Flow
+- `visit [-->]` - Queue nodes for traversal
+- `disengage` - Stop walker immediately
+- `report value` - Return value from walker
+
+```jac
+walker SearchWalker {
+    has target: str;
+    has found: bool = False;
+
+    can search with Person entry {
+        if here.name == self.target {
+            self.found = True;
+            report here;    # Return the found node
+            disengage;      # Stop traversing
+        }
+        visit [-->];
+    }
 }
 ```
 
 ## AI Integration
-`import from byllm.lib { Model }` `glob llm = Model(model_name: str, api_key: str, base_url: str, method: str, tools: list, hyperparams: dict);` `can name() -> type by llm(method: str, tools: list, incl_info: dict, stream: bool);` `sem TypeOrAttr = "description";`
 
-### Custom LLM & Python
-`obj MyLLM(BaseLLM) { def model_call_no_stream(params: dict) -> any { return "res"; } }`
-```python
-@by(llm_instance)
-def func(text: str) -> dict: ...
-```
-
-## API & Server
-`jac start <file.jac> [--port 8000] [--scale] [--build]` `jac streamlit <file.jac>` | `jac destroy`
-
-**Endpoints:**
-`POST /user/register` | `POST /user/login` -> `{"token": "...", "root_id": "..."}` `POST /walker/<name>` -> `{"fields": {...}}` `POST /function/<name>` -> `{"args": {...}}`
-
-**Walker API:**
+### Basic LLM Functions
 ```jac
-walker api_call {
-has data: str;
-can go with entry { report {"res": self.data}; }
-}
-```
+import from byllm.lib { Model }
+glob llm = Model(model_name="gpt-4o-mini");
 
-## Cloud & Persistence
-`has [protected|private] attr: type;`
-```jac
-node user {
-has protected email: str;
-can login with entry { ... } with exit { ... }
-}
-```
+"""Summarize the given text into 2-3 sentences."""
+def summarize(text: str) -> str by llm();
 
-## Configuration (jac.toml)
-```toml
-[serve]
-cl_route_prefix = "cl"
-base_route_app = "app"
-```
-
-## Collections
-`has n: list[t] = [v];` | `dict[k, v] = {k: v};` | `set[t] = {v};` | `tuple = (v,);`
-```jac
-evens = [i for i in range(10) if i % 2 == 0];
-friends = [self --> (`?Person)];
-recent = [{"msg": m.content} for m in [root-->(`?Chat)]];
-enum Status { ACTIVE, INACTIVE }
-```
-
-## Context & Objects
-`obj Name { has attr: type; }` `can name with [Type] [entry|exit] { }` `with open(p, m) as v { }` | `with object { }` `here`, `self`, `root`, `allroots()`, `report {expr};`
-```jac
-with entry { root ++> Person(name="Jonah"); }
-can process with Student entry { here.messages.append(self.msg); visit [-->]; }
-```
-
-## Control Flow
-**Conditionals & Loops**
-```jac
-if x < 5 { } elif x < 10 { } else { }
-match x { case 1: ... case _: ... }
-switch x { case 1: ... default: ... }
-for i = 0 to i < 5 by i += 1 { }
-for x in coll { }
-while cond { }
-try { ... } except Type as e { ... }
-```
-
-**Walker Specific**
-- `visit [nodes] else { }`: Move to nodes; execute `else` if traversal fails.
-- `disengage;`: Stop traversal and deactivate walker.
-- `skip;`: Stop current node execution, move to next in queue.
-- `spawn`: Create walker/node instance.
-
-**LLM & Async**
-- `by llm();`: Logic/assignment delegated to LLM.
-- `glob t = flow func(); res = wait t;`: Async execution.
-
-## Package & API
-- `jac add --cl <pkg>`: Install package.
-- `jacLogin(email, password)`, `jacSignup(email, password)`: Auth built-ins.
-
-## Decorators & Modifiers
-`@dec_name`, `:modifier`
-```jac
-@timing can op(n: int) -> int;
-glob:pub URL: str = "...";
-obj :pub User { has id: int; }
-```
-
-## LLM Integration
-`can func() -> type by llm(method=..., tools=...);`
-```jac
-can summarize(text: str) -> str by llm();
-```
-
-## Custom Decorators
-```jac
-def dec(f: callable) -> callable {
-def wrap(*args: any, **kwargs: any) -> any { return f(*args, **kwargs); }
-return wrap;
-}
-```
-
-## Edges
-`edge Name { has attr: type = val; }`
-- **Creation**: `n1 ++> n2;` (dir), `n1 <++> n2;` (bi), `n1 +:edge_name:attr=val:+> n2;` (custom)
-- **Traversal**: `[-->]` (forward), `[<--]` (backward), `[-->(`?NodeType)]` (typed)
-- **Deletion**: `n1 del --> n2;`
-
-## Entry Points & Lifecycle
-- **Global**: `with entry { ... }`
-- **Archetype Hooks**: `node Name { can name with entry/exit { ... } }`
-- **Keywords**: `here` (current node), `self` (current walker/object)
-
-## Environment & Config
-- **CLI**: `jac start`, `jac run`
-- **jac.toml**: `[environments.response.headers] "Key" = "val"`
-
-## Error Handling
-`try { ... } except Type as e { ... } finally { ... }`
-- **Logic**: `raise Exception()`, `assert condition;`
-- **LLM Fallback**: `val = NonGPT.random_value_for_type(type);`
-
-## File I/O & JSON
-- **File**: `with open("path", "w") as f { f.write("data"); }`
-- **JSON**: `json.loads(str)`, `json.dumps(obj)`
-
-## LLM Integration
-`can name(args) -> type by llm(method="...", tools=[...]);`
-- **Minimal**: `def summarize(text: str) -> str by llm();`
-
-## Filtering & Selection
-- **Syntax**: `[path](?condition)`, `(list)(?condition)`
-- **Examples**:
-- `[root-->(`?Person)](?city == "NYC");`
-- `[n1->:Edge:attr >= 1:->(`?Type)];`
-- **Manual**: `traverse(source=n, depth=2, node_types=["t"], edge_types=["e"]);`
-
-## Functions & Callables
-- **Standard**: `def name(p: type = val) -> type { return val; }`
-- **Ability**: `can name(p: type) -> type;`
-- **Async**: `async def fetch(url: str) -> str;`
-- **Lambda**: `add = lambda a: int, b: int -> int : a + b;`
-- **Impl Separation**: `can name; impl can name { ... }`
-- **Public (Client)**: `def:pub Component(props: dict) -> any;`
-- **Global Var**: `glob config = {"key": "val"};`
-
-## Graph Navigation
-- **Visit**: `visit [-->];` (moves walker to next nodes)
-- **Report**: `report here.data;` (sends data to output)
-
-## Graphs
-`graph Name { has anchor root; spawn { } }`
-```jac
-root = spawn node::person(name="R");
-root +:friendship(since=2020):+> spawn node::person(name="F");
-root ++> [Node() for i in range(2)] ++> Node();
-```
-**Operators:** `++>`, `<++`, `<++>`, `+>:edge:+>`, `-->`, `->:edge:filter:->`, `[--> node_type](?attr == val)`
-**Keywords:** `here`, `root`, `spawn`, `visit`, `report`
-**LLM Traversal:** `visit [edge_pattern] by llm(method=..., tools=...);`
-**Lib:** `printgraph(node, depth=30, dot_file='g.dot', as_json=bool)`
-
-## Imports
-| Pattern | Syntax | |---------|--------| | Absolute | `import:py os;` / `import:jac math;` | | From | `import from mod { X as Y, Z }` | | Relative | `import from ..parent, item;` | | Include | `include:jac "file.jac";` / `include glob;` |
-
-## Logging
-`print(f"Val: {self.val}");` `report {"status": "ok"};` `glob logger = getLogger("n"); logger.info("msg");`
-
-## Multimodal AI
-`import from byllm.lib { Image, Video }` `def name(i: Image, v: Video) -> str by llm();`
-```jac
 with entry {
-img = Image("path.jpg");
-vid = Video(path="v.mp4", fps=1);
-report analyze(img, vid);
+    summary = summarize("Long article text here...");
+    print(summary);
 }
 ```
 
-## Core Archetypes
-`node N { has a: T=v; can b with W entry/exit { } }` `obj O(P) { has :pub a: T; has :priv b: T; def m(p: T) -> R { } }` `walker W { has a: T; can b with N entry/exit { visit [-->]; report here; } }` `enum E { V1 = 'val', V2 }`
+### Structured Output
+```jac
+import from byllm.lib { Model }
+glob llm = Model(model_name="gpt-4o-mini");
 
-## Graph Operators
-- **Connect:** `a ++> b` (directed), `a <++> b` (bi), `a +>:E:a=v:+> b` (typed/attr)
-- **Traverse:** `visit [-->]`, `visit [-->](?a == v)`, `visit:0: [-->]`, `visit --> by llm()`
-- **Filter:** `[root --E--> N](?a > 10)`, `[<-:E:<-(?N)]`
-- **Lifecycle:** `spawn node_ref walker_instance(args);`, `disengage;`, `ignore node_ref;`
+enum Sentiment { POSITIVE, NEGATIVE, NEUTRAL }
 
-## LLM & Semantic Integration
-- **Semantic Types:** `type Review: str { def sentiment() -> int by llm(); }`
-- **Semantic Attrs:** `has bio: str `sem: user bio` = "John" <+ "context";`
-- **LLM Methods:** `can task() -> T by llm(method="reason", tools=[obj.method]);`
-- **Global Semantics:** `sem node User "description";`
+"""Analyze the sentiment of the text."""
+def get_sentiment(text: str) -> Sentiment by llm();
 
-## Logic & Context
-- **Keywords:** `here` (node), `self` (walker/obj), `visitor` (walker in node), `root`
-- **Global:** `glob v = 1;`, `:g: v;` (access)
-- **Null-safe:** `obj?.attr`, `list?[0]`
-- **Pipe:** `val |> func |> print;`
-- **Ref:** `&self` (address), `here.id` (UUID)
+with entry {
+    result = get_sentiment("I love this product!");
+    print(result);  # Sentiment.POSITIVE
+}
+```
 
-## Security & Persistence
-- **Access:** `:pub`, `:priv`, `:protect`
-- **Perms:** `grant(here, WritePerm); revoke(self);`
-- **Persistence:** `commit();` (save graph state)
+### Image/Video Analysis
+```jac
+import from byllm.lib { Model, Image, Video }
+glob llm = Model(model_name="gpt-4o");
 
-## Standard Library
-- **JSON:** `json.dumps(obj)`, `json.loads(str)`
-- **File:** `f = file.open("path", "w"); f.write(data);`
-- **Testing:** `test name { check 1+1==2; assert x==y, "msg"; }`
+"""Describe what you see in this image."""
+def describe_image(img: Image) -> str by llm();
 
-## Syntax & Modules
-- **Import:** `import:py from math { sqrt };`, `include:jac mod;`
-- **Version:** `module name; version v"1.0.0";`
-- **Reactive:** `cl { has count: int = 0; }` (frontend state)
-- **Specs:** `obj __specs__ { static has auth: bool = False; }`
+"""Summarize the key events in this video."""
+def analyze_video(v: Video) -> str by llm();
+
+with entry {
+    img = Image(url="https://example.com/photo.jpg");
+    description = describe_image(img);
+    
+    vid = Video(path="video.mp4", fps=1);
+    summary = analyze_video(vid);
+}
+```
+
+### Semantic Strings (Semstrings)
+```jac
+enum AgentType {
+    RESEARCHER = "Handles web searches and information gathering" :sem:,
+    CODER = "Writes and reviews code" :sem:,
+    WRITER = "Creates and edits text content" :sem:
+}
+```
+
+## Cloud & API
+
+### Serve Walkers as Endpoints
+```bash
+jac serve main.jac
+```
+
+### Walker Specs
+```jac
+walker get_counter {
+    obj __specs__ {
+        static has auth: bool = False;      # Public endpoint
+        static has methods: list = ["GET"]; # HTTP methods
+    }
+
+    can get_counter_endpoint with `root entry {
+        counter_nodes = [root --> Counter];
+        if not counter_nodes {
+            counter = Counter();
+            root ++> counter;
+        } else {
+            counter = counter_nodes[0];
+        }
+        report {"value": counter.get_value()};
+    }
+}
+```
+
+### Report for API Response
+```jac
+walker create_post {
+    has content: str;
+    has author: str;
+
+    can create with `root entry {
+        new_post = Post(content=self.content, author=self.author);
+        here ++> new_post;
+        report {"id": new_post.id, "status": "posted"};
+    }
+}
+```
+
+## Persistence
+
+### Global Variables
+```jac
+glob END = EndNode();  # Persistent global node
+
+with entry {
+    node_a ++> END;  # Connect to global
+}
+```
+
+### Graph Persistence
+Nodes and edges connected to `root` persist automatically in jac-cloud/jac-scale.
+
+## Patterns
+
+### Complete Graph Traversal Example
+```jac
+node Person {
+    has name: str;
+    has age: int;
+}
+
+edge Knows {
+    has since: int = 2024;
+}
+
+walker Collector {
+    has data: list = [];
+
+    can start with `root entry {
+        visit [-->];
+    }
+
+    can collect with Person entry {
+        self.data.append({"name": here.name, "age": here.age});
+        visit [-->];
+    }
+}
+
+with entry {
+    alice = Person(name="Alice", age=30);
+    bob = Person(name="Bob", age=25);
+    
+    root ++> alice;
+    alice +>:Knows(since=2020):+> bob;
+
+    c = Collector() spawn root;
+    print(c.data);  # [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+}
+```
+
+### Search with Early Exit
+```jac
+walker FindPerson {
+    has target_name: str;
+    has result: Person | None = None;
+
+    can start with `root entry {
+        visit [-->];
+    }
+
+    can search with Person entry {
+        if here.name == self.target_name {
+            self.result = here;
+            report here;
+            disengage;
+        }
+        visit [-->];
+    }
+}
+
+with entry {
+    root ++> Person(name="Alice", age=30);
+    root ++> Person(name="Bob", age=25);
+    
+    finder = FindPerson(target_name="Bob") spawn root;
+    print(finder.result.name);  # Bob
+}
+```
+
+### AI-Powered Node Processing
+```jac
+import from byllm.lib { Model }
+glob llm = Model(model_name="gpt-4o-mini");
+
+node Document {
+    has content: str;
+    has summary: str = "";
+}
+
+"""Summarize the document in one sentence."""
+def summarize(text: str) -> str by llm();
+
+walker Summarizer {
+    can process with Document entry {
+        here.summary = summarize(here.content);
+        print(f"Summarized: {here.summary}");
+        visit [-->];
+    }
+}
+
+with entry {
+    doc = Document(content="Long document text...");
+    root ++> doc;
+    Summarizer() spawn root;
+}
+```
+
+## Quick Reference
+
+### Operators
+| Operator | Purpose |
+|----------|---------|
+| `++>` | Connect forward |
+| `<++` | Connect backward |
+| `<++>` | Connect bidirectional |
+| `+>:E:+>` | Typed forward edge |
+| `[-->]` | Traverse forward |
+| `[<--]` | Traverse backward |
+| `spawn` | Start walker at node |
+| `visit` | Queue nodes to visit |
+| `disengage` | Stop walker |
+| `report` | Return value |
+
+### Keywords
+| Keyword | Context |
+|---------|---------|
+| `self` | Current instance |
+| `here` | Current node (in walker) |
+| `visitor` | Visiting walker (in node) |
+| `root` | Graph root |
+| `` `root `` | Root type matcher |
+| `entry` | Enter event |
+| `exit` | Leave event |

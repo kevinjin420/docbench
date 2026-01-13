@@ -112,7 +112,7 @@ async def run_pipeline():
 
 @app.post("/api/run/{stage}")
 async def run_stage(stage: str):
-    valid_stages = ["fetch", "extract", "merge", "reduce", "compress"]
+    valid_stages = ["fetch", "extract", "assemble"]
     if stage not in valid_stages:
         return {"error": f"Invalid stage. Must be one of: {valid_stages}"}
     if runner:

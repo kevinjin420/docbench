@@ -11,7 +11,8 @@ source_dir: "docs"
 # LLM API Configuration
 llm:
   provider: "openrouter"
-  model: "google/gemini-3-flash-preview"
+  # model: "google/gemini-3-flash-preview"
+  model: "anthropic/claude-opus-4.5"
   api_key_env: "OPENROUTER_API_KEY"
   max_tokens: 4096
   temperature: 0.0

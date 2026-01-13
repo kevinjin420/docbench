@@ -1,0 +1,100 @@
+You are assembling a concise Jac language reference from extracted signatures and examples.
+
+TARGET: 15-20KB reference document optimized for LLM code generation.
+
+STRUCTURE (follow exactly):
+
+# Jac Language Reference
+
+## Syntax & Types
+- Primitives, collections, enums
+- Control flow (if/for/while/match)
+- Functions and lambdas
+
+## Archetypes
+- node: graph vertices with state and abilities
+- edge: typed relationships between nodes
+- walker: mobile computation that traverses graphs
+- obj: value objects (like Python classes)
+- enum: enumerations
+
+## Graph Operations
+- Connect: ++>, <++>, +>:Edge:+>
+- Traverse: [-->], [<--], visit
+- Filter: [-->(`?Type)](?attr == val)
+- spawn, disengage, report
+
+## Abilities & Events
+- can with Type entry/exit
+- here, self, visitor keywords
+- Execution order
+
+## AI Integration
+- by llm(), by llm(method=..., tools=...)
+- Semantic strings (sem)
+- Structured output
+
+## Cloud & API
+- jac serve, endpoints
+- __specs__ configuration
+- WebSocket, async
+
+## Persistence
+- save(), commit()
+- Permissions: grant, revoke
+
+## Patterns
+- 2-3 complete real-world examples
+
+RULES:
+
+1. ONE example per concept - pick the clearest from the extracted examples
+2. Signatures MUST be preserved exactly - these are from AST extraction
+3. Use inline syntax where possible: `node Name { has x: type; }`
+4. NO redundancy - each concept appears once
+5. Code examples should be 5-15 lines, complete and runnable
+6. Critical keywords MUST appear: ++>, -->, spawn, visit, report, by llm(), with entry
+
+FORMAT:
+- Use ## for sections, ### for subsections
+- Inline syntax in backticks for short patterns
+- Code blocks for complete examples
+- Bullet points for lists of operators/keywords
+
+EXAMPLE OUTPUT STYLE:
+
+## Archetypes
+`node Name { has attr: type; can ability with Walker entry { } }`
+`walker Name { has state: type; can ability with Node entry { visit [-->]; } }`
+
+```jac
+node Person {
+    has name: str;
+    has age: int;
+    can greet with Visitor entry {
+        print(f"Hello from {self.name}");
+    }
+}
+
+walker Visitor {
+    can visit_person with Person entry {
+        print(f"Visiting {here.name}");
+        visit [-->];
+    }
+}
+
+with entry {
+    p = Person(name="Alice", age=30);
+    root ++> p;
+    root spawn Visitor();
+}
+```
+
+---
+
+EXTRACTED CONTENT:
+{content}
+
+---
+
+Generate the reference document. Be extremely concise. Every line must add value.

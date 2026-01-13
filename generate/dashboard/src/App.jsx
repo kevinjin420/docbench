@@ -432,6 +432,12 @@ function StageCard({ stage, stageKey, isActive, progress, onRun, disabled }) {
     error: 'bg-red-600',
   }
 
+  const stageDescriptions = {
+    fetch: 'Fetches docs from git sources, cleans markdown, extracts Jac skeletons',
+    extract: 'Categorizes code examples, selects best examples per construct (no LLM)',
+    assemble: 'Single LLM call to generate final reference document',
+  }
+
   const showProgress = stage.status === 'running' && progress?.total > 0
 
   return (
@@ -450,7 +456,8 @@ function StageCard({ stage, stageKey, isActive, progress, onRun, disabled }) {
       <div className="p-4">
         <div className="mb-3">
           <h3 className="font-medium text-white">{stage.name}</h3>
-          <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs text-white ${statusColors[stage.status]}`}>
+          <p className="text-xs text-zinc-500 mt-1">{stageDescriptions[stageKey]}</p>
+          <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs text-white ${statusColors[stage.status]}`}>
             {stage.status}
           </span>
         </div>
@@ -477,8 +484,21 @@ function StageCard({ stage, stageKey, isActive, progress, onRun, disabled }) {
           <div className="text-zinc-400">Duration:</div>
           <div className="text-white">{formatDuration(stage.duration)}</div>
 
-          <div className="text-zinc-400">Files:</div>
-          <div className="text-white">{stage.file_count || stage.files?.length || 0}</div>
+          {stageKey === 'extract' && stage.extra?.signatures > 0 && (
+            <>
+              <div className="text-zinc-400">Signatures:</div>
+              <div className="text-white">{stage.extra.signatures}</div>
+              <div className="text-zinc-400">Examples:</div>
+              <div className="text-white">{stage.extra.selected_examples || 0} selected</div>
+            </>
+          )}
+
+          {stageKey !== 'extract' && (
+            <>
+              <div className="text-zinc-400">Files:</div>
+              <div className="text-white">{stage.file_count || stage.files?.length || 0}</div>
+            </>
+          )}
         </div>
       )}
 
@@ -581,11 +601,9 @@ function App() {
   const [running, setRunning] = useState(false)
   const [sources, setSources] = useState([])
   const [stages, setStages] = useState({
-    fetch: { name: 'Fetch & Sanitize', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-    extract: { name: 'Topic Extraction', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-    merge: { name: 'Topic Merging', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-    reduce: { name: 'Hierarchical Reduction', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-    compress: { name: 'Final Minification', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
+    fetch: { name: 'Fetch & Sanitize', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
+    extract: { name: 'Deterministic Extract', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
+    assemble: { name: 'LLM Assembly', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
   })
   const [progress, setProgress] = useState({})
   const [validation, setValidation] = useState(null)
@@ -604,14 +622,14 @@ function App() {
     const lines = []
 
     const totalInput = s.fetch.input_size
-    const totalOutput = s.compress.output_size
+    const totalOutput = s.assemble.output_size
     const overallRatio = totalInput > 0 ? ((1 - totalOutput / totalInput) * 100).toFixed(1) : 0
 
     lines.push(`Total: ${formatBytes(totalInput)} -> ${formatBytes(totalOutput)} (${overallRatio}% reduction)`)
     if (duration) lines.push(`Duration: ${formatDuration(duration)}`)
     lines.push('')
 
-    const stageOrder = ['fetch', 'extract', 'merge', 'reduce', 'compress']
+    const stageOrder = ['fetch', 'extract', 'assemble']
     for (const key of stageOrder) {
       const stage = s[key]
       if (stage.status === 'complete') {
@@ -621,6 +639,11 @@ function App() {
         const fileCount = stage.file_count || stage.files?.length || 0
         lines.push(`${stage.name}:`)
         lines.push(`  ${formatBytes(stage.input_size)} -> ${formatBytes(stage.output_size)} (${reduction}% reduction, ${fileCount} files)`)
+        // Show extra stats for extract stage
+        if (key === 'extract' && stage.extra) {
+          const { signatures, examples, selected_examples } = stage.extra
+          if (signatures) lines.push(`  ${signatures} signatures, ${examples} examples -> ${selected_examples} selected`)
+        }
       } else if (stage.status === 'error') {
         lines.push(`${stage.name}: ERROR`)
         if (stage.error) lines.push(`  ${stage.error}`)
@@ -773,11 +796,9 @@ function App() {
   const runPipeline = async () => {
     setLogs([])
     setStages({
-      fetch: { name: 'Fetch & Sanitize', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-      extract: { name: 'Topic Extraction', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-      merge: { name: 'Topic Merging', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-      reduce: { name: 'Hierarchical Reduction', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
-      compress: { name: 'Final Minification', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1 },
+      fetch: { name: 'Fetch & Sanitize', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
+      extract: { name: 'Deterministic Extract', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
+      assemble: { name: 'LLM Assembly', status: 'pending', input_size: 0, output_size: 0, files: [], compression_ratio: 1, extra: {} },
     })
     setValidation(null)
     setMetrics(null)
@@ -800,7 +821,7 @@ function App() {
 
   const activeStage = Object.keys(stages).find(k => stages[k].status === 'running')
   const totalInput = stages.fetch.input_size
-  const totalOutput = stages.compress.output_size
+  const totalOutput = stages.assemble.output_size
   const overallRatio = totalInput > 0 ? totalOutput / totalInput : 0
 
   return (
@@ -890,7 +911,7 @@ function App() {
 
         {page === 'pipeline' && (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {Object.entries(stages).map(([key, stage]) => (
                 <StageCard
                   key={key}
