@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 Database models and schemas for Jaseci Benchmark
-All data stored in PostgreSQL with proper JSON schemas
+
+Two separate databases:
+1. Public DB (PostgreSQL) - access_tokens, leaderboard_entries, public_test_config
+2. Local DB (SQLite) - benchmark_results, benchmark_runs, collections, documentation_variants
 """
 
 import os
@@ -13,29 +16,54 @@ from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.dialects.postgresql import JSONB
 
-Base = declarative_base()
+LocalBase = declarative_base()
+PublicBase = declarative_base()
 
 
-def get_json_type():
+def _get_local_db_url() -> str:
+    """Get local database URL"""
+    url = os.getenv('LOCAL_DATABASE_URL') or os.getenv('DATABASE_URL')
+    if not url:
+        db_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(db_dir, 'benchmark.db')
+        return f'sqlite:///{db_path}'
+    return url
+
+
+def _get_public_db_url() -> str:
+    """Get public database URL"""
+    url = os.getenv('PUBLIC_DATABASE_URL') or os.getenv('DATABASE_URL')
+    if not url:
+        db_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(db_dir, 'public.db')
+        return f'sqlite:///{db_path}'
+    return url
+
+
+def _is_postgres(url: str) -> bool:
+    return 'postgresql' in url
+
+
+def _get_json_type(url: str):
     """Return JSONB for PostgreSQL, JSON for SQLite"""
-    db_url = os.getenv('DATABASE_URL', 'sqlite:///./benchmark.db')
-    if 'postgresql' in db_url:
+    if _is_postgres(url):
         return JSONB
     return JSON
 
 
-class Collection(Base):
+# ============================================================================
+# LOCAL DATABASE MODELS (SQLite - ephemeral/dev data)
+# ============================================================================
+
+class Collection(LocalBase):
     """Collections for grouping benchmark results"""
     __tablename__ = 'collections'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(256), unique=True, nullable=False, index=True)
-
-    # Metadata
     description = Column(Text, nullable=True)
     created_at = Column(Float, nullable=False)
 
-    # Relationships
     results = relationship('BenchmarkResult', back_populates='collection_obj')
 
     __table_args__ = (
@@ -43,139 +71,157 @@ class Collection(Base):
     )
 
 
-class BenchmarkResult(Base):
+class BenchmarkResult(LocalBase):
     """Complete benchmark results with all test responses"""
     __tablename__ = 'benchmark_results'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     run_id = Column(String(256), unique=True, nullable=False, index=True)
 
-    # Model and variant info
     model = Column(String(256), nullable=False, index=True)
     model_id = Column(String(256), nullable=False)
     variant = Column(String(128), nullable=False, index=True)
 
-    # Run configuration
     temperature = Column(Float, nullable=False)
     max_tokens = Column(Integer, nullable=False)
 
-    # Metadata
     total_tests = Column(Integer, nullable=False)
     batch_size = Column(Integer, nullable=True)
     num_batches = Column(Integer, nullable=True)
 
-    # Results - stored as JSONB for efficient querying
-    responses = Column(get_json_type(), nullable=False)  # {test_id: code}
-    run_metadata = Column(get_json_type(), nullable=True)
+    responses = Column(JSON, nullable=False)
+    run_metadata = Column(JSON, nullable=True)
 
-    # Evaluation results (computed after responses saved)
-    evaluation_results = Column(get_json_type(), nullable=True)  # Full evaluation with scores
+    evaluation_results = Column(JSON, nullable=True)
     total_score = Column(Float, nullable=True, index=True)
     max_score = Column(Float, nullable=True)
     percentage = Column(Float, nullable=True, index=True)
 
-    # Timestamps
     created_at = Column(Float, nullable=False, index=True)
     evaluated_at = Column(Float, nullable=True)
 
-    # Status
     status = Column(String(32), nullable=False, default='completed', index=True)
-    evaluation_status = Column(String(32), nullable=True, default='pending', index=True)  # pending, evaluating, completed, failed
+    evaluation_status = Column(String(32), nullable=True, default='pending', index=True)
 
-    # Collection grouping (for organizing multiple runs)
     collection_id = Column(Integer, ForeignKey('collections.id'), nullable=True, index=True)
-
-    # Relationships
     collection_obj = relationship('Collection', back_populates='results')
 
     __table_args__ = (
         Index('idx_model_variant', 'model', 'variant'),
         Index('idx_created_at_desc', created_at.desc()),
         Index('idx_score_desc', total_score.desc()),
-        Index('idx_collection_id', 'collection_id'),
     )
 
 
-class BenchmarkRun(Base):
-    """Benchmark run tracking (in-progress and historical)"""
+class BenchmarkRun(LocalBase):
+    """Benchmark run tracking"""
     __tablename__ = 'benchmark_runs'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     run_id = Column(String(256), unique=True, nullable=False, index=True)
 
-    # Model and variant
     model = Column(String(256), nullable=False, index=True)
     model_id = Column(String(256), nullable=False)
     variant = Column(String(128), nullable=False)
 
-    # Configuration
     temperature = Column(Float, nullable=False)
     max_tokens = Column(Integer, nullable=False)
 
-    # Status tracking
-    status = Column(String(32), nullable=False, index=True)  # running, completed, failed
+    status = Column(String(32), nullable=False, index=True)
     progress = Column(String(512), nullable=True)
+    result_id = Column(Integer, nullable=True)
 
-    # References
-    result_id = Column(Integer, nullable=True)  # FK to benchmark_results.id
-
-    # Timestamps
     started_at = Column(Float, nullable=False, index=True)
     completed_at = Column(Float, nullable=True)
-
-    # Error handling
     error_message = Column(Text, nullable=True)
-
-    # Additional metadata
-    run_metadata = Column(get_json_type(), nullable=True)
+    run_metadata = Column(JSON, nullable=True)
 
     __table_args__ = (
         Index('idx_status_started', 'status', started_at.desc()),
     )
 
 
-class DocumentationVariant(Base):
-    """Documentation variants"""
+class DocumentationVariant(LocalBase):
+    """Documentation variants - just name and URL"""
     __tablename__ = 'documentation_variants'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     variant_name = Column(String(128), unique=True, nullable=False, index=True)
     url = Column(String(512), nullable=False)
 
-    # Cached content (fetched from URL)
-    content = Column(Text, nullable=True)
-    size_bytes = Column(Integer, nullable=True)
-    cached_at = Column(Float, nullable=True)
-    cache_ttl = Column(Integer, nullable=False, default=3600)
 
-    # Timestamps
+# ============================================================================
+# PUBLIC DATABASE MODELS (PostgreSQL - shared/persistent data)
+# ============================================================================
+
+class AccessToken(PublicBase):
+    """Access tokens for authenticated users"""
+    __tablename__ = 'access_tokens'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    token_hash = Column(String(256), unique=True, nullable=False, index=True)
+    name = Column(String(128), nullable=False)
+    is_admin = Column(Boolean, nullable=False, default=False)
     created_at = Column(Float, nullable=False)
-    updated_at = Column(Float, nullable=False)
+    expires_at = Column(Float, nullable=True)
+    last_used_at = Column(Float, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
 
-
-# Database connection configuration
-def get_database_url() -> str:
-    """Get database URL from environment"""
-    url = os.getenv('DATABASE_URL')
-
-    if not url:
-        # Default to SQLite for local dev
-        return 'sqlite:///./benchmark.db'
-
-    return url
+    __table_args__ = (
+        Index('idx_token_active', 'is_active', 'token_hash'),
+    )
 
 
-# Create engine with connection pooling
-def create_db_engine():
-    db_url = get_database_url()
-    is_postgres = 'postgresql' in db_url
+class PublicTestConfig(PublicBase):
+    """Configuration for which tests are in the public suite"""
+    __tablename__ = 'public_test_config'
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    test_id = Column(String(64), unique=True, nullable=False, index=True)
+    is_public = Column(Boolean, nullable=False, default=True)
+    added_at = Column(Float, nullable=False)
+    added_by = Column(Integer, nullable=True)
+
+
+class LeaderboardEntry(PublicBase):
+    """Public leaderboard entries for documentation submissions"""
+    __tablename__ = 'leaderboard_entries'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    documentation_name = Column(String(256), nullable=False)
+    documentation_url = Column(String(1024), nullable=False)
+    submitter_email = Column(String(256), nullable=True)
+
+    total_score = Column(Float, nullable=False)
+    max_score = Column(Float, nullable=False)
+    percentage = Column(Float, nullable=False, index=True)
+
+    # Store result data directly (no FK since different databases)
+    benchmark_result_id = Column(Integer, nullable=True)
+    evaluation_snapshot = Column(JSON, nullable=True)
+
+    model_used = Column(String(256), nullable=False)
+    submitted_at = Column(Float, nullable=False, index=True)
+    is_visible = Column(Boolean, nullable=False, default=True)
+
+    __table_args__ = (
+        Index('idx_leaderboard_percentage_desc', percentage.desc()),
+        Index('idx_leaderboard_submitted', submitted_at.desc()),
+        Index('idx_leaderboard_visible', 'is_visible', percentage.desc()),
+    )
+
+
+# ============================================================================
+# DATABASE ENGINES AND SESSIONS
+# ============================================================================
+
+def _create_engine(db_url: str):
+    """Create engine with appropriate settings"""
     engine_kwargs = {
         'echo': os.getenv('SQL_ECHO', 'false').lower() == 'true'
     }
 
-    if is_postgres:
+    if _is_postgres(db_url):
         engine_kwargs.update({
             'poolclass': QueuePool,
             'pool_size': int(os.getenv('DB_POOL_SIZE', '10')),
@@ -186,16 +232,38 @@ def create_db_engine():
 
     return create_engine(db_url, **engine_kwargs)
 
-engine = create_db_engine()
 
-# Session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Local database (SQLite)
+local_engine = _create_engine(_get_local_db_url())
+LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=local_engine)
+
+# Public database (PostgreSQL)
+public_engine = _create_engine(_get_public_db_url())
+PublicSession = sessionmaker(autocommit=False, autoflush=False, bind=public_engine)
+
+# Legacy aliases
+engine = local_engine
+SessionLocal = LocalSession
 
 
 @contextmanager
 def get_db() -> Session:
-    """Context manager for database sessions"""
-    session = SessionLocal()
+    """Context manager for local database sessions"""
+    session = LocalSession()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+@contextmanager
+def get_public_db() -> Session:
+    """Context manager for public database sessions"""
+    session = PublicSession()
     try:
         yield session
         session.commit()
@@ -207,22 +275,42 @@ def get_db() -> Session:
 
 
 def init_db():
-    """Initialize database schema"""
+    """Initialize both database schemas"""
     try:
-        Base.metadata.create_all(bind=engine)
-        print(f"Database initialized successfully ({get_database_url()})")
+        LocalBase.metadata.create_all(bind=local_engine)
+        print(f"Local database initialized ({_get_local_db_url()})")
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        print(f"Error initializing local database: {e}")
         raise
+
+    try:
+        PublicBase.metadata.create_all(bind=public_engine)
+        print(f"Public database initialized ({_get_public_db_url()})")
+    except Exception as e:
+        print(f"Error initializing public database: {e}")
+        raise
+
+
+def init_local_db():
+    """Initialize only local database"""
+    LocalBase.metadata.create_all(bind=local_engine)
+    print(f"Local database initialized ({_get_local_db_url()})")
+
+
+def init_public_db():
+    """Initialize only public database"""
+    PublicBase.metadata.create_all(bind=public_engine)
+    print(f"Public database initialized ({_get_public_db_url()})")
 
 
 def drop_all_tables():
     """Drop all tables (use with caution!)"""
-    Base.metadata.drop_all(bind=engine)
+    LocalBase.metadata.drop_all(bind=local_engine)
+    PublicBase.metadata.drop_all(bind=public_engine)
     print("All tables dropped")
 
 
-# Initialize database on module import (only if AUTO_INIT_DB is true)
+# Initialize databases on module import
 if os.getenv('AUTO_INIT_DB', 'true').lower() == 'true':
     try:
         init_db()

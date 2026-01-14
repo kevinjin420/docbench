@@ -13,33 +13,40 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN useradd -m -u 1000 -s /bin/bash appuser
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt gunicorn eventlet
 
 # Copy backend code
-COPY backend/ ./backend/
-COPY database/ ./database/
-COPY api.py .
-COPY tests.json .
+COPY --chown=appuser:appuser backend/ ./backend/
+COPY --chown=appuser:appuser database/ ./database/
+COPY --chown=appuser:appuser api.py .
+COPY --chown=appuser:appuser tests.json .
 
 # Copy built frontend
-COPY --from=frontend-builder /app/frontend/dist ./static/
+COPY --from=frontend-builder --chown=appuser:appuser /app/frontend/dist ./static/
 
-# Create directories
-RUN mkdir -p release
+# Create directories with proper ownership
+RUN mkdir -p release && chown appuser:appuser release
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 5050
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:5050/api/stats || exit 1
+    CMD curl -f http://localhost:5050/api/health || exit 1
 
 # Run with gunicorn + eventlet for production
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5050", "api:app"]
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5050", "--timeout", "120", "api:app"]

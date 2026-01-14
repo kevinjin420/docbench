@@ -9,8 +9,6 @@ interface Props {
 	setSelectedModel: (model: string) => void;
 	selectedVariant: string;
 	setSelectedVariant: (variant: string) => void;
-	temperature: number;
-	setTemperature: (temp: number) => void;
 	queueSize: number;
 	setQueueSize: (size: number) => void;
 	batchSize: number;
@@ -30,8 +28,6 @@ export default function BenchmarkControls({
 	setSelectedModel,
 	selectedVariant,
 	setSelectedVariant,
-	temperature,
-	setTemperature,
 	queueSize,
 	setQueueSize,
 	batchSize,
@@ -44,39 +40,33 @@ export default function BenchmarkControls({
 	canRun = true,
 }: Props) {
 	return (
-		<div className="flex gap-3 items-center justify-between">
-			<div className="flex gap-3 items-center flex-wrap">
-				<div className="flex-1 min-w-[300px]">
-					<ModelSelector
-						models={models}
-						selectedModel={selectedModel}
-						onSelect={setSelectedModel}
-						disabled={isRunning}
-					/>
+		<div className="flex gap-4 items-center justify-between">
+			<div className="flex gap-4 items-center flex-wrap">
+				<div className="flex items-center gap-2">
+					<label className="text-text-secondary text-sm font-medium uppercase tracking-wide">Model:</label>
+					<div className="min-w-[280px]">
+						<ModelSelector
+							models={models}
+							selectedModel={selectedModel}
+							onSelect={setSelectedModel}
+							disabled={isRunning}
+						/>
+					</div>
 				</div>
 
-				<div className="flex-1 min-w-[250px]">
-					<DocumentationSelector
-						variants={variants}
-						selectedVariant={selectedVariant}
-						onSelect={setSelectedVariant}
-						disabled={isRunning}
-					/>
+				<div className="flex items-center gap-2">
+					<label className="text-text-secondary text-sm font-medium uppercase tracking-wide">Documentation:</label>
+					<div className="min-w-[220px]">
+						<DocumentationSelector
+							variants={variants}
+							selectedVariant={selectedVariant}
+							onSelect={setSelectedVariant}
+							disabled={isRunning}
+						/>
+					</div>
 				</div>
 
-				<span>temp</span>
-				<input
-					type="number"
-					min="0"
-					max="2"
-					step="0.1"
-					value={temperature}
-					onChange={(e) => setTemperature(parseFloat(e.target.value))}
-					disabled={isRunning}
-					className="w-20 px-3 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed"
-				/>
-
-				<span>#</span>
+				<span className="text-text-muted text-sm uppercase">Runs:</span>
 				<input
 					type="number"
 					min="1"
@@ -85,11 +75,11 @@ export default function BenchmarkControls({
 					value={queueSize}
 					onChange={(e) => setQueueSize(parseInt(e.target.value) || 1)}
 					disabled={isRunning}
-					className="w-16 px-2 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
+					className="w-16 px-2 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
 					title="Number of runs to queue"
 				/>
 
-				<span>batch</span>
+				<span className="text-text-muted text-sm uppercase">Batch:</span>
 				<input
 					type="number"
 					min="1"
@@ -99,18 +89,18 @@ export default function BenchmarkControls({
 					onChange={(e) => setBatchSize(e.target.value === "" ? 0 : parseInt(e.target.value))}
 					onBlur={(e) => { if (!e.target.value || parseInt(e.target.value) < 1) setBatchSize(45); }}
 					disabled={isRunning || customBatchSizes.trim() !== ""}
-					className="w-16 px-2 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
+					className="w-16 px-2 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
 					title="Tests per batch"
 				/>
 
-				<span>custom</span>
+				<span className="text-text-muted text-sm uppercase">Custom:</span>
 				<input
 					type="text"
 					value={customBatchSizes}
 					onChange={(e) => setCustomBatchSizes(e.target.value)}
 					disabled={isRunning}
-					placeholder="30,30,30,15,15"
-					className="w-32 px-2 py-2 bg-zinc-900 border border-terminal-border rounded text-gray-300 text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
+					placeholder="30,30,30,15"
+					className="w-28 px-2 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
 					title="Custom batch sizes (comma-separated)"
 				/>
 			</div>
@@ -120,14 +110,14 @@ export default function BenchmarkControls({
 					<button
 						onClick={onRun}
 						disabled={!canRun || !selectedModel || !selectedVariant}
-						className="px-6 py-2 bg-terminal-accent text-black rounded text-sm font-semibold whitespace-nowrap hover:bg-green-500 disabled:bg-terminal-border disabled:text-gray-600 disabled:cursor-not-allowed cursor-pointer"
+						className="btn btn-primary"
 					>
-						Run {queueSize}
+						Run {queueSize > 1 ? `(${queueSize})` : ""}
 					</button>
 				) : (
 					<button
 						onClick={onCancel}
-						className="px-6 py-2 bg-red-600 text-white rounded text-sm font-semibold whitespace-nowrap hover:bg-red-700 cursor-pointer"
+						className="btn btn-danger-solid"
 					>
 						Cancel
 					</button>

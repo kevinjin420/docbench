@@ -8,6 +8,9 @@ from . import files
 from . import results
 from . import health
 from . import graphs
+from . import auth
+from . import public
+from . import admin
 
 
 def register_all_routes(app, socketio, running_benchmarks):
@@ -18,6 +21,9 @@ def register_all_routes(app, socketio, running_benchmarks):
     results.register_routes(app, socketio, running_benchmarks)
     health.register_routes(app, socketio, running_benchmarks)
     graphs.register_routes(app, socketio, running_benchmarks)
+    auth.register_routes(app, socketio, running_benchmarks)
+    public.register_routes(app, socketio, running_benchmarks)
+    admin.register_routes(app, socketio, running_benchmarks)
 
 
 __all__ = ['register_all_routes']

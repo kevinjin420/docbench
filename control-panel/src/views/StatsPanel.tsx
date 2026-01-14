@@ -23,7 +23,7 @@ export default function StatsPanel({ stats, apiKeyConfigured }: Props) {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-3">
           <div className={`flex items-center gap-2 px-4 py-3 rounded border text-sm ${
             apiKeyConfigured
-              ? 'bg-green-950 border-terminal-accent text-terminal-accent'
+              ? 'bg-green-950 border-green-600 text-green-400'
               : 'bg-red-950 border-red-600 text-red-400'
           }`}>
             <span className="text-sm">{apiKeyConfigured ? 'OK' : 'Missing'}</span>

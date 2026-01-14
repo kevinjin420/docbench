@@ -94,3 +94,41 @@ export const MODEL_DISPLAY_NAMES: Record<string, string> = {
 	"o1": "O1",
 	"o1-mini": "O1 Mini",
 };
+
+export interface LeaderboardEntry {
+	id: number;
+	rank: number;
+	documentation_name: string;
+	documentation_url: string;
+	percentage: number;
+	total_score: number;
+	max_score: number;
+	model_used: string;
+	submitted_at: number;
+}
+
+export interface PublicTest {
+	id: string;
+	level: number;
+	category: string;
+	task: string;
+	points: number;
+}
+
+export interface PublicBenchmarkStatus {
+	run_id?: string;
+	status: "idle" | "running" | "evaluating" | "completed" | "failed";
+	progress?: string;
+	completed?: number;
+	total?: number;
+	result?: {
+		run_id: string;
+		percentage: number;
+		total_score: number;
+		max_score: number;
+		documentation_name?: string;
+		documentation_url?: string;
+		model?: string;
+	};
+	error?: string;
+}

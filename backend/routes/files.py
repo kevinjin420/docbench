@@ -5,6 +5,7 @@ import io
 import json
 from datetime import datetime
 from pathlib import Path
+from backend.utils.auth import require_auth
 from database import BenchmarkResultService, get_db
 from database.models import BenchmarkResult
 
@@ -37,6 +38,7 @@ def _format_result(result, collection=None):
 def register_routes(app, socketio=None, running_benchmarks=None):
 
     @app.route('/api/test-files', methods=['GET'])
+    @require_auth
     def get_test_files():
         limit = request.args.get('limit', 50, type=int)
         with get_db() as session:
@@ -64,20 +66,24 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         return jsonify({'files': [_format_result(r) for r in results]})
 
     @app.route('/api/stashes', methods=['GET'])
+    @require_auth
     def get_stashes():
         return jsonify({'stashes': BenchmarkResultService.get_collections()})
 
     @app.route('/api/stash/<stash_name>/files', methods=['GET'])
+    @require_auth
     def get_stash_files(stash_name):
         results = BenchmarkResultService.get_collection_results(stash_name)
         return jsonify({'files': [_format_result(r, stash_name) for r in results]})
 
     @app.route('/api/stash/<stash_name>', methods=['DELETE'])
+    @require_auth
     def delete_stash(stash_name):
         BenchmarkResultService.delete_collection(stash_name)
         return jsonify({'status': 'success'})
 
     @app.route('/api/stash', methods=['POST'])
+    @require_auth
     def stash():
         with get_db() as session:
             uncollected = session.query(BenchmarkResult).filter(
@@ -97,6 +103,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
             })
 
     @app.route('/api/stash-selected', methods=['POST'])
+    @require_auth
     def stash_selected():
         data = request.json
         run_ids = data.get('run_ids', [])
@@ -113,6 +120,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         })
 
     @app.route('/api/delete-file', methods=['POST'])
+    @require_auth
     def delete_file():
         data = request.json
         file_path = data.get('file_path')
@@ -126,6 +134,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         return jsonify({'error': 'Result not found'}), 404
 
     @app.route('/api/clean', methods=['POST'])
+    @require_auth
     def clean():
         with get_db() as session:
             deleted = session.query(BenchmarkResult).filter(
@@ -134,6 +143,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         return jsonify({'status': 'success', 'deleted': deleted})
 
     @app.route('/api/export-collections-csv', methods=['POST'])
+    @require_auth
     def export_collections_csv():
         data = request.json
         collection_names = data.get('collections', [])

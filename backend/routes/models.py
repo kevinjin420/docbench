@@ -1,6 +1,7 @@
 """Model and variant route handlers"""
 from flask import jsonify, request
 from backend.services import LLMService
+from backend.utils.auth import require_auth
 from database import DocumentationService
 
 
@@ -35,6 +36,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
         return jsonify({'variants': variants})
 
     @app.route('/api/variants', methods=['POST'])
+    @require_auth
     def create_variant():
         data = request.get_json()
         variant_name = data.get('variant_name')
@@ -50,6 +52,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/variants/<variant_name>', methods=['DELETE'])
+    @require_auth
     def delete_variant(variant_name):
         try:
             DocumentationService.delete_variant(variant_name)

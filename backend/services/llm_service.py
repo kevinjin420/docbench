@@ -54,10 +54,11 @@ class LLMService:
             response = self.client.models.list()
             models = [m.model_dump() for m in response.data]
             LLMService._models_cache = {m['id']: m for m in models}
+            logger.info(f"Successfully fetched {len(models)} models from OpenRouter")
             return models
         except Exception as e:
-            logger.warning(f"Failed to fetch models from OpenRouter: {e}")
-            return []
+            logger.error(f"Failed to fetch models from OpenRouter: {e}")
+            raise RuntimeError(f"OpenRouter API error: {e}")
 
     def _get_model_data(self, model_id: str) -> Optional[Dict]:
         """Get model data from cache, fetching if needed"""
@@ -101,21 +102,34 @@ class LLMService:
         }
 
     def _construct_prompt(self, doc_content: str, tests_to_use: List[Dict]) -> str:
-        """Construct full prompt for LLM"""
-        test_prompts = {
-            "tests": [
-                {
-                    "id": test["id"],
-                    "level": test["level"],
-                    "category": test["category"],
-                    "task": test["task"],
-                    "points": test["points"],
-                    "hints": test["hints"]
-                }
-                for test in tests_to_use
-            ]
-        }
+        """Construct full prompt for LLM with support for different test types"""
+        formatted_tests = []
+        for test in tests_to_use:
+            test_data = {
+                "id": test["id"],
+                "level": test["level"],
+                "category": test["category"],
+                "task": test["task"],
+                "points": test["points"],
+                "hints": test["hints"]
+            }
+            test_type = test.get("type", "generate")
+            test_data["type"] = test_type
 
+            if test_type == "debug" and "broken_code" in test:
+                test_data["broken_code"] = test["broken_code"]
+                if "error_hint" in test:
+                    test_data["error_hint"] = test["error_hint"]
+            elif test_type == "complete" and "partial_code" in test:
+                test_data["partial_code"] = test["partial_code"]
+                if "completion_hint" in test:
+                    test_data["completion_hint"] = test["completion_hint"]
+            elif test_type == "refactor" and "python_code" in test:
+                test_data["python_code"] = test["python_code"]
+
+            formatted_tests.append(test_data)
+
+        test_prompts = {"tests": formatted_tests}
         test_prompts_json = json.dumps(test_prompts, indent=2)
 
         prompt_template = """You are a Jac programming language expert. Write valid Jac code for each test case based on the documentation.
@@ -125,6 +139,12 @@ class LLMService:
 
 # Test Cases
 {test_prompts_json}
+
+# Instructions by Test Type
+- **generate**: Write complete Jac code from scratch based on the task description.
+- **debug**: Fix the provided broken_code. Return the corrected, working Jac code.
+- **complete**: Fill in the blanks (marked with ____) in the partial_code. Return the complete code.
+- **refactor**: Convert the provided python_code to equivalent Jac code.
 
 # Task
 Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and \\" for quotes in the code strings.
@@ -364,12 +384,15 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
         self,
         model_id: str,
         variant: str,
-        temperature: float,
-        max_tokens: int,
-        batch_num: int,
+        max_tokens: Optional[int] = None,
+        batch_num: int = 1,
         batch_size: int = 45
     ) -> Dict:
         """Rerun a single batch and return the responses"""
+        temperature = float(os.getenv('DEFAULT_TEMPERATURE', '0.1'))
+        if max_tokens is None:
+            max_tokens = self._get_max_tokens_for_model(model_id)
+
         doc_content = self.get_doc_content(variant)
         if doc_content is None:
             raise ValueError(f"No documentation content found for variant '{variant}'")
@@ -390,3 +413,116 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
             raise RuntimeError(f"Batch {batch_num} failed: {error}")
 
         return responses
+
+    def run_public_benchmark(
+        self,
+        model_id: str,
+        documentation_url: str,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        public_test_ids: Optional[List[str]] = None,
+        progress_callback: Optional[Callable] = None
+    ) -> Dict:
+        """Run benchmark with only public tests and user-provided documentation URL"""
+        import requests
+
+        if temperature is None:
+            temperature = float(os.getenv('DEFAULT_TEMPERATURE', '0.1'))
+        if max_tokens is None:
+            max_tokens = self._get_max_tokens_for_model(model_id)
+
+        try:
+            response = requests.get(documentation_url, timeout=60)
+            response.raise_for_status()
+            doc_content = response.text
+        except Exception as e:
+            raise ValueError(f"Failed to fetch documentation from URL: {e}")
+
+        if public_test_ids:
+            public_test_ids_set = set(public_test_ids)
+            tests_to_use = [t for t in self.tests if t['id'] in public_test_ids_set]
+        else:
+            tests_to_use = self.tests
+
+        if not tests_to_use:
+            raise ValueError("No tests to run")
+
+        batch_size = min(45, len(tests_to_use))
+        num_batches = (len(tests_to_use) + batch_size - 1) // batch_size
+        batches = []
+        for i in range(num_batches):
+            start_idx = i * batch_size
+            end_idx = min(start_idx + batch_size, len(tests_to_use))
+            batches.append((i + 1, tests_to_use[start_idx:end_idx]))
+
+        batch_statuses = {i + 1: {"status": "pending", "retry": 0, "max_retries": 2} for i in range(num_batches)}
+
+        def batch_status_callback(batch_num, status, retry, max_retries):
+            batch_statuses[batch_num] = {"status": status, "retry": retry, "max_retries": max_retries}
+            if progress_callback:
+                progress_callback(
+                    completed * batch_size, len(tests_to_use), f"Batch {batch_num} {status}",
+                    batch_num=completed, num_batches=num_batches
+                )
+
+        if progress_callback:
+            progress_callback(0, len(tests_to_use), f"Running {num_batches} batches")
+
+        responses = {}
+        completed = 0
+        failed = 0
+        errors = []
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [
+                executor.submit(self._run_batch, model_id, doc_content, batch, temperature, max_tokens, batch_num, batch_status_callback)
+                for batch_num, batch in batches
+            ]
+
+            for future in as_completed(futures):
+                batch_num, batch_responses, error, retries = future.result()
+                if error:
+                    failed += 1
+                    errors.append(f"Batch {batch_num}: {error}")
+                else:
+                    responses.update(batch_responses)
+                completed += 1
+
+                if progress_callback:
+                    progress_callback(
+                        completed * batch_size, len(tests_to_use), f"Batch {completed}/{num_batches}"
+                    )
+
+        if progress_callback:
+            progress_callback(len(tests_to_use), len(tests_to_use), "Completed")
+
+        if not responses:
+            raise RuntimeError(f"No responses generated - all batches failed: {'; '.join(errors)}")
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        safe_model_name = model_id.replace('/', '-')
+        run_id = f"public-{safe_model_name}-{timestamp}"
+
+        BenchmarkResultService.create(
+            run_id=run_id,
+            model=model_id,
+            model_id=model_id,
+            variant='public',
+            temperature=temperature,
+            max_tokens=max_tokens,
+            total_tests=len(tests_to_use),
+            responses=responses,
+            batch_size=batch_size,
+            num_batches=num_batches,
+            metadata={'documentation_url': documentation_url, 'is_public': True}
+        )
+
+        return {
+            'run_id': run_id,
+            'model': model_id,
+            'variant': 'public',
+            'num_responses': len(responses),
+            'responses': responses,
+            'failed_batches': failed,
+            'errors': errors if errors else None
+        }

@@ -1,32 +1,60 @@
 from .models import (
-    Base,
+    LocalBase,
+    PublicBase,
     Collection,
     BenchmarkResult,
     BenchmarkRun,
     DocumentationVariant,
+    AccessToken,
+    PublicTestConfig,
+    LeaderboardEntry,
     get_db,
+    get_public_db,
     init_db,
-    engine
+    init_local_db,
+    init_public_db,
+    local_engine,
+    public_engine,
 )
+
+# Legacy aliases
+Base = LocalBase
+engine = local_engine
 
 from .services import (
     BenchmarkResultService,
     BenchmarkRunService,
     DocumentationService,
-    CollectionService
+    CollectionService,
+    AccessTokenService,
+    PublicTestConfigService,
+    LeaderboardService
 )
 
 __all__ = [
     'Base',
+    'LocalBase',
+    'PublicBase',
     'Collection',
     'BenchmarkResult',
     'BenchmarkRun',
     'DocumentationVariant',
+    'AccessToken',
+    'PublicTestConfig',
+    'LeaderboardEntry',
     'get_db',
+    'get_public_db',
     'init_db',
+    'init_local_db',
+    'init_public_db',
     'engine',
+    'local_engine',
+    'public_engine',
     'BenchmarkResultService',
     'BenchmarkRunService',
     'DocumentationService',
-    'CollectionService'
+    'CollectionService',
+    'AccessTokenService',
+    'PublicTestConfigService',
+    'LeaderboardService'
 ]

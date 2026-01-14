@@ -4,14 +4,15 @@ Results-related route handlers
 from flask import jsonify, request
 import traceback
 from backend.services import EvaluatorService
+from backend.utils.auth import require_auth
 from database import BenchmarkResultService
 
 
 def register_routes(app, socketio=None, running_benchmarks=None):
     """Register results routes"""
 
-
     @app.route('/api/stats', methods=['GET'])
+    @require_auth
     def get_stats():
         """Get benchmark statistics"""
         try:
@@ -49,6 +50,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/compare', methods=['POST'])
+    @require_auth
     def compare_stashes():
         """Compare two stash collections"""
         try:

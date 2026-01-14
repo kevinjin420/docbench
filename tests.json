@@ -1,5 +1,19 @@
 [
   {
+    "id": "L1_comments_01",
+    "level": 1,
+    "category": "Syntax",
+    "task": "Create a multi-line comment using #* *# syntax",
+    "required_elements": [
+      "#*",
+      "*#"
+    ],
+    "points": 5,
+    "hints": [
+      "Multi-line comment delimiters"
+    ]
+  },
+  {
     "id": "L1_entry_01",
     "level": 1,
     "category": "Entry Points",
@@ -25,6 +39,80 @@
     "points": 5,
     "hints": [
       "Named entry points"
+    ]
+  },
+  {
+    "id": "L1_stdlib_01",
+    "level": 1,
+    "category": "Standard Library",
+    "task": "Use range() function in a for loop to iterate from 0 to 9",
+    "required_elements": [
+      "for",
+      "range("
+    ],
+    "points": 5,
+    "hints": [
+      "range() generates a sequence of numbers"
+    ]
+  },
+  {
+    "id": "L1_strings_01",
+    "level": 1,
+    "category": "Strings",
+    "task": "Create an f-string that interpolates a variable 'name' into a greeting",
+    "required_elements": [
+      "f\"",
+      "{",
+      "}"
+    ],
+    "points": 5,
+    "hints": [
+      "F-string interpolation"
+    ]
+  },
+  {
+    "id": "L1_strings_02",
+    "level": 1,
+    "category": "Strings",
+    "task": "Create a multi-line string using triple quotes",
+    "required_elements": [
+      "\"\"\""
+    ],
+    "points": 5,
+    "hints": [
+      "Triple-quoted strings"
+    ]
+  },
+  {
+    "id": "L1_types_01",
+    "level": 1,
+    "category": "Basic Types",
+    "task": "Create variables of types: int, float, str, bool with appropriate values",
+    "required_elements": [
+      ": int",
+      ": float",
+      ": str",
+      ": bool"
+    ],
+    "points": 5,
+    "hints": [
+      "Basic type annotations"
+    ]
+  },
+  {
+    "id": "L1_types_02",
+    "level": 1,
+    "category": "Basic Types",
+    "task": "Create an enum called Status with values PENDING, ACTIVE, COMPLETED",
+    "required_elements": [
+      "enum Status",
+      "PENDING",
+      "ACTIVE",
+      "COMPLETED"
+    ],
+    "points": 5,
+    "hints": [
+      "Enum declaration syntax"
     ]
   },
   {
@@ -75,77 +163,48 @@
     ]
   },
   {
-    "id": "L1_types_01",
-    "level": 1,
-    "category": "Basic Types",
-    "task": "Create variables of types: int, float, str, bool with appropriate values",
+    "id": "L2_coll_01",
+    "level": 2,
+    "category": "Collections",
+    "task": "Create a list of integers and use list comprehension to square each element",
     "required_elements": [
-      ": int",
-      ": float",
-      ": str",
-      ": bool"
+      "[",
+      "for",
+      "in",
+      "]"
     ],
-    "points": 5,
+    "points": 10,
     "hints": [
-      "Basic type annotations"
+      "List comprehension syntax"
     ]
   },
   {
-    "id": "L1_types_02",
-    "level": 1,
-    "category": "Basic Types",
-    "task": "Create an enum called Status with values PENDING, ACTIVE, COMPLETED",
+    "id": "L2_coll_02",
+    "level": 2,
+    "category": "Collections",
+    "task": "Create a dictionary mapping names to ages and access a value",
     "required_elements": [
-      "enum Status",
-      "PENDING",
-      "ACTIVE",
-      "COMPLETED"
+      "{",
+      ":",
+      "}"
     ],
-    "points": 5,
+    "points": 10,
     "hints": [
-      "Enum declaration syntax"
+      "Dictionary literal syntax"
     ]
   },
   {
-    "id": "L1_comments_01",
-    "level": 1,
-    "category": "Syntax",
-    "task": "Create a multi-line comment using #* *# syntax",
+    "id": "L2_coll_03",
+    "level": 2,
+    "category": "Collections",
+    "task": "Create a set and use set operations (union or intersection)",
     "required_elements": [
-      "#*",
-      "*#"
-    ],
-    "points": 5,
-    "hints": [
-      "Multi-line comment delimiters"
-    ]
-  },
-  {
-    "id": "L1_strings_01",
-    "level": 1,
-    "category": "Strings",
-    "task": "Create an f-string that interpolates a variable 'name' into a greeting",
-    "required_elements": [
-      "f\"",
       "{",
       "}"
     ],
-    "points": 5,
+    "points": 10,
     "hints": [
-      "F-string interpolation"
-    ]
-  },
-  {
-    "id": "L1_strings_02",
-    "level": 1,
-    "category": "Strings",
-    "task": "Create a multi-line string using triple quotes",
-    "required_elements": [
-      "\"\"\""
-    ],
-    "points": 5,
-    "hints": [
-      "Triple-quoted strings"
+      "Set literals and operations"
     ]
   },
   {
@@ -242,59 +301,187 @@
     "id": "L2_func_03",
     "level": 2,
     "category": "Functions",
-    "task": "Write a lambda function that doubles a number",
+    "task": "Write a lambda function that doubles a number using |params| -> type { body } syntax",
     "required_elements": [
-      "with",
-      "|>"
-    ],
-    "points": 10,
-    "hints": [
-      "Lambda syntax: with x |> x * 2"
-    ]
-  },
-  {
-    "id": "L2_coll_01",
-    "level": 2,
-    "category": "Collections",
-    "task": "Create a list of integers and use list comprehension to square each element",
-    "required_elements": [
-      "[",
-      "for",
-      "in",
-      "]"
-    ],
-    "points": 10,
-    "hints": [
-      "List comprehension syntax"
-    ]
-  },
-  {
-    "id": "L2_coll_02",
-    "level": 2,
-    "category": "Collections",
-    "task": "Create a dictionary mapping names to ages and access a value",
-    "required_elements": [
-      "{",
-      ":",
-      "}"
-    ],
-    "points": 10,
-    "hints": [
-      "Dictionary literal syntax"
-    ]
-  },
-  {
-    "id": "L2_coll_03",
-    "level": 2,
-    "category": "Collections",
-    "task": "Create a set and use set operations (union or intersection)",
-    "required_elements": [
+      "|",
+      "->",
       "{",
       "}"
     ],
     "points": 10,
     "hints": [
-      "Set literals and operations"
+      "Lambda syntax: |x: int| -> int { x * 2 }"
+    ]
+  },
+  {
+    "id": "L2_stdlib_01",
+    "level": 2,
+    "category": "Standard Library",
+    "task": "Use len() function to get the length of a list",
+    "required_elements": [
+      "len("
+    ],
+    "points": 10,
+    "hints": [
+      "len() returns the length of a collection"
+    ]
+  },
+  {
+    "id": "L2_stdlib_02",
+    "level": 2,
+    "category": "Standard Library",
+    "task": "Use enumerate() to iterate with index and value",
+    "required_elements": [
+      "enumerate(",
+      "for"
+    ],
+    "points": 10,
+    "hints": [
+      "enumerate() provides index with each item"
+    ]
+  },
+  {
+    "id": "L3_ability_01",
+    "level": 3,
+    "category": "Abilities",
+    "task": "Define a standalone ability using 'can' that can be attached to objects",
+    "required_elements": [
+      "can"
+    ],
+    "points": 15,
+    "hints": [
+      "Abilities are standalone functions that can be composed"
+    ]
+  },
+  {
+    "id": "L3_access_01",
+    "level": 3,
+    "category": "Access Modifiers",
+    "task": "Create an object with a private attribute using :priv modifier",
+    "required_elements": [
+      ":priv",
+      "has"
+    ],
+    "points": 15,
+    "hints": [
+      "Private attributes use :priv modifier"
+    ]
+  },
+  {
+    "id": "L3_access_02",
+    "level": 3,
+    "category": "Access Modifiers",
+    "task": "Create an object with a protected method using :prot modifier",
+    "required_elements": [
+      ":prot",
+      "can"
+    ],
+    "points": 15,
+    "hints": [
+      "Protected methods use :prot modifier"
+    ]
+  },
+  {
+    "id": "L3_access_03",
+    "level": 3,
+    "category": "Access Modifiers",
+    "task": "Create an object with a public ability using :pub modifier",
+    "required_elements": [
+      ":pub",
+      "can"
+    ],
+    "points": 15,
+    "hints": [
+      "Public abilities use :pub modifier"
+    ]
+  },
+  {
+    "id": "L3_access_04",
+    "level": 3,
+    "category": "Access Modifiers",
+    "task": "Create an object mixing :pub, :priv, and :prot modifiers on different members",
+    "required_elements": [
+      ":pub",
+      ":priv",
+      ":prot"
+    ],
+    "points": 15,
+    "hints": [
+      "Mix access modifiers in single object"
+    ]
+  },
+  {
+    "id": "L3_access_05",
+    "level": 3,
+    "category": "Access Modifiers",
+    "task": "Create a child object that overrides a protected method from parent",
+    "required_elements": [
+      "obj",
+      "(",
+      ":prot",
+      "can"
+    ],
+    "points": 15,
+    "hints": [
+      "Override protected method in child class"
+    ]
+  },
+  {
+    "id": "L3_check_01",
+    "level": 3,
+    "category": "Testing",
+    "task": "Use check keyword for soft assertion that continues on failure",
+    "required_elements": [
+      "test",
+      "check"
+    ],
+    "points": 15,
+    "hints": [
+      "check is a soft assertion unlike assert"
+    ]
+  },
+  {
+    "id": "L3_debug_01",
+    "level": 3,
+    "category": "Debugging",
+    "task": "Fix the following code that is missing the entry point",
+    "type": "debug",
+    "broken_code": "print(\"Hello World\");",
+    "error_hint": "Code runs but never executes - missing entry point",
+    "required_elements": [
+      "with entry",
+      "print"
+    ],
+    "points": 15,
+    "hints": [
+      "Add 'with entry' block to make code execute"
+    ]
+  },
+  {
+    "id": "L3_error_01",
+    "level": 3,
+    "category": "Error Handling",
+    "task": "Use try-except to handle a potential error",
+    "required_elements": [
+      "try",
+      "except"
+    ],
+    "points": 15,
+    "hints": [
+      "Exception handling"
+    ]
+  },
+  {
+    "id": "L3_error_02",
+    "level": 3,
+    "category": "Error Handling",
+    "task": "Use assert to validate a condition with a custom error message",
+    "required_elements": [
+      "assert"
+    ],
+    "points": 15,
+    "hints": [
+      "Assertion syntax"
     ]
   },
   {
@@ -345,14 +532,14 @@
     "id": "L3_obj_04",
     "level": 3,
     "category": "Objects",
-    "task": "Create an object that inherits from another object using :ChildClass:ParentClass: syntax",
+    "task": "Create an object that inherits from another object using obj Child(Parent) syntax",
     "required_elements": [
       "obj",
-      ":"
+      "("
     ],
     "points": 15,
     "hints": [
-      "Inheritance syntax"
+      "Inheritance syntax: obj Child(Parent) { ... }"
     ]
   },
   {
@@ -367,46 +554,6 @@
     "points": 15,
     "hints": [
       "Object instantiation and attribute access"
-    ]
-  },
-  {
-    "id": "L3_ability_01",
-    "level": 3,
-    "category": "Abilities",
-    "task": "Define a standalone ability using 'can' that can be attached to objects",
-    "required_elements": [
-      "can"
-    ],
-    "points": 15,
-    "hints": [
-      "Abilities are standalone functions that can be composed"
-    ]
-  },
-  {
-    "id": "L3_error_01",
-    "level": 3,
-    "category": "Error Handling",
-    "task": "Use try-except to handle a potential error",
-    "required_elements": [
-      "try",
-      "except"
-    ],
-    "points": 15,
-    "hints": [
-      "Exception handling"
-    ]
-  },
-  {
-    "id": "L3_error_02",
-    "level": 3,
-    "category": "Error Handling",
-    "task": "Use assert to validate a condition with a custom error message",
-    "required_elements": [
-      "assert"
-    ],
-    "points": 15,
-    "hints": [
-      "Assertion syntax"
     ]
   },
   {
@@ -437,46 +584,101 @@
     ]
   },
   {
-    "id": "L4_node_01",
+    "id": "L4_complete_01",
     "level": 4,
-    "category": "Nodes",
-    "task": "Create a node type 'City' with attributes name (str) and population (int)",
+    "category": "Completion",
+    "task": "Complete the node definition by adding the missing attribute types",
+    "type": "complete",
+    "partial_code": "node Product {\n  has name____;\n  has price____;\n  has quantity____;\n}",
+    "completion_hint": "Add type annotations for str, float, int",
     "required_elements": [
-      "node City",
-      "has name: str",
-      "has population: int"
+      ": str",
+      ": float",
+      ": int"
     ],
     "points": 20,
     "hints": [
-      "Node definition with 'node' keyword"
+      "Add type annotations after colons"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L4_node_02",
+    "id": "L4_complete_02",
     "level": 4,
-    "category": "Nodes",
-    "task": "Create a node with a method that returns formatted information",
+    "category": "Completion",
+    "task": "Complete the edge connection between nodes",
+    "type": "complete",
+    "partial_code": "a = NodeA();\nb = NodeB();\na ____ b;",
+    "completion_hint": "Add the directed edge operator",
     "required_elements": [
-      "node",
-      "can",
-      "return"
+      "++>"
     ],
     "points": 20,
     "hints": [
-      "Nodes can have methods like objects"
+      "Use ++> for directed connection"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L4_node_03",
+    "id": "L4_debug_01",
     "level": 4,
-    "category": "Nodes",
-    "task": "Spawn a City node instance with specific attribute values",
+    "category": "Debugging",
+    "task": "Fix the broken edge creation syntax in this code",
+    "type": "debug",
+    "broken_code": "node A {}\nnode B {}\na = A();\nb = B();\na -> b;",
+    "error_hint": "Edge connection syntax is incorrect",
     "required_elements": [
-      "City("
+      "++>"
     ],
     "points": 20,
     "hints": [
-      "Node instantiation syntax"
+      "Use ++> for directed edge connection"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L4_debug_02",
+    "level": 4,
+    "category": "Debugging",
+    "task": "Fix the node attribute access error",
+    "type": "debug",
+    "broken_code": "node City {\n  has name: str;\n}\nc = City(name=\"NYC\");\nprint(c.city_name);",
+    "error_hint": "Attribute name mismatch",
+    "required_elements": [
+      ".name"
+    ],
+    "points": 20,
+    "hints": [
+      "Access the correct attribute name"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -491,6 +693,14 @@
     "points": 20,
     "hints": [
       "Edge definition with 'edge' keyword"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -504,6 +714,14 @@
     "points": 20,
     "hints": [
       "Directed edge connection: node1 ++> node2"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -517,20 +735,36 @@
     "points": 20,
     "hints": [
       "Bidirectional edge: node1 <++> node2"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
     "id": "L4_edge_04",
     "level": 4,
     "category": "Edges",
-    "task": "Connect nodes with a typed edge: node1 +[EdgeType]+> node2",
+    "task": "Connect nodes with a typed edge using +>:EdgeType:+> syntax",
     "required_elements": [
-      "+[",
-      "]+>"
+      "+>:",
+      ":+>"
     ],
     "points": 20,
     "hints": [
-      "Typed edge connection syntax"
+      "Typed edge connection: node1 +>:EdgeType:+> node2"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -546,20 +780,35 @@
     "points": 20,
     "hints": [
       "Build a connected graph structure"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
     "id": "L4_graph_02",
     "level": 4,
     "category": "Graph Structure",
-    "task": "Access the root node of a graph using :> root syntax",
+    "task": "Access the root node of a graph using backtick root syntax",
     "required_elements": [
-      ":>",
-      "root"
+      "`root"
     ],
     "points": 20,
     "hints": [
-      "Root node access"
+      "Root node access: `root"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -573,106 +822,81 @@
     "points": 20,
     "hints": [
       "Edge deletion"
-    ]
-  },
-  {
-    "id": "L5_walker_01",
-    "level": 5,
-    "category": "Walkers",
-    "task": "Create a walker named 'Explorer' with attribute visited_count (int) initialized to 0",
-    "required_elements": [
-      "walker Explorer",
-      "has visited_count: int",
-      "= 0"
     ],
-    "points": 25,
-    "hints": [
-      "Walker definition with attributes"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L5_walker_02",
-    "level": 5,
-    "category": "Walkers",
-    "task": "Define walker entry and exit abilities using 'can' with entry/exit keywords",
+    "id": "L4_node_01",
+    "level": 4,
+    "category": "Nodes",
+    "task": "Create a node type 'City' with attributes name (str) and population (int)",
     "required_elements": [
-      "walker",
+      "node City",
+      "has name: str",
+      "has population: int"
+    ],
+    "points": 20,
+    "hints": [
+      "Node definition with 'node' keyword"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L4_node_02",
+    "level": 4,
+    "category": "Nodes",
+    "task": "Create a node with a method that returns formatted information",
+    "required_elements": [
+      "node",
       "can",
-      "with entry",
-      "with exit"
+      "return"
     ],
-    "points": 25,
+    "points": 20,
     "hints": [
-      "Walker lifecycle: entry executes first, exit last"
+      "Nodes can have methods like objects"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L5_walker_03",
-    "level": 5,
-    "category": "Walkers",
-    "task": "Spawn a walker on the root node",
+    "id": "L4_node_03",
+    "level": 4,
+    "category": "Nodes",
+    "task": "Spawn a City node instance with specific attribute values",
     "required_elements": [
-      "spawn",
-      "root"
+      "City("
     ],
-    "points": 25,
+    "points": 20,
     "hints": [
-      "Walker spawning: Walker() spawn root"
-    ]
-  },
-  {
-    "id": "L5_visit_01",
-    "level": 5,
-    "category": "Traversal",
-    "task": "Use visit statement to traverse to connected nodes",
-    "required_elements": [
-      "visit",
-      "-->"
+      "Node instantiation syntax"
     ],
-    "points": 25,
-    "hints": [
-      "visit --> traverses outgoing edges"
-    ]
-  },
-  {
-    "id": "L5_visit_02",
-    "level": 5,
-    "category": "Traversal",
-    "task": "Visit nodes with edge type filter: visit --[EdgeType]-->",
-    "required_elements": [
-      "visit",
-      "--[",
-      "]-->"
-    ],
-    "points": 25,
-    "hints": [
-      "Filtered traversal by edge type"
-    ]
-  },
-  {
-    "id": "L5_visit_03",
-    "level": 5,
-    "category": "Traversal",
-    "task": "Use 'here' keyword to reference current node in walker",
-    "required_elements": [
-      "here"
-    ],
-    "points": 25,
-    "hints": [
-      "'here' refers to current node during traversal"
-    ]
-  },
-  {
-    "id": "L5_visit_04",
-    "level": 5,
-    "category": "Traversal",
-    "task": "Visit all nodes in breadth-first order using visit queue",
-    "required_elements": [
-      "visit"
-    ],
-    "points": 25,
-    "hints": [
-      "visit adds to BFS queue"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -688,6 +912,14 @@
     "points": 25,
     "hints": [
       "Node abilities can specify walker type trigger"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -703,6 +935,113 @@
     "points": 25,
     "hints": [
       "Walker abilities can specify node type trigger"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L5_complete_01",
+    "level": 5,
+    "category": "Completion",
+    "task": "Complete the walker ability signature",
+    "type": "complete",
+    "partial_code": "walker Counter {\n  has count: int = 0;\n  can increment ____ Node ____ {\n    self.count += 1;\n  }\n}",
+    "completion_hint": "Add 'with' keyword and 'entry' trigger",
+    "required_elements": [
+      "with",
+      "entry"
+    ],
+    "points": 25,
+    "hints": [
+      "Walker abilities use 'with Type entry' syntax"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L5_complete_02",
+    "level": 5,
+    "category": "Completion",
+    "task": "Complete the visit statement with edge type filter",
+    "type": "complete",
+    "partial_code": "walker Explorer {\n  can explore with Node entry {\n    visit ____Road____;\n  }\n}",
+    "completion_hint": "Add edge type filter syntax",
+    "required_elements": [
+      "[-->:",
+      ":]"
+    ],
+    "points": 25,
+    "hints": [
+      "Use [-->:EdgeType:] for filtered visit"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L5_debug_01",
+    "level": 5,
+    "category": "Debugging",
+    "task": "Fix the walker that never visits child nodes",
+    "type": "debug",
+    "broken_code": "walker Traverse {\n  can walk with `root entry {\n    print(here);\n  }\n}",
+    "error_hint": "Walker visits root but stops - never traverses",
+    "required_elements": [
+      "visit",
+      "-->"
+    ],
+    "points": 25,
+    "hints": [
+      "Add visit statement to continue traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L5_debug_02",
+    "level": 5,
+    "category": "Debugging",
+    "task": "Fix the incorrect traversal direction",
+    "type": "debug",
+    "broken_code": "walker BackTrack {\n  can walk with Node entry {\n    visit -->;\n  }\n}",
+    "error_hint": "Walker goes forward but should go backward",
+    "required_elements": [
+      "<--"
+    ],
+    "points": 25,
+    "hints": [
+      "Use <-- for reverse traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -716,75 +1055,203 @@
     "points": 25,
     "hints": [
       "disengage stops traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_filter_01",
-    "level": 6,
-    "category": "Filtering",
-    "task": "Filter nodes by attribute value using ?(condition) syntax",
+    "id": "L5_skip_01",
+    "level": 5,
+    "category": "Skip Control",
+    "task": "Use skip keyword to bypass certain nodes during walker traversal",
     "required_elements": [
-      "?",
-      "=="
+      "walker",
+      "skip"
     ],
-    "points": 30,
+    "points": 25,
     "hints": [
-      "Filter syntax: nodes?(attr == value)"
+      "skip bypasses current node but continues traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_filter_02",
-    "level": 6,
-    "category": "Filtering",
-    "task": "Use compound filter with multiple conditions",
+    "id": "L5_visit_01",
+    "level": 5,
+    "category": "Traversal",
+    "task": "Use visit statement to traverse to connected nodes",
     "required_elements": [
-      "?",
-      "and"
+      "visit",
+      "-->"
     ],
-    "points": 30,
+    "points": 25,
     "hints": [
-      "Compound filter: ?(cond1 and cond2)"
+      "visit --> traverses outgoing edges"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"visit_traverses\" {\n    check True;\n}"
+  },
+  {
+    "id": "L5_visit_02",
+    "level": 5,
+    "category": "Traversal",
+    "task": "Visit nodes with edge type filter using [-->:EdgeType:] syntax",
+    "required_elements": [
+      "visit",
+      "[-->:",
+      ":]"
+    ],
+    "points": 25,
+    "hints": [
+      "Filtered traversal: visit [-->:EdgeType:]"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_filter_03",
-    "level": 6,
-    "category": "Filtering",
-    "task": "Filter edges by type and attribute",
+    "id": "L5_visit_03",
+    "level": 5,
+    "category": "Traversal",
+    "task": "Use 'here' keyword to reference current node in walker",
     "required_elements": [
-      "--[",
-      "]?"
+      "here"
     ],
-    "points": 30,
+    "points": 25,
     "hints": [
-      "Edge filtering: --[Type]?(attr > value)-->"
+      "'here' refers to current node during traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"here_keyword_works\" {\n    check True;\n}"
+  },
+  {
+    "id": "L5_visit_04",
+    "level": 5,
+    "category": "Traversal",
+    "task": "Visit all nodes in breadth-first order using visit queue",
+    "required_elements": [
+      "visit"
+    ],
+    "points": 25,
+    "hints": [
+      "visit adds to BFS queue"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_ref_01",
-    "level": 6,
-    "category": "References",
-    "task": "Store a reference to a node and use it later",
+    "id": "L5_walker_01",
+    "level": 5,
+    "category": "Walkers",
+    "task": "Create a walker named 'Explorer' with attribute visited_count (int) initialized to 0",
     "required_elements": [
-      "&"
+      "walker Explorer",
+      "has visited_count: int",
+      "= 0"
     ],
-    "points": 30,
+    "points": 25,
     "hints": [
-      "Reference syntax for nodes"
-    ]
+      "Walker definition with attributes"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"walker_has_attribute\" {\n    w = Explorer();\n    check w.visited_count == 0;\n}"
   },
   {
-    "id": "L6_ref_02",
-    "level": 6,
-    "category": "References",
-    "task": "Get all edges connected to a node using edges property",
+    "id": "L5_walker_02",
+    "level": 5,
+    "category": "Walkers",
+    "task": "Define walker entry and exit abilities using 'can' with entry/exit keywords",
     "required_elements": [
-      ".edges"
+      "walker",
+      "can",
+      "with entry",
+      "with exit"
     ],
-    "points": 30,
+    "points": 25,
     "hints": [
-      "Accessing connected edges"
-    ]
+      "Walker lifecycle: entry executes first, exit last"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"walker_has_entry_exit\" {\n    check True;\n}"
+  },
+  {
+    "id": "L5_walker_03",
+    "level": 5,
+    "category": "Walkers",
+    "task": "Spawn a walker on the root node",
+    "required_elements": [
+      "spawn",
+      "root"
+    ],
+    "points": 25,
+    "hints": [
+      "Walker spawning: Walker() spawn root"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"walker_spawns_on_root\" {\n    check True;\n}"
   },
   {
     "id": "L6_async_01",
@@ -798,19 +1265,63 @@
     "points": 30,
     "hints": [
       "Async walker definition"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_spawn_01",
+    "id": "L6_complete_01",
     "level": 6,
-    "category": "Advanced Spawn",
-    "task": "Spawn multiple walkers in parallel on different nodes",
+    "category": "Completion",
+    "task": "Complete the filter expression for nodes",
+    "type": "complete",
+    "partial_code": "nodes = [-->];\nactive_nodes = nodes____status == \"active\"____;",
+    "completion_hint": "Add filter syntax around condition",
     "required_elements": [
-      "spawn"
+      "?(",
+      ")"
     ],
     "points": 30,
     "hints": [
-      "Parallel walker execution"
+      "Use ?(condition) for filtering"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_complete_02",
+    "level": 6,
+    "category": "Completion",
+    "task": "Complete the spawn pattern to create and connect node",
+    "type": "complete",
+    "partial_code": "node Item { has value: int; }\nwith entry {\n  `root ____ Item(value=42);\n}",
+    "completion_hint": "Add edge operator to connect to root",
+    "required_elements": [
+      "++>"
+    ],
+    "points": 30,
+    "hints": [
+      "Connect new node to root with ++>"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -825,19 +1336,132 @@
     "points": 30,
     "hints": [
       "Walker self-reference and node reference"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L6_report_01",
+    "id": "L6_debug_01",
     "level": 6,
-    "category": "Reporting",
-    "task": "Use report to collect data during traversal and return it",
+    "category": "Debugging",
+    "task": "Fix the filtering syntax error",
+    "type": "debug",
+    "broken_code": "nodes = [-->];\nfiltered = nodes.filter(x => x.value > 10);",
+    "error_hint": "Using JavaScript filter syntax instead of Jac",
     "required_elements": [
-      "report"
+      "?",
+      ">"
     ],
     "points": 30,
     "hints": [
-      "Report collects values from walker execution"
+      "Use Jac filter syntax: nodes?(condition)"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_debug_02",
+    "level": 6,
+    "category": "Debugging",
+    "task": "Fix the spawn statement that fails to create node",
+    "type": "debug",
+    "broken_code": "node Item { has value: int; }\nroot.spawn(Item(value=5));",
+    "error_hint": "Incorrect spawn syntax",
+    "required_elements": [
+      "++>",
+      "Item("
+    ],
+    "points": 30,
+    "hints": [
+      "Use ++> to connect new node to root"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_filter_01",
+    "level": 6,
+    "category": "Filtering",
+    "task": "Filter nodes by attribute value using ?(condition) syntax",
+    "required_elements": [
+      "?",
+      "=="
+    ],
+    "points": 30,
+    "hints": [
+      "Filter syntax: nodes?(attr == value)"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"filter_by_attribute\" {\n    check True;\n}"
+  },
+  {
+    "id": "L6_filter_02",
+    "level": 6,
+    "category": "Filtering",
+    "task": "Use compound filter with multiple conditions",
+    "required_elements": [
+      "?",
+      "and"
+    ],
+    "points": 30,
+    "hints": [
+      "Compound filter: ?(cond1 and cond2)"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_filter_03",
+    "level": 6,
+    "category": "Filtering",
+    "task": "Filter edges by type and attribute using [-->:Type:](?cond) syntax",
+    "required_elements": [
+      "[-->:",
+      ":(?"
+    ],
+    "points": 30,
+    "hints": [
+      "Edge filtering: [-->:Type:](?attr > value)"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -851,6 +1475,235 @@
     "points": 30,
     "hints": [
       "ignore skips but continues, unlike disengage"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_ref_01",
+    "level": 6,
+    "category": "References",
+    "task": "Store a reference to a node and use it later",
+    "required_elements": [
+      "&"
+    ],
+    "points": 30,
+    "hints": [
+      "Reference syntax for nodes"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_ref_02",
+    "level": 6,
+    "category": "References",
+    "task": "Get all edges connected to a node using edges property",
+    "required_elements": [
+      ".edges"
+    ],
+    "points": 30,
+    "hints": [
+      "Accessing connected edges"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_ref_03",
+    "level": 6,
+    "category": "References",
+    "task": "Use &\"n::id\" syntax to lookup a node by its ID",
+    "required_elements": [
+      "&\"n::",
+      "\""
+    ],
+    "points": 30,
+    "hints": [
+      "Reference syntax for node lookup by ID"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_report_01",
+    "level": 6,
+    "category": "Reporting",
+    "task": "Use report to collect data during traversal and return it",
+    "required_elements": [
+      "report"
+    ],
+    "points": 30,
+    "hints": [
+      "Report collects values from walker execution"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"report_collects_data\" {\n    check True;\n}"
+  },
+  {
+    "id": "L6_skip_02",
+    "level": 6,
+    "category": "Skip Control",
+    "task": "Use conditional skip based on node property value",
+    "required_elements": [
+      "skip",
+      "if",
+      "here"
+    ],
+    "points": 30,
+    "hints": [
+      "Conditional skip: if here.property skip"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L6_spawn_01",
+    "level": 6,
+    "category": "Advanced Spawn",
+    "task": "Spawn multiple walkers in parallel on different nodes",
+    "required_elements": [
+      "spawn"
+    ],
+    "points": 30,
+    "hints": [
+      "Parallel walker execution"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ai_agent_01",
+    "level": 7,
+    "category": "Agents",
+    "task": "Create a simple agentic loop with AI decision making",
+    "required_elements": [
+      "by llm()",
+      "while"
+    ],
+    "points": 35,
+    "hints": [
+      "Agentic AI pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ai_byllm_01",
+    "level": 7,
+    "category": "AI Abilities",
+    "task": "Create a function decorated with 'by llm()' that summarizes text",
+    "required_elements": [
+      "by llm()",
+      "can"
+    ],
+    "points": 35,
+    "hints": [
+      "by llm() decorator for AI-powered functions"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"ai_function_exists\" {\n    check True;\n}"
+  },
+  {
+    "id": "L7_ai_byllm_02",
+    "level": 7,
+    "category": "AI Abilities",
+    "task": "Create a 'by llm()' function with specific model parameter",
+    "required_elements": [
+      "by llm(",
+      "model="
+    ],
+    "points": 35,
+    "hints": [
+      "Specify model in by llm() decorator"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ai_byllm_03",
+    "level": 7,
+    "category": "AI Abilities",
+    "task": "Create an AI function that returns a structured object type",
+    "required_elements": [
+      "by llm()",
+      "->"
+    ],
+    "points": 35,
+    "hints": [
+      "Typed return from LLM function"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -866,103 +1719,14 @@
     "points": 35,
     "hints": [
       "LLM model import"
-    ]
-  },
-  {
-    "id": "L7_ai_byllm_01",
-    "level": 7,
-    "category": "AI Abilities",
-    "task": "Create a function decorated with 'by llm()' that summarizes text",
-    "required_elements": [
-      "by llm()",
-      "can"
     ],
-    "points": 35,
-    "hints": [
-      "by llm() decorator for AI-powered functions"
-    ]
-  },
-  {
-    "id": "L7_ai_byllm_02",
-    "level": 7,
-    "category": "AI Abilities",
-    "task": "Create a 'by llm()' function with specific model parameter",
-    "required_elements": [
-      "by llm(",
-      "model="
-    ],
-    "points": 35,
-    "hints": [
-      "Specify model in by llm() decorator"
-    ]
-  },
-  {
-    "id": "L7_ai_byllm_03",
-    "level": 7,
-    "category": "AI Abilities",
-    "task": "Create an AI function that returns a structured object type",
-    "required_elements": [
-      "by llm()",
-      "->"
-    ],
-    "points": 35,
-    "hints": [
-      "Typed return from LLM function"
-    ]
-  },
-  {
-    "id": "L7_ai_semstr_01",
-    "level": 7,
-    "category": "Semantic Types",
-    "task": "Use semantic string annotation 'str \"description\"' for LLM context",
-    "required_elements": [
-      "str \""
-    ],
-    "points": 35,
-    "hints": [
-      "Semantic strings provide context to LLM"
-    ]
-  },
-  {
-    "id": "L7_ai_obj_01",
-    "level": 7,
-    "category": "AI Objects",
-    "task": "Create an object with AI-powered method using by llm()",
-    "required_elements": [
-      "obj",
-      "by llm()"
-    ],
-    "points": 35,
-    "hints": [
-      "Objects can have AI methods"
-    ]
-  },
-  {
-    "id": "L7_ai_walker_01",
-    "level": 7,
-    "category": "AI Walkers",
-    "task": "Create a walker with an AI ability that processes node data",
-    "required_elements": [
-      "walker",
-      "by llm()"
-    ],
-    "points": 35,
-    "hints": [
-      "Walkers can use AI for decision making"
-    ]
-  },
-  {
-    "id": "L7_ai_rag_01",
-    "level": 7,
-    "category": "RAG",
-    "task": "Use RAG context in an AI function with 'context' parameter",
-    "required_elements": [
-      "by llm(",
-      "context"
-    ],
-    "points": 35,
-    "hints": [
-      "RAG integration for grounded responses"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -977,63 +1741,222 @@
     "points": 35,
     "hints": [
       "Multimodal AI with image processing"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L7_ai_agent_01",
+    "id": "L7_ai_obj_01",
     "level": 7,
-    "category": "Agents",
-    "task": "Create a simple agentic loop with AI decision making",
+    "category": "AI Objects",
+    "task": "Create an object with AI-powered method using by llm()",
     "required_elements": [
-      "by llm()",
-      "while"
+      "obj",
+      "by llm()"
     ],
     "points": 35,
     "hints": [
-      "Agentic AI pattern"
+      "Objects can have AI methods"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L8_cloud_specs_01",
-    "level": 8,
-    "category": "Cloud Walker",
-    "task": "Create a walker with __specs__ that allows GET and POST HTTP methods",
+    "id": "L7_ai_rag_01",
+    "level": 7,
+    "category": "RAG",
+    "task": "Use RAG context in an AI function with 'context' parameter",
+    "required_elements": [
+      "by llm(",
+      "context"
+    ],
+    "points": 35,
+    "hints": [
+      "RAG integration for grounded responses"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ai_semstr_01",
+    "level": 7,
+    "category": "Semantic Types",
+    "task": "Use semantic string annotation 'str \"description\"' for LLM context",
+    "required_elements": [
+      "str \""
+    ],
+    "points": 35,
+    "hints": [
+      "Semantic strings provide context to LLM"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ai_walker_01",
+    "level": 7,
+    "category": "AI Walkers",
+    "task": "Create a walker with an AI ability that processes node data",
     "required_elements": [
       "walker",
-      "__specs__",
-      "methods"
+      "by llm()"
     ],
-    "points": 40,
+    "points": 35,
     "hints": [
-      "__specs__ defines API endpoint configuration"
+      "Walkers can use AI for decision making"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L8_cloud_specs_02",
-    "level": 8,
-    "category": "Cloud Walker",
-    "task": "Define allowed auth methods in walker __specs__ (token, jwt)",
+    "id": "L7_complete_01",
+    "level": 7,
+    "category": "Completion",
+    "task": "Complete the AI function signature with return type",
+    "type": "complete",
+    "partial_code": "enum Sentiment { POSITIVE, NEGATIVE, NEUTRAL }\ncan classify(text: str) ____ Sentiment ____ llm();",
+    "completion_hint": "Add return type arrow and 'by' keyword",
     "required_elements": [
-      "__specs__",
-      "auth"
+      "->",
+      "by"
     ],
-    "points": 40,
+    "points": 35,
     "hints": [
-      "Authentication configuration in specs"
+      "Use -> for return type, by llm() for AI"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L8_cloud_path_01",
-    "level": 8,
-    "category": "API Paths",
-    "task": "Create a walker with custom API path using path_prefix",
+    "id": "L7_complete_02",
+    "level": 7,
+    "category": "Completion",
+    "task": "Complete the semantic type annotation",
+    "type": "complete",
+    "partial_code": "obj Review {\n  has content: str ____the review text written by customer____;\n}",
+    "completion_hint": "Add semantic string quotes",
     "required_elements": [
-      "__specs__",
-      "path"
+      "str \""
     ],
-    "points": 40,
+    "points": 35,
     "hints": [
-      "Custom API path configuration"
+      "Semantic strings use 'str \"description\"' syntax"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_debug_01",
+    "level": 7,
+    "category": "Debugging",
+    "task": "Fix the AI ability that has incorrect decorator syntax",
+    "type": "debug",
+    "broken_code": "@llm\ncan summarize(text: str) -> str;",
+    "error_hint": "Wrong decorator syntax for AI ability",
+    "required_elements": [
+      "by llm()",
+      "can"
+    ],
+    "points": 35,
+    "hints": [
+      "Use 'by llm()' after the signature"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_debug_02",
+    "level": 7,
+    "category": "Debugging",
+    "task": "Fix the missing model parameter in AI function",
+    "type": "debug",
+    "broken_code": "can classify(text: str) -> str by llm();",
+    "error_hint": "AI function needs model specification",
+    "required_elements": [
+      "by llm(",
+      "model="
+    ],
+    "points": 35,
+    "hints": [
+      "Specify model in by llm() decorator"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L7_ref_01",
+    "level": 7,
+    "category": "References",
+    "task": "Reference and access nodes across different graph boundaries",
+    "required_elements": [
+      "&",
+      "spawn"
+    ],
+    "points": 35,
+    "hints": [
+      "Cross-graph node references"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1049,62 +1972,14 @@
     "points": 40,
     "hints": [
       "Async walker for long-running tasks"
-    ]
-  },
-  {
-    "id": "L8_cloud_ws_01",
-    "level": 8,
-    "category": "WebSocket",
-    "task": "Create a WebSocket walker using socket.notify for real-time updates",
-    "required_elements": [
-      "walker",
-      "socket.notify"
     ],
-    "points": 40,
-    "hints": [
-      "WebSocket integration for real-time"
-    ]
-  },
-  {
-    "id": "L8_cloud_perm_01",
-    "level": 8,
-    "category": "Permissions",
-    "task": "Define node-level permissions using __jac__ anchor",
-    "required_elements": [
-      "__jac__",
-      "access"
-    ],
-    "points": 40,
-    "hints": [
-      "Node access control"
-    ]
-  },
-  {
-    "id": "L8_cloud_schedule_01",
-    "level": 8,
-    "category": "Scheduler",
-    "task": "Create a scheduled walker that runs periodically using cron",
-    "required_elements": [
-      "walker",
-      "schedule"
-    ],
-    "points": 40,
-    "hints": [
-      "Scheduled task execution"
-    ]
-  },
-  {
-    "id": "L8_cloud_webhook_01",
-    "level": 8,
-    "category": "Webhooks",
-    "task": "Create a webhook walker that receives external events",
-    "required_elements": [
-      "walker",
-      "webhook"
-    ],
-    "points": 40,
-    "hints": [
-      "External webhook integration"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1119,6 +1994,14 @@
     "points": 40,
     "hints": [
       "Environment variable access"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1133,46 +2016,361 @@
     "points": 40,
     "hints": [
       "Production logging patterns"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L9_import_01",
-    "level": 9,
-    "category": "Imports",
-    "task": "Import a Jac module from another file using 'import from'",
+    "id": "L8_cloud_path_01",
+    "level": 8,
+    "category": "API Paths",
+    "task": "Create a walker with custom API path using path_prefix",
     "required_elements": [
-      "import",
+      "__specs__",
+      "path"
+    ],
+    "points": 40,
+    "hints": [
+      "Custom API path configuration"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_cloud_perm_01",
+    "level": 8,
+    "category": "Permissions",
+    "task": "Define node-level permissions using __jac__ anchor",
+    "required_elements": [
+      "__jac__",
+      "access"
+    ],
+    "points": 40,
+    "hints": [
+      "Node access control"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_cloud_schedule_01",
+    "level": 8,
+    "category": "Scheduler",
+    "task": "Create a scheduled walker that runs periodically using cron",
+    "required_elements": [
+      "walker",
+      "schedule"
+    ],
+    "points": 40,
+    "hints": [
+      "Scheduled task execution"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_cloud_specs_01",
+    "level": 8,
+    "category": "Cloud Walker",
+    "task": "Create a walker with __specs__ that allows GET and POST HTTP methods",
+    "required_elements": [
+      "walker",
+      "__specs__",
+      "methods"
+    ],
+    "points": 40,
+    "hints": [
+      "__specs__ defines API endpoint configuration"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"walker_has_specs\" {\n    check True;\n}"
+  },
+  {
+    "id": "L8_cloud_specs_02",
+    "level": 8,
+    "category": "Cloud Walker",
+    "task": "Define allowed auth methods in walker __specs__ (token, jwt)",
+    "required_elements": [
+      "__specs__",
+      "auth"
+    ],
+    "points": 40,
+    "hints": [
+      "Authentication configuration in specs"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_cloud_webhook_01",
+    "level": 8,
+    "category": "Webhooks",
+    "task": "Create a webhook walker that receives external events",
+    "required_elements": [
+      "walker",
+      "webhook"
+    ],
+    "points": 40,
+    "hints": [
+      "External webhook integration"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_cloud_ws_01",
+    "level": 8,
+    "category": "WebSocket",
+    "task": "Create a WebSocket walker using socket.notify for real-time updates",
+    "required_elements": [
+      "walker",
+      "socket.notify"
+    ],
+    "points": 40,
+    "hints": [
+      "WebSocket integration for real-time"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_complete_01",
+    "level": 8,
+    "category": "Completion",
+    "task": "Complete the API specs for the walker",
+    "type": "complete",
+    "partial_code": "walker CreateItem {\n  ____ = {____: [\"POST\"], \"auth\": [\"jwt\"]};\n  has name: str;\n}",
+    "completion_hint": "Add __specs__ and methods key",
+    "required_elements": [
+      "__specs__",
+      "\"methods\""
+    ],
+    "points": 40,
+    "hints": [
+      "Use __specs__ with methods and auth keys"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_debug_01",
+    "level": 8,
+    "category": "Debugging",
+    "task": "Fix the API endpoint configuration error",
+    "type": "debug",
+    "broken_code": "walker GetUsers {\n  specs = {\"methods\": [\"GET\"]};\n  can fetch with `root entry { report [-->:User:]; }\n}",
+    "error_hint": "Walker specs not properly defined",
+    "required_elements": [
+      "__specs__",
+      "methods"
+    ],
+    "points": 40,
+    "hints": [
+      "Use __specs__ as static class attribute"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_deploy_01",
+    "level": 8,
+    "category": "Deployment",
+    "task": "Read environment variable for database connection string",
+    "required_elements": [
+      "import:py",
+      "os",
+      "environ"
+    ],
+    "points": 40,
+    "hints": [
+      "Access environment variables for configuration"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_perm_02",
+    "level": 8,
+    "category": "Permissions",
+    "task": "Define NoPerm, ReadPerm, and WritePerm access levels for a node",
+    "required_elements": [
+      "__jac__",
+      "NoPerm",
+      "ReadPerm"
+    ],
+    "points": 40,
+    "hints": [
+      "Permission levels control node access"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L8_refactor_01",
+    "level": 8,
+    "category": "Refactoring",
+    "task": "Convert this Python class to a Jac node",
+    "type": "refactor",
+    "python_code": "class User:\n    def __init__(self, name, email):\n        self.name = name\n        self.email = email",
+    "required_elements": [
+      "node User",
+      "has name",
+      "has email"
+    ],
+    "points": 40,
+    "hints": [
+      "Use node keyword, has for attributes"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L9_complete_01",
+    "level": 9,
+    "category": "Completion",
+    "task": "Complete the Python module import statement",
+    "type": "complete",
+    "partial_code": "____datetime import datetime, timedelta;",
+    "completion_hint": "Add Python import syntax",
+    "required_elements": [
+      "import:py",
       "from"
     ],
     "points": 45,
     "hints": [
-      "Module imports between Jac files"
+      "Use 'import:py from module import items' syntax"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L9_import_02",
+    "id": "L9_decorator_01",
     "level": 9,
-    "category": "Imports",
-    "task": "Import Python module and use its functions in Jac",
+    "category": "Decorators",
+    "task": "Create a custom decorator that wraps a function",
     "required_elements": [
-      "import:py"
+      "@"
     ],
     "points": 45,
     "hints": [
-      "Python interop with import:py"
+      "Decorator syntax"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L9_import_03",
+    "id": "L9_deploy_01",
     "level": 9,
-    "category": "Imports",
-    "task": "Use include statement to inline another Jac file",
+    "category": "Deployment",
+    "task": "Configure application settings from environment with fallback defaults",
     "required_elements": [
-      "include"
+      "import:py",
+      "os",
+      "get("
     ],
     "points": 45,
     "hints": [
-      "File inclusion for code organization"
+      "Use dict.get() for fallback defaults"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1187,6 +2385,14 @@
     "points": 45,
     "hints": [
       "File reading"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1201,6 +2407,14 @@
     "points": 45,
     "hints": [
       "File writing"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1216,45 +2430,14 @@
     "points": 45,
     "hints": [
       "JSON serialization"
-    ]
-  },
-  {
-    "id": "L9_persist_01",
-    "level": 9,
-    "category": "Persistence",
-    "task": "Save graph state to persistent storage",
-    "required_elements": [
-      "save"
     ],
-    "points": 45,
-    "hints": [
-      "Graph persistence"
-    ]
-  },
-  {
-    "id": "L9_persist_02",
-    "level": 9,
-    "category": "Persistence",
-    "task": "Load graph state from persistent storage",
-    "required_elements": [
-      "load"
-    ],
-    "points": 45,
-    "hints": [
-      "Graph loading"
-    ]
-  },
-  {
-    "id": "L9_decorator_01",
-    "level": 9,
-    "category": "Decorators",
-    "task": "Create a custom decorator that wraps a function",
-    "required_elements": [
-      "@"
-    ],
-    "points": 45,
-    "hints": [
-      "Decorator syntax"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1268,442 +2451,304 @@
     "points": 45,
     "hints": [
       "Generator functions"
-    ]
-  },
-  {
-    "id": "L10_int_social_01",
-    "level": 10,
-    "category": "Integration",
-    "task": "Create a social network with Person nodes, Friendship edges, and a walker to find connections",
-    "required_elements": [
-      "node Person",
-      "edge",
-      "walker",
-      "visit"
     ],
-    "points": 50,
-    "hints": [
-      "Complete social graph implementation"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_int_social_02",
-    "level": 10,
-    "category": "Integration",
-    "task": "Implement friend recommendation using 2-hop traversal",
+    "id": "L9_glob_01",
+    "level": 9,
+    "category": "Glob Nodes",
+    "task": "Create and access a glob node for global persistent state",
     "required_elements": [
-      "walker",
-      "visit",
-      "-->",
-      "-->"
-    ],
-    "points": 50,
-    "hints": [
-      "Multi-hop graph traversal"
-    ]
-  },
-  {
-    "id": "L10_int_tree_01",
-    "level": 10,
-    "category": "Integration",
-    "task": "Create a tree structure with parent-child relationships and tree traversal walker",
-    "required_elements": [
-      "node",
-      "edge",
-      "walker",
-      "visit"
-    ],
-    "points": 50,
-    "hints": [
-      "Hierarchical graph structure"
-    ]
-  },
-  {
-    "id": "L10_int_workflow_01",
-    "level": 10,
-    "category": "Integration",
-    "task": "Implement a state machine with State nodes and Transition edges",
-    "required_elements": [
-      "node",
-      "edge State",
-      "walker"
-    ],
-    "points": 50,
-    "hints": [
-      "State machine pattern"
-    ]
-  },
-  {
-    "id": "L10_ai_chat_01",
-    "level": 10,
-    "category": "AI Integration",
-    "task": "Create a chatbot walker that maintains conversation history in graph",
-    "required_elements": [
-      "walker",
-      "node",
-      "by llm()"
-    ],
-    "points": 55,
-    "hints": [
-      "Conversational AI with graph memory"
-    ]
-  },
-  {
-    "id": "L10_ai_classify_01",
-    "level": 10,
-    "category": "AI Integration",
-    "task": "Create a content classifier that tags nodes using AI",
-    "required_elements": [
-      "walker",
-      "by llm()",
+      "glob",
       "node"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "AI-powered node classification"
-    ]
-  },
-  {
-    "id": "L10_ai_extract_01",
-    "level": 10,
-    "category": "AI Integration",
-    "task": "Create an entity extractor that builds a knowledge graph from text",
-    "required_elements": [
-      "by llm()",
-      "node",
-      "edge",
-      "spawn"
+      "Glob nodes persist across executions"
     ],
-    "points": 55,
-    "hints": [
-      "Knowledge graph construction with AI"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_api_crud_01",
-    "level": 10,
-    "category": "API Patterns",
-    "task": "Create CRUD walkers (Create, Read, Update, Delete) for a resource",
+    "id": "L9_glob_02",
+    "level": 9,
+    "category": "Glob Nodes",
+    "task": "Store application configuration in a glob node",
     "required_elements": [
-      "walker",
-      "__specs__",
-      "methods"
+      "glob",
+      "has"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "RESTful CRUD pattern"
-    ]
-  },
-  {
-    "id": "L10_api_auth_01",
-    "level": 10,
-    "category": "API Patterns",
-    "task": "Implement authenticated API endpoint with JWT validation",
-    "required_elements": [
-      "walker",
-      "__specs__",
-      "auth",
-      "jwt"
+      "Glob nodes for shared configuration"
     ],
-    "points": 55,
-    "hints": [
-      "JWT authentication"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_api_paginate_01",
-    "level": 10,
-    "category": "API Patterns",
-    "task": "Implement paginated list endpoint with limit and offset",
+    "id": "L9_import_01",
+    "level": 9,
+    "category": "Imports",
+    "task": "Import a Jac module from another file using 'import from'",
     "required_elements": [
-      "walker",
-      "has limit",
-      "has offset"
+      "import",
+      "from"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Pagination pattern"
-    ]
-  },
-  {
-    "id": "L10_ws_realtime_01",
-    "level": 10,
-    "category": "Real-time",
-    "task": "Create a real-time notification system using WebSocket channels",
-    "required_elements": [
-      "walker",
-      "socket.notify_channels"
+      "Module imports between Jac files"
     ],
-    "points": 55,
-    "hints": [
-      "Channel-based notifications"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_ws_collab_01",
-    "level": 10,
-    "category": "Real-time",
-    "task": "Implement collaborative editing with change broadcasting",
+    "id": "L9_import_02",
+    "level": 9,
+    "category": "Imports",
+    "task": "Import Python module and use its functions in Jac",
     "required_elements": [
-      "walker",
-      "socket",
-      "broadcast"
+      "import:py"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Collaborative real-time pattern"
-    ]
-  },
-  {
-    "id": "L10_cache_01",
-    "level": 10,
-    "category": "Performance",
-    "task": "Implement a caching walker with TTL expiration",
-    "required_elements": [
-      "walker",
-      "has cache",
-      "has ttl"
+      "Python interop with import:py"
     ],
-    "points": 55,
-    "hints": [
-      "Caching pattern with expiration"
-    ]
-  },
-  {
-    "id": "L10_batch_01",
-    "level": 10,
-    "category": "Performance",
-    "task": "Create a batch processing walker that handles multiple items efficiently",
-    "required_elements": [
-      "walker",
-      "for",
-      "visit"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ],
-    "points": 55,
-    "hints": [
-      "Batch processing pattern"
-    ]
+    "type": "functional",
+    "test_harness": "test \"python_import_works\" {\n    check True;\n}"
   },
   {
-    "id": "L10_audit_01",
-    "level": 10,
-    "category": "Observability",
-    "task": "Implement an audit trail walker that logs all graph changes",
+    "id": "L9_import_03",
+    "level": 9,
+    "category": "Imports",
+    "task": "Use include statement to inline another Jac file",
     "required_elements": [
-      "walker",
-      "node AuditLog",
-      "timestamp"
+      "include"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Audit logging pattern"
-    ]
-  },
-  {
-    "id": "L10_metrics_01",
-    "level": 10,
-    "category": "Observability",
-    "task": "Create a metrics collector that tracks walker execution statistics",
-    "required_elements": [
-      "walker",
-      "has metrics",
-      "report"
+      "File inclusion for code organization"
     ],
-    "points": 55,
-    "hints": [
-      "Metrics collection pattern"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_error_01",
-    "level": 10,
-    "category": "Resilience",
-    "task": "Implement error handling with retry logic in a walker",
+    "id": "L9_perm_01",
+    "level": 9,
+    "category": "Permissions",
+    "task": "Implement grant permission to give another user access to a node",
     "required_elements": [
-      "walker",
-      "try",
-      "except",
-      "retry"
+      "__jac__",
+      "grant"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Retry pattern"
-    ]
-  },
-  {
-    "id": "L10_validate_01",
-    "level": 10,
-    "category": "Validation",
-    "task": "Create a validation walker that checks node data integrity",
-    "required_elements": [
-      "walker",
-      "assert",
-      "visit"
+      "Grant permissions to share access"
     ],
-    "points": 55,
-    "hints": [
-      "Data validation pattern"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_migrate_01",
-    "level": 10,
-    "category": "Operations",
-    "task": "Create a migration walker that transforms graph structure",
+    "id": "L9_persist_01",
+    "level": 9,
+    "category": "Persistence",
+    "task": "Save graph state to persistent storage",
     "required_elements": [
-      "walker",
-      "visit",
-      "spawn",
-      "del"
+      "save"
     ],
-    "points": 60,
+    "points": 45,
     "hints": [
-      "Graph migration pattern"
-    ]
-  },
-  {
-    "id": "L10_fullstack_01",
-    "level": 10,
-    "category": "Full Stack",
-    "task": "Create a complete mini-application with nodes, edges, walkers, AI, and cloud endpoints",
-    "required_elements": [
-      "node",
-      "edge",
-      "walker",
-      "by llm()",
-      "__specs__"
+      "Graph persistence"
     ],
-    "points": 60,
-    "hints": [
-      "Complete Jac application"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_search_01",
-    "level": 10,
-    "category": "Algorithms",
-    "task": "Implement depth-first search using a walker with a visited set to avoid cycles",
+    "id": "L9_persist_02",
+    "level": 9,
+    "category": "Persistence",
+    "task": "Load graph state from persistent storage",
     "required_elements": [
-      "walker",
-      "has visited",
-      "set()",
-      "visit"
+      "load"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "DFS with cycle detection"
-    ]
-  },
-  {
-    "id": "L10_search_02",
-    "level": 10,
-    "category": "Algorithms",
-    "task": "Implement shortest path finding between two nodes using walker traversal",
-    "required_elements": [
-      "walker",
-      "has path",
-      "has distance",
-      "visit"
+      "Graph loading"
     ],
-    "points": 55,
-    "hints": [
-      "Path finding algorithm"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_aggregate_01",
-    "level": 10,
-    "category": "Data Processing",
-    "task": "Create a walker that aggregates statistics (sum, count, average) across all visited nodes",
+    "id": "L9_persist_03",
+    "level": 9,
+    "category": "Persistence",
+    "task": "Use commit() to explicitly persist graph changes",
     "required_elements": [
-      "walker",
-      "has sum",
-      "has count",
-      "visit",
-      "report"
+      "commit()"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Aggregation during traversal"
+      "commit() persists all pending changes"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_transform_01",
-    "level": 10,
-    "category": "Data Processing",
-    "task": "Create a walker that transforms node data and creates new derived nodes",
+    "id": "L9_persist_04",
+    "level": 9,
+    "category": "Persistence",
+    "task": "Use commit(Type) to persist only specific node types",
     "required_elements": [
-      "walker",
-      "visit",
-      "spawn",
+      "commit(",
       "node"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Graph transformation pattern"
+      "Selective persistence with commit(Type)"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_plugin_01",
-    "level": 10,
-    "category": "Extensibility",
-    "task": "Create a plugin system using objects with a common interface (register, execute methods)",
+    "id": "L9_persist_05",
+    "level": 9,
+    "category": "Persistence",
+    "task": "Auto-persist data by connecting nodes to root",
     "required_elements": [
-      "obj",
-      "can register",
-      "can execute"
+      "root",
+      "++>"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Plugin architecture pattern"
+      "Nodes connected to root are auto-persisted"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_event_01",
-    "level": 10,
-    "category": "Events",
-    "task": "Implement an event system with Event nodes and subscriber walkers",
+    "id": "L9_refactor_01",
+    "level": 9,
+    "category": "Refactoring",
+    "task": "Convert this Python function to a Jac ability",
+    "type": "refactor",
+    "python_code": "def calculate_discount(price: float, percentage: float) -> float:\n    return price * (1 - percentage / 100)",
     "required_elements": [
-      "node Event",
-      "walker",
-      "has subscribers",
-      "visit"
+      "can calculate_discount",
+      "->",
+      "return"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Event-driven architecture"
+      "Use can keyword for abilities"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
-    "id": "L10_queue_01",
-    "level": 10,
-    "category": "Data Structures",
-    "task": "Implement a priority queue using nodes with priority attribute and sorted traversal",
+    "id": "L9_refactor_02",
+    "level": 9,
+    "category": "Refactoring",
+    "task": "Convert this Python dataclass to a Jac object",
+    "type": "refactor",
+    "python_code": "from dataclasses import dataclass\n\n@dataclass\nclass Config:\n    host: str\n    port: int = 8080\n    debug: bool = False",
     "required_elements": [
-      "node",
-      "has priority",
-      "walker",
-      "?"
+      "obj Config",
+      "has host",
+      "has port",
+      "has debug"
     ],
-    "points": 55,
+    "points": 45,
     "hints": [
-      "Priority queue with graph"
-    ]
-  },
-  {
-    "id": "L10_version_01",
-    "level": 10,
-    "category": "Versioning",
-    "task": "Create a versioned data system where nodes track version history",
-    "required_elements": [
-      "node",
-      "has version",
-      "has history",
-      "edge"
+      "Use obj keyword, has with defaults"
     ],
-    "points": 55,
-    "hints": [
-      "Version control pattern for graph data"
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1721,6 +2766,596 @@
     "points": 60,
     "hints": [
       "RBAC implementation"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_aggregate_01",
+    "level": 10,
+    "category": "Data Processing",
+    "task": "Create a walker that aggregates statistics (sum, count, average) across all visited nodes",
+    "required_elements": [
+      "walker",
+      "has sum",
+      "has count",
+      "visit",
+      "report"
+    ],
+    "points": 55,
+    "hints": [
+      "Aggregation during traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_ai_chat_01",
+    "level": 10,
+    "category": "AI Integration",
+    "task": "Create a chatbot walker that maintains conversation history in graph",
+    "required_elements": [
+      "walker",
+      "node",
+      "by llm()"
+    ],
+    "points": 55,
+    "hints": [
+      "Conversational AI with graph memory"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_ai_classify_01",
+    "level": 10,
+    "category": "AI Integration",
+    "task": "Create a content classifier that tags nodes using AI",
+    "required_elements": [
+      "walker",
+      "by llm()",
+      "node"
+    ],
+    "points": 55,
+    "hints": [
+      "AI-powered node classification"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_ai_extract_01",
+    "level": 10,
+    "category": "AI Integration",
+    "task": "Create an entity extractor that builds a knowledge graph from text",
+    "required_elements": [
+      "by llm()",
+      "node",
+      "edge",
+      "spawn"
+    ],
+    "points": 55,
+    "hints": [
+      "Knowledge graph construction with AI"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_api_auth_01",
+    "level": 10,
+    "category": "API Patterns",
+    "task": "Implement authenticated API endpoint with JWT validation",
+    "required_elements": [
+      "walker",
+      "__specs__",
+      "auth",
+      "jwt"
+    ],
+    "points": 55,
+    "hints": [
+      "JWT authentication"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_api_crud_01",
+    "level": 10,
+    "category": "API Patterns",
+    "task": "Create CRUD walkers (Create, Read, Update, Delete) for a resource",
+    "required_elements": [
+      "walker",
+      "__specs__",
+      "methods"
+    ],
+    "points": 55,
+    "hints": [
+      "RESTful CRUD pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_api_paginate_01",
+    "level": 10,
+    "category": "API Patterns",
+    "task": "Implement paginated list endpoint with limit and offset",
+    "required_elements": [
+      "walker",
+      "has limit",
+      "has offset"
+    ],
+    "points": 55,
+    "hints": [
+      "Pagination pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_audit_01",
+    "level": 10,
+    "category": "Observability",
+    "task": "Implement an audit trail walker that logs all graph changes",
+    "required_elements": [
+      "walker",
+      "node AuditLog",
+      "timestamp"
+    ],
+    "points": 55,
+    "hints": [
+      "Audit logging pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_batch_01",
+    "level": 10,
+    "category": "Performance",
+    "task": "Create a batch processing walker that handles multiple items efficiently",
+    "required_elements": [
+      "walker",
+      "for",
+      "visit"
+    ],
+    "points": 55,
+    "hints": [
+      "Batch processing pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_cache_01",
+    "level": 10,
+    "category": "Performance",
+    "task": "Implement a caching walker with TTL expiration",
+    "required_elements": [
+      "walker",
+      "has cache",
+      "has ttl"
+    ],
+    "points": 55,
+    "hints": [
+      "Caching pattern with expiration"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_error_01",
+    "level": 10,
+    "category": "Resilience",
+    "task": "Implement error handling with retry logic in a walker",
+    "required_elements": [
+      "walker",
+      "try",
+      "except",
+      "retry"
+    ],
+    "points": 55,
+    "hints": [
+      "Retry pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_event_01",
+    "level": 10,
+    "category": "Events",
+    "task": "Implement an event system with Event nodes and subscriber walkers",
+    "required_elements": [
+      "node Event",
+      "walker",
+      "has subscribers",
+      "visit"
+    ],
+    "points": 55,
+    "hints": [
+      "Event-driven architecture"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_fullstack_01",
+    "level": 10,
+    "category": "Full Stack",
+    "task": "Create a complete mini-application with nodes, edges, walkers, AI, and cloud endpoints",
+    "required_elements": [
+      "node",
+      "edge",
+      "walker",
+      "by llm()",
+      "__specs__"
+    ],
+    "points": 60,
+    "hints": [
+      "Complete Jac application"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_auth_ai_01",
+    "level": 10,
+    "category": "Full Integration",
+    "task": "Create an authenticated API endpoint that: 1) Accepts text input, 2) Uses AI to summarize it, 3) Stores summary in a node connected to root, 4) Returns summary with timestamp",
+    "required_elements": [
+      "walker",
+      "__specs__",
+      "auth",
+      "by llm()",
+      "node",
+      "++>",
+      "report"
+    ],
+    "points": 80,
+    "hints": [
+      "Combine authentication, AI, persistence, and API patterns"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_fullstack_02",
+    "level": 10,
+    "category": "Full Integration",
+    "task": "Create a complete task management app with: 1) Task and Project nodes, 2) Assignment edges, 3) CRUD API walkers, 4) AI prioritization, 5) Real-time notifications",
+    "required_elements": [
+      "node",
+      "edge",
+      "walker",
+      "__specs__",
+      "by llm()",
+      "socket.notify"
+    ],
+    "points": 100,
+    "hints": [
+      "Full-featured application with all Jac capabilities"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_multiagent_02",
+    "level": 10,
+    "category": "Full Integration",
+    "task": "Create a multi-agent workflow where: 1) Researcher walker gathers data, 2) Analyzer walker processes it with AI, 3) Reporter walker summarizes results, 4) All share a common graph",
+    "required_elements": [
+      "walker",
+      "by llm()",
+      "spawn",
+      "visit",
+      "report",
+      "node"
+    ],
+    "points": 100,
+    "hints": [
+      "Chain multiple AI walkers for complex workflow"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_persist_api_01",
+    "level": 10,
+    "category": "Full Integration",
+    "task": "Create a persistent API that: 1) Stores items in graph, 2) Implements CRUD operations, 3) Auto-persists on changes, 4) Supports filtering",
+    "required_elements": [
+      "walker",
+      "__specs__",
+      "methods",
+      "save",
+      "?",
+      "report"
+    ],
+    "points": 80,
+    "hints": [
+      "CRUD with persistence and filtering"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_realtime_01",
+    "level": 10,
+    "category": "Full Integration",
+    "task": "Create a real-time collaborative system that: 1) Maintains Document nodes, 2) Allows walker updates, 3) Broadcasts changes via WebSocket, 4) Includes permission checks",
+    "required_elements": [
+      "node Document",
+      "walker",
+      "socket.notify",
+      "__jac__",
+      "++>",
+      "report"
+    ],
+    "points": 80,
+    "hints": [
+      "Real-time collaboration with permissions"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_social_01",
+    "level": 10,
+    "category": "Integration",
+    "task": "Create a social network with Person nodes, Friendship edges, and a walker to find connections",
+    "required_elements": [
+      "node Person",
+      "edge",
+      "walker",
+      "visit"
+    ],
+    "points": 50,
+    "hints": [
+      "Complete social graph implementation"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"social_network_exists\" {\n    check True;\n}"
+  },
+  {
+    "id": "L10_int_social_02",
+    "level": 10,
+    "category": "Integration",
+    "task": "Implement friend recommendation using 2-hop traversal",
+    "required_elements": [
+      "walker",
+      "visit",
+      "-->",
+      "-->"
+    ],
+    "points": 50,
+    "hints": [
+      "Multi-hop graph traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_tree_01",
+    "level": 10,
+    "category": "Integration",
+    "task": "Create a tree structure with parent-child relationships and tree traversal walker",
+    "required_elements": [
+      "node",
+      "edge",
+      "walker",
+      "visit"
+    ],
+    "points": 50,
+    "hints": [
+      "Hierarchical graph structure"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_int_workflow_01",
+    "level": 10,
+    "category": "Integration",
+    "task": "Implement a state machine with State nodes and Transition edges",
+    "required_elements": [
+      "node",
+      "edge State",
+      "walker"
+    ],
+    "points": 50,
+    "hints": [
+      "State machine pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_metrics_01",
+    "level": 10,
+    "category": "Observability",
+    "task": "Create a metrics collector that tracks walker execution statistics",
+    "required_elements": [
+      "walker",
+      "has metrics",
+      "report"
+    ],
+    "points": 55,
+    "hints": [
+      "Metrics collection pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_migrate_01",
+    "level": 10,
+    "category": "Operations",
+    "task": "Create a migration walker that transforms graph structure",
+    "required_elements": [
+      "walker",
+      "visit",
+      "spawn",
+      "del"
+    ],
+    "points": 60,
+    "hints": [
+      "Graph migration pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   },
   {
@@ -1738,6 +3373,302 @@
     "points": 60,
     "hints": [
       "Multi-agent AI collaboration pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_perm_01",
+    "level": 10,
+    "category": "Permissions",
+    "task": "Implement revoke permission to remove user access from a node",
+    "required_elements": [
+      "__jac__",
+      "revoke",
+      "walker"
+    ],
+    "points": 55,
+    "hints": [
+      "Revoke permissions to remove access"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_plugin_01",
+    "level": 10,
+    "category": "Extensibility",
+    "task": "Create a plugin system using objects with a common interface (register, execute methods)",
+    "required_elements": [
+      "obj",
+      "can register",
+      "can execute"
+    ],
+    "points": 55,
+    "hints": [
+      "Plugin architecture pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_queue_01",
+    "level": 10,
+    "category": "Data Structures",
+    "task": "Implement a priority queue using nodes with priority attribute and sorted traversal",
+    "required_elements": [
+      "node",
+      "has priority",
+      "walker",
+      "?"
+    ],
+    "points": 55,
+    "hints": [
+      "Priority queue with graph"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_refactor_01",
+    "level": 10,
+    "category": "Refactoring",
+    "task": "Convert this Python class hierarchy to Jac nodes with inheritance",
+    "type": "refactor",
+    "python_code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        pass\n\nclass Dog(Animal):\n    def speak(self):\n        return 'Woof!'",
+    "required_elements": [
+      "node Animal",
+      "node Dog",
+      "(",
+      "can speak"
+    ],
+    "points": 55,
+    "hints": [
+      "Use node with parentheses for inheritance"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_refactor_02",
+    "level": 10,
+    "category": "Refactoring",
+    "task": "Convert this Python script to a Jac walker with graph traversal",
+    "type": "refactor",
+    "python_code": "class TreeTraverser:\n    def __init__(self):\n        self.visited = []\n    \n    def traverse(self, node):\n        self.visited.append(node.value)\n        for child in node.children:\n            self.traverse(child)",
+    "required_elements": [
+      "walker",
+      "has visited",
+      "visit",
+      "-->"
+    ],
+    "points": 60,
+    "hints": [
+      "Walkers naturally handle graph traversal"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_search_01",
+    "level": 10,
+    "category": "Algorithms",
+    "task": "Implement depth-first search using a walker with a visited set to avoid cycles",
+    "required_elements": [
+      "walker",
+      "has visited",
+      "set()",
+      "visit"
+    ],
+    "points": 55,
+    "hints": [
+      "DFS with cycle detection"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ],
+    "type": "functional",
+    "test_harness": "test \"dfs_walker_exists\" {\n    check True;\n}"
+  },
+  {
+    "id": "L10_search_02",
+    "level": 10,
+    "category": "Algorithms",
+    "task": "Implement shortest path finding between two nodes using walker traversal",
+    "required_elements": [
+      "walker",
+      "has path",
+      "has distance",
+      "visit"
+    ],
+    "points": 55,
+    "hints": [
+      "Path finding algorithm"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_transform_01",
+    "level": 10,
+    "category": "Data Processing",
+    "task": "Create a walker that transforms node data and creates new derived nodes",
+    "required_elements": [
+      "walker",
+      "visit",
+      "spawn",
+      "node"
+    ],
+    "points": 55,
+    "hints": [
+      "Graph transformation pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_validate_01",
+    "level": 10,
+    "category": "Validation",
+    "task": "Create a validation walker that checks node data integrity",
+    "required_elements": [
+      "walker",
+      "assert",
+      "visit"
+    ],
+    "points": 55,
+    "hints": [
+      "Data validation pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_version_01",
+    "level": 10,
+    "category": "Versioning",
+    "task": "Create a versioned data system where nodes track version history",
+    "required_elements": [
+      "node",
+      "has version",
+      "has history",
+      "edge"
+    ],
+    "points": 55,
+    "hints": [
+      "Version control pattern for graph data"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_ws_collab_01",
+    "level": 10,
+    "category": "Real-time",
+    "task": "Implement collaborative editing with change broadcasting",
+    "required_elements": [
+      "walker",
+      "socket",
+      "broadcast"
+    ],
+    "points": 55,
+    "hints": [
+      "Collaborative real-time pattern"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
+    ]
+  },
+  {
+    "id": "L10_ws_realtime_01",
+    "level": 10,
+    "category": "Real-time",
+    "task": "Create a real-time notification system using WebSocket channels",
+    "required_elements": [
+      "walker",
+      "socket.notify_channels"
+    ],
+    "points": 55,
+    "hints": [
+      "Channel-based notifications"
+    ],
+    "forbidden_elements": [
+      "def ",
+      "class ",
+      "function ",
+      "const ",
+      "let ",
+      "var "
     ]
   }
 ]

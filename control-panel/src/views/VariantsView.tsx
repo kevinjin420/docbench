@@ -5,9 +5,10 @@ import { API_BASE } from '@/utils/types'
 interface Props {
   variants: Variant[]
   onRefresh: () => void
+  accessToken: string
 }
 
-export default function VariantsView({ variants, onRefresh }: Props) {
+export default function VariantsView({ variants, onRefresh, accessToken }: Props) {
   const [isAddingVariant, setIsAddingVariant] = useState(false)
   const [formData, setFormData] = useState({ variant_name: '', url: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -20,7 +21,7 @@ export default function VariantsView({ variants, onRefresh }: Props) {
     try {
       const response = await fetch(`${API_BASE}/variants`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
         body: JSON.stringify(formData)
       })
 
@@ -48,7 +49,8 @@ export default function VariantsView({ variants, onRefresh }: Props) {
 
     try {
       const response = await fetch(`${API_BASE}/variants/${encodeURIComponent(variantName)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'X-Access-Token': accessToken }
       })
 
       if (response.ok) {
@@ -75,7 +77,7 @@ export default function VariantsView({ variants, onRefresh }: Props) {
         </div>
         <button
           onClick={() => setIsAddingVariant(!isAddingVariant)}
-          className="px-4 py-2 bg-terminal-accent text-black rounded hover:bg-opacity-80 transition-all font-medium cursor-pointer"
+          className={`btn ${isAddingVariant ? 'btn-secondary' : 'btn-primary'}`}
         >
           {isAddingVariant ? 'Cancel' : 'Add Variant'}
         </button>
@@ -113,14 +115,14 @@ export default function VariantsView({ variants, onRefresh }: Props) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-terminal-accent text-black rounded hover:bg-opacity-80 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="btn btn-primary"
               >
                 {isSubmitting ? 'Creating...' : 'Create Variant'}
               </button>
               <button
                 type="button"
                 onClick={() => setIsAddingVariant(false)}
-                className="px-4 py-2 bg-zinc-700 text-gray-300 rounded hover:bg-zinc-600 transition-all cursor-pointer"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -160,18 +162,14 @@ export default function VariantsView({ variants, onRefresh }: Props) {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <button
                         onClick={() => handleDelete(variant.name)}
-                        className={`px-3 py-1 rounded transition-all cursor-pointer ${
-                          deleteConfirm === variant.name
-                            ? 'bg-red-600 text-white hover:bg-red-700'
-                            : 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
-                        }`}
+                        className={`btn btn-sm ${deleteConfirm === variant.name ? 'btn-danger-solid' : 'btn-danger'}`}
                       >
-                        {deleteConfirm === variant.name ? 'Confirm Delete' : 'Delete'}
+                        {deleteConfirm === variant.name ? 'Confirm' : 'Delete'}
                       </button>
                       {deleteConfirm === variant.name && (
                         <button
                           onClick={() => setDeleteConfirm(null)}
-                          className="ml-2 px-3 py-1 bg-zinc-700 text-gray-300 rounded hover:bg-zinc-600 transition-all cursor-pointer"
+                          className="btn btn-secondary btn-sm ml-2"
                         >
                           Cancel
                         </button>

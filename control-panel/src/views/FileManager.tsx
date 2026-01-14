@@ -12,6 +12,7 @@ interface Props {
   onClearDb: () => void
   onRefresh: () => void
   onDelete?: (filePath: string) => void
+  accessToken: string
 }
 
 export default function FileManager({
@@ -21,7 +22,8 @@ export default function FileManager({
   onClean,
   onClearDb,
   onRefresh,
-  onDelete
+  onDelete,
+  accessToken
 }: Props) {
   const [sortBy, setSortBy] = useState<'size' | 'modified' | 'model-variant'>(() => {
     const saved = localStorage.getItem('fileManager_sortBy')
@@ -96,7 +98,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/stash-selected`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
         body: JSON.stringify({ run_ids: Array.from(selectedFiles) })
       })
       if (res.ok) {
@@ -126,7 +128,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/export-collections-csv`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
         body: JSON.stringify({ collections: Array.from(selectedCollections) })
       })
       if (res.ok) {
@@ -195,13 +197,15 @@ export default function FileManager({
 
       if (!stashFiles.has(stashName)) {
         try {
-          const res = await fetch(`${API_BASE}/stash/${stashName}/files`)
+          const res = await fetch(`${API_BASE}/stash/${stashName}/files`, {
+            headers: { 'X-Access-Token': accessToken }
+          })
           const data = await res.json()
           setStashFiles(new Map(stashFiles.set(stashName, data.files || [])))
         } catch (error) {
           console.error(`Failed to fetch stash files for ${stashName}:`, error)
         }
-    }
+      }
     }
 
     setExpandedStashes(newExpanded)
@@ -210,7 +214,10 @@ export default function FileManager({
   const deleteStash = async (stashName: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      await fetch(`${API_BASE}/stash/${stashName}`, { method: 'DELETE' })
+      await fetch(`${API_BASE}/stash/${stashName}`, {
+        method: 'DELETE',
+        headers: { 'X-Access-Token': accessToken }
+      })
       onRefresh()
     } catch (error) {
       console.error(`Failed to delete stash ${stashName}:`, error)
@@ -222,7 +229,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/evaluate-collection`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
         body: JSON.stringify({ collection: stashName })
       })
       const data = await res.json()
@@ -246,7 +253,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/compare`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
         body: JSON.stringify({ stash1: selectedStashForCompare, stash2: stashName })
       })
       const data = await res.json()
@@ -263,37 +270,37 @@ export default function FileManager({
     <div className="bg-terminal-surface border border-terminal-border rounded p-6">
       <div className="flex justify-between items-center mb-6 pb-2 border-b border-terminal-border">
         <h2 className="text-terminal-accent text-xl m-0">Test Results</h2>
-        <button onClick={onRefresh} className="px-3 py-2 bg-transparent border border-terminal-border rounded text-gray-400 text-sm hover:bg-zinc-800 hover:border-gray-600 hover:text-white cursor-pointer" title="Refresh">
+        <button onClick={onRefresh} className="btn btn-secondary btn-icon" title="Refresh">
           ↻
         </button>
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap items-center justify-between">
         <div className="flex gap-2">
-          <button onClick={onStash} className="px-4 py-2.5 bg-terminal-border text-gray-300 border border-gray-600 rounded text-sm font-semibold hover:bg-zinc-700 cursor-pointer">
+          <button onClick={onStash} className="btn btn-secondary">
             Stash All
           </button>
           {selectedFiles.size > 0 && (
-            <button onClick={stashSelected} className="px-4 py-2.5 bg-blue-900 text-white border border-blue-700 rounded text-sm font-semibold hover:bg-blue-800 cursor-pointer">
+            <button onClick={stashSelected} className="btn btn-info">
               Stash Selected ({selectedFiles.size})
             </button>
           )}
           <div className="flex">
-            <button onClick={() => exportCollectionsGraph('svg')} className="px-3 py-2.5 bg-blue-900 text-white border border-blue-700 rounded-l text-sm font-semibold hover:bg-blue-800 cursor-pointer">
+            <button onClick={() => exportCollectionsGraph('svg')} className="btn btn-info" style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}>
               SVG
             </button>
-            <button onClick={() => exportCollectionsGraph('png')} className="px-3 py-2.5 bg-blue-900 text-white border-l-0 border border-blue-700 rounded-r text-sm font-semibold hover:bg-blue-800 cursor-pointer">
+            <button onClick={() => exportCollectionsGraph('png')} className="btn btn-info" style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 'none' }}>
               PNG
             </button>
           </div>
-          <button onClick={onClean} className="px-4 py-2.5 bg-red-900 text-white rounded text-sm font-semibold hover:bg-red-800 cursor-pointer">
+          <button onClick={onClean} className="btn btn-danger">
             Delete Uncategorized
           </button>
           <button onClick={() => {
             if (window.confirm('Are you sure you want to nuke the database? This will delete all benchmark results and cannot be undone.')) {
               onClearDb()
             }
-          }} className="px-4 py-2.5 bg-red-950 text-white border border-red-800 rounded text-sm font-semibold hover:bg-red-900 cursor-pointer">
+          }} className="btn btn-danger-solid">
             Nuke Database
           </button>
         </div>
@@ -347,7 +354,7 @@ export default function FileManager({
                 {onDelete && (
                   <button
                     onClick={() => onDelete(file.path)}
-                    className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-950 border border-red-500 rounded transition-colors cursor-pointer"
+                    className="btn btn-danger btn-sm btn-icon"
                     title="Delete file"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,7 +385,7 @@ export default function FileManager({
               {selectedCollections.size > 0 && (
                 <button
                   onClick={exportCollectionsCSV}
-                  className="px-3 py-1.5 bg-green-900 text-green-300 border border-green-700 rounded text-xs font-semibold hover:bg-green-800 cursor-pointer"
+                  className="btn btn-success btn-sm"
                 >
                   Export CSV ({selectedCollections.size})
                 </button>
@@ -478,33 +485,29 @@ export default function FileManager({
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => selectForCompare(stash.name, e)}
-                      className={`px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-all ${
-                        selectedStashForCompare === stash.name
-                          ? 'bg-blue-600 text-white border border-blue-600'
-                          : 'bg-transparent text-blue-400 border border-blue-600 hover:bg-blue-900'
-                      }`}
+                      className={`btn btn-sm ${selectedStashForCompare === stash.name ? 'btn-primary' : 'btn-info'}`}
                       title="Select this stash for comparison"
                     >
-                      Select for Compare
+                      Select
                     </button>
                     <button
                       onClick={(e) => compareWithSelected(stash.name, e)}
-                      className="px-3 py-1.5 bg-transparent text-purple-400 border border-purple-600 rounded text-xs font-semibold hover:bg-purple-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn btn-secondary btn-sm"
                       title="Compare with selected stash"
                       disabled={!selectedStashForCompare || selectedStashForCompare === stash.name}
                     >
-                      Compare with Selected
+                      Compare
                     </button>
                     <button
                       onClick={(e) => evaluateStash(stash.name, e)}
-                      className="px-3 py-1.5 bg-terminal-border text-terminal-accent border border-terminal-accent rounded text-xs font-semibold hover:bg-terminal-accent hover:text-black cursor-pointer"
+                      className="btn btn-accent btn-sm"
                       title="Evaluate all files in this stash"
                     >
-                      Evaluate All
+                      Evaluate
                     </button>
                     <button
                       onClick={(e) => deleteStash(stash.name, e)}
-                      className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-950 border border-red-500 rounded transition-colors cursor-pointer"
+                      className="btn btn-danger btn-sm btn-icon"
                       title="Delete entire stash"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,7 +538,7 @@ export default function FileManager({
                           {onDelete && (
                             <button
                               onClick={() => onDelete(file.path)}
-                              className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-950 border border-red-500 rounded transition-colors cursor-pointer"
+                              className="btn btn-danger btn-sm btn-icon"
                               title="Delete file"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -281,14 +281,14 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 							<div className="flex">
 								<button
 									onClick={() => exportGraph("svg")}
-									className="px-2 py-1 border border-blue-500 text-blue-500 rounded-l hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+									className="btn btn-info btn-sm" style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
 									title="Export as SVG"
 								>
 									SVG
 								</button>
 								<button
 									onClick={() => exportGraph("png")}
-									className="px-2 py-1 border border-blue-500 border-l-0 text-blue-500 rounded-r hover:bg-blue-500 hover:text-white cursor-pointer transition-colors text-xs font-medium"
+									className="btn btn-info btn-sm" style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: "none" }}
 									title="Export as PNG"
 								>
 									PNG
@@ -297,7 +297,7 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 						)}
 						<button
 							onClick={copyToClipboard}
-							className="p-2 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"
+							className="btn btn-accent btn-icon relative overflow-hidden"
 							title="Copy evaluation as image"
 						>
 							<svg
@@ -337,7 +337,7 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 						</button>
 						<button
 							onClick={onClose}
-							className="w-9 h-9 flex items-center justify-center border border-gray-600 text-gray-400 rounded hover:border-white hover:text-white text-xl leading-none cursor-pointer transition-colors"
+							className="btn btn-secondary btn-icon text-xl leading-none"
 						>
 							×
 						</button>
@@ -540,7 +540,7 @@ export default function EvaluationModal({ isOpen, onClose, results }: Props) {
 												onClick={() =>
 													copyFileResult(filename)
 												}
-												className="p-1.5 border border-terminal-accent text-terminal-accent rounded hover:bg-terminal-accent hover:text-black cursor-pointer transition-colors relative overflow-hidden"
+												className="btn btn-accent btn-sm btn-icon relative overflow-hidden"
 												title="Copy file result as image"
 											>
 												<svg

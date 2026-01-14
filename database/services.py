@@ -12,10 +12,14 @@ from sqlalchemy import desc, func
 
 from .models import (
     get_db,
+    get_public_db,
     Collection,
     BenchmarkResult,
     BenchmarkRun,
-    DocumentationVariant
+    DocumentationVariant,
+    AccessToken,
+    PublicTestConfig,
+    LeaderboardEntry
 )
 
 
@@ -28,13 +32,13 @@ class BenchmarkResultService:
         model: str,
         model_id: str,
         variant: str,
-        temperature: float,
         max_tokens: int,
         total_tests: int,
         responses: Dict[str, str],
         batch_size: Optional[int] = None,
         num_batches: Optional[int] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
+        temperature: float = 0.1
     ) -> int:
         """Save benchmark results to database"""
         with get_db() as session:
@@ -278,8 +282,8 @@ class BenchmarkRunService:
         model: str,
         model_id: str,
         variant: str,
-        temperature: float,
-        max_tokens: int
+        max_tokens: int,
+        temperature: float = 0.1
     ) -> int:
         """Create new benchmark run"""
         with get_db() as session:
@@ -352,20 +356,7 @@ class DocumentationService:
 
     @staticmethod
     def create_variant(variant_name: str, url: str):
-        """Create a new documentation variant with URL and fetch content"""
-        import requests
-
-        content = None
-        size_bytes = 0
-        try:
-            response = requests.get(url, timeout=30)
-            response.raise_for_status()
-            content = response.text
-            size_bytes = len(content.encode('utf-8'))
-        except Exception as e:
-            print(f"Warning: Could not fetch content from {url}: {e}")
-
-        current_time = time.time()
+        """Create or update a documentation variant"""
         with get_db() as session:
             existing = session.query(DocumentationVariant).filter_by(
                 variant_name=variant_name
@@ -373,96 +364,57 @@ class DocumentationService:
 
             if existing:
                 existing.url = url
-                existing.content = content
-                existing.size_bytes = size_bytes
-                existing.cached_at = current_time if content else None
-                existing.updated_at = current_time
             else:
                 variant = DocumentationVariant(
                     variant_name=variant_name,
-                    url=url,
-                    content=content,
-                    size_bytes=size_bytes,
-                    cached_at=current_time if content else None,
-                    cache_ttl=3600,
-                    created_at=current_time,
-                    updated_at=current_time,
-                    is_active=True
+                    url=url
                 )
                 session.add(variant)
 
     @staticmethod
-    def get_variant(variant_name: str, force_refresh: bool = False) -> Optional[str]:
-        """Get documentation content by variant name, fetching from URL if needed"""
+    def get_variant(variant_name: str) -> Optional[str]:
+        """Get documentation content by fetching from URL"""
         import requests
 
         with get_db() as session:
             variant = session.query(DocumentationVariant).filter_by(
-                variant_name=variant_name,
-                is_active=True
+                variant_name=variant_name
             ).first()
 
             if not variant:
                 return None
 
-            # Check if cache is valid
-            current_time = time.time()
-            cache_valid = (
-                variant.content and
-                variant.cached_at and
-                (current_time - variant.cached_at) < variant.cache_ttl and
-                not force_refresh
-            )
-
-            if cache_valid:
-                return variant.content
-
-            # Fetch from URL
             try:
                 response = requests.get(variant.url, timeout=30)
                 response.raise_for_status()
-                content = response.text
-
-                # Update cache
-                variant.content = content
-                variant.size_bytes = len(content.encode('utf-8'))
-                variant.cached_at = current_time
-                session.commit()
-
-                return content
+                return response.text
             except Exception as e:
                 print(f"Error fetching variant {variant_name} from {variant.url}: {e}")
-                # Return cached content if available, even if expired
-                return variant.content if variant.content else None
+                return None
 
     @staticmethod
     def get_all_variants() -> List[Dict[str, Any]]:
-        """Get all active documentation variants"""
+        """Get all documentation variants"""
         with get_db() as session:
-            variants = session.query(DocumentationVariant).filter_by(
-                is_active=True
-            ).all()
-
+            variants = session.query(DocumentationVariant).all()
             return [
                 {
                     'name': v.variant_name,
-                    'url': v.url,
-                    'size_bytes': v.size_bytes or 0,
-                    'size_kb': round((v.size_bytes or 0) / 1024, 2)
+                    'url': v.url
                 }
                 for v in variants
             ]
 
     @staticmethod
     def delete_variant(variant_name: str) -> bool:
-        """Delete (deactivate) a documentation variant"""
+        """Delete a documentation variant"""
         with get_db() as session:
             variant = session.query(DocumentationVariant).filter_by(
                 variant_name=variant_name
             ).first()
 
             if variant:
-                variant.is_active = False
+                session.delete(variant)
                 return True
             return False
 
@@ -559,4 +511,310 @@ class CollectionService:
 
                 session.query(Collection).filter_by(name=name).delete()
 
+
+class AccessTokenService:
+    """Service for managing access tokens (uses public database)"""
+
+    @staticmethod
+    def hash_token(token: str) -> str:
+        """Hash a token using SHA-256"""
+        import hashlib
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    @staticmethod
+    def generate_token() -> tuple[str, int]:
+        """Generate a new token. Returns (plaintext_token, token_id)"""
+        import secrets
+        plaintext = secrets.token_urlsafe(32)
+        token_hash = AccessTokenService.hash_token(plaintext)
+
+        with get_public_db() as session:
+            token = AccessToken(
+                token_hash=token_hash,
+                name='generated',
+                is_admin=False,
+                created_at=time.time(),
+                is_active=True
+            )
+            session.add(token)
+            session.flush()
+            return plaintext, token.id
+
+    @staticmethod
+    def create(name: str, is_admin: bool = False, expires_days: Optional[int] = None) -> tuple[str, int]:
+        """Create a new access token with metadata"""
+        import secrets
+        plaintext = secrets.token_urlsafe(32)
+        token_hash = AccessTokenService.hash_token(plaintext)
+
+        expires_at = None
+        if expires_days:
+            expires_at = time.time() + (expires_days * 86400)
+
+        with get_public_db() as session:
+            token = AccessToken(
+                token_hash=token_hash,
+                name=name,
+                is_admin=is_admin,
+                created_at=time.time(),
+                expires_at=expires_at,
+                is_active=True
+            )
+            session.add(token)
+            session.flush()
+            return plaintext, token.id
+
+    @staticmethod
+    def validate(token: str) -> Optional[Dict[str, Any]]:
+        """Validate a token and return token info if valid"""
+        token_hash = AccessTokenService.hash_token(token)
+
+        with get_public_db() as session:
+            record = session.query(AccessToken).filter_by(
+                token_hash=token_hash,
+                is_active=True
+            ).first()
+
+            if not record:
+                return None
+
+            if record.expires_at and time.time() > record.expires_at:
+                return None
+
+            record.last_used_at = time.time()
+
+            return {
+                'id': record.id,
+                'name': record.name,
+                'is_admin': record.is_admin,
+                'created_at': record.created_at,
+                'expires_at': record.expires_at
+            }
+
+    @staticmethod
+    def revoke(token_id: int) -> bool:
+        """Revoke (deactivate) a token"""
+        with get_public_db() as session:
+            token = session.query(AccessToken).filter_by(id=token_id).first()
+            if token:
+                token.is_active = False
+                return True
+            return False
+
+    @staticmethod
+    def list_all() -> List[Dict[str, Any]]:
+        """List all tokens (without hashes)"""
+        with get_public_db() as session:
+            tokens = session.query(AccessToken).order_by(
+                desc(AccessToken.created_at)
+            ).all()
+
+            return [
+                {
+                    'id': t.id,
+                    'name': t.name,
+                    'is_admin': t.is_admin,
+                    'created_at': t.created_at,
+                    'expires_at': t.expires_at,
+                    'last_used_at': t.last_used_at,
+                    'is_active': t.is_active
+                }
+                for t in tokens
+            ]
+
+
+class PublicTestConfigService:
+    """Service for managing public test configuration (uses public database)"""
+
+    @staticmethod
+    def get_public_test_ids() -> List[str]:
+        """Get list of test IDs in the public suite"""
+        with get_public_db() as session:
+            configs = session.query(PublicTestConfig).filter_by(is_public=True).all()
+            return [c.test_id for c in configs]
+
+    @staticmethod
+    def set_public_tests(test_ids: List[str], added_by: Optional[int] = None):
+        """Set which tests are in the public suite"""
+        current_time = time.time()
+
+        with get_public_db() as session:
+            session.query(PublicTestConfig).update({'is_public': False})
+
+            for test_id in test_ids:
+                existing = session.query(PublicTestConfig).filter_by(test_id=test_id).first()
+                if existing:
+                    existing.is_public = True
+                else:
+                    config = PublicTestConfig(
+                        test_id=test_id,
+                        is_public=True,
+                        added_at=current_time,
+                        added_by=added_by
+                    )
+                    session.add(config)
+
+    @staticmethod
+    def add_public_test(test_id: str, added_by: Optional[int] = None) -> bool:
+        """Add a single test to the public suite"""
+        with get_public_db() as session:
+            existing = session.query(PublicTestConfig).filter_by(test_id=test_id).first()
+            if existing:
+                existing.is_public = True
+                return True
+
+            config = PublicTestConfig(
+                test_id=test_id,
+                is_public=True,
+                added_at=time.time(),
+                added_by=added_by
+            )
+            session.add(config)
+            return True
+
+    @staticmethod
+    def remove_public_test(test_id: str) -> bool:
+        """Remove a test from the public suite"""
+        with get_public_db() as session:
+            config = session.query(PublicTestConfig).filter_by(test_id=test_id).first()
+            if config:
+                config.is_public = False
+                return True
+            return False
+
+    @staticmethod
+    def get_config() -> List[Dict[str, Any]]:
+        """Get full public test configuration"""
+        with get_public_db() as session:
+            configs = session.query(PublicTestConfig).all()
+            return [
+                {
+                    'test_id': c.test_id,
+                    'is_public': c.is_public,
+                    'added_at': c.added_at
+                }
+                for c in configs
+            ]
+
+
+class LeaderboardService:
+    """Service for managing the public leaderboard (uses public database)"""
+
+    @staticmethod
+    def submit(
+        documentation_name: str,
+        documentation_url: str,
+        total_score: float,
+        max_score: float,
+        percentage: float,
+        model_used: str,
+        submitter_email: Optional[str] = None,
+        evaluation_snapshot: Optional[Dict] = None
+    ) -> int:
+        """Submit a new leaderboard entry"""
+        with get_public_db() as session:
+            entry = LeaderboardEntry(
+                documentation_name=documentation_name,
+                documentation_url=documentation_url,
+                submitter_email=submitter_email,
+                total_score=total_score,
+                max_score=max_score,
+                percentage=percentage,
+                evaluation_snapshot=evaluation_snapshot,
+                model_used=model_used,
+                submitted_at=time.time(),
+                is_visible=True
+            )
+            session.add(entry)
+            session.flush()
+            return entry.id
+
+    @staticmethod
+    def get_leaderboard(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get ranked leaderboard entries"""
+        with get_public_db() as session:
+            entries = session.query(LeaderboardEntry).filter_by(
+                is_visible=True
+            ).order_by(
+                desc(LeaderboardEntry.percentage)
+            ).offset(offset).limit(limit).all()
+
+            result = []
+            for rank, entry in enumerate(entries, start=offset + 1):
+                result.append({
+                    'id': entry.id,
+                    'rank': rank,
+                    'documentation_name': entry.documentation_name,
+                    'documentation_url': entry.documentation_url,
+                    'percentage': round(entry.percentage, 2),
+                    'total_score': round(entry.total_score, 2),
+                    'max_score': round(entry.max_score, 2),
+                    'model_used': entry.model_used,
+                    'submitted_at': entry.submitted_at
+                })
+            return result
+
+    @staticmethod
+    def get_entry_by_id(entry_id: int) -> Optional[Dict[str, Any]]:
+        """Get a single leaderboard entry with full details"""
+        with get_public_db() as session:
+            entry = session.query(LeaderboardEntry).filter_by(id=entry_id).first()
+            if not entry:
+                return None
+
+            rank = session.query(LeaderboardEntry).filter(
+                LeaderboardEntry.is_visible == True,
+                LeaderboardEntry.percentage > entry.percentage
+            ).count() + 1
+
+            return {
+                'id': entry.id,
+                'rank': rank,
+                'documentation_name': entry.documentation_name,
+                'documentation_url': entry.documentation_url,
+                'submitter_email': entry.submitter_email,
+                'percentage': round(entry.percentage, 2),
+                'total_score': round(entry.total_score, 2),
+                'max_score': round(entry.max_score, 2),
+                'model_used': entry.model_used,
+                'submitted_at': entry.submitted_at,
+                'evaluation_snapshot': entry.evaluation_snapshot,
+                'is_visible': entry.is_visible
+            }
+
+    @staticmethod
+    def hide_entry(entry_id: int) -> bool:
+        """Hide a leaderboard entry (admin function)"""
+        with get_public_db() as session:
+            entry = session.query(LeaderboardEntry).filter_by(id=entry_id).first()
+            if entry:
+                entry.is_visible = False
+                return True
+            return False
+
+    @staticmethod
+    def unhide_entry(entry_id: int) -> bool:
+        """Unhide a leaderboard entry"""
+        with get_public_db() as session:
+            entry = session.query(LeaderboardEntry).filter_by(id=entry_id).first()
+            if entry:
+                entry.is_visible = True
+                return True
+            return False
+
+    @staticmethod
+    def get_total_count() -> int:
+        """Get total number of visible entries"""
+        with get_public_db() as session:
+            return session.query(LeaderboardEntry).filter_by(is_visible=True).count()
+
+    @staticmethod
+    def get_rank_for_percentage(percentage: float) -> int:
+        """Get what rank a given percentage would achieve"""
+        with get_public_db() as session:
+            better_count = session.query(LeaderboardEntry).filter(
+                LeaderboardEntry.is_visible == True,
+                LeaderboardEntry.percentage > percentage
+            ).count()
+            return better_count + 1
 

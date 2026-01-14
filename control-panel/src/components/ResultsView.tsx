@@ -100,7 +100,7 @@ export default function ResultsView({ results }: Props) {
 					<div className="flex justify-end mb-4">
 						<button
 							onClick={downloadCsv}
-							className="px-3 py-1.5 bg-zinc-800 border border-terminal-border rounded text-xs text-gray-300 hover:bg-zinc-700 hover:text-white transition-colors flex items-center gap-2"
+							className="btn btn-secondary btn-sm flex items-center gap-2"
 							title="Download results as CSV"
 						>
 							<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,10 +119,9 @@ export default function ResultsView({ results }: Props) {
 									cy="50"
 									r="45"
 									fill="none"
-									stroke="#00cc00"
 									strokeWidth="6"
 									strokeDasharray="283"
-									className="transition-all duration-700"
+									className="transition-all duration-700 stroke-terminal-accent"
 									style={{
 										strokeDashoffset: 283 - (283 * results.summary.overall_percentage) / 100,
 									}}

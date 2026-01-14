@@ -14,20 +14,19 @@ interface Props {
 	testFiles: TestFile[];
 	onBenchmarkComplete: () => void;
 	apiKey: string;
+	onApiKeyChange: (key: string) => void;
+	keyError: string;
+	accessToken: string;
 }
 
 let socket: Socket | null = null;
 
-export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete, apiKey }: Props) {
+export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete, apiKey, onApiKeyChange, keyError, accessToken }: Props) {
 	const [selectedModel, setSelectedModel] = useState(() => {
 		return localStorage.getItem("benchmarkModel") || models[0]?.id || "";
 	});
 	const [selectedVariant, setSelectedVariant] = useState(() => {
 		return localStorage.getItem("benchmarkVariant") || variants[0]?.name || "";
-	});
-	const [temperature, setTemperature] = useState(() => {
-		const saved = localStorage.getItem("benchmarkTemperature");
-		return saved ? parseFloat(saved) : 0.1;
 	});
 	const [queueSize, setQueueSize] = useState(() => {
 		const saved = localStorage.getItem("benchmarkQueueSize");
@@ -53,7 +52,6 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 
 	useEffect(() => localStorage.setItem("benchmarkModel", selectedModel), [selectedModel]);
 	useEffect(() => localStorage.setItem("benchmarkVariant", selectedVariant), [selectedVariant]);
-	useEffect(() => localStorage.setItem("benchmarkTemperature", temperature.toString()), [temperature]);
 	useEffect(() => localStorage.setItem("benchmarkQueueSize", queueSize.toString()), [queueSize]);
 	useEffect(() => localStorage.setItem("benchmarkBatchSize", batchSize.toString()), [batchSize]);
 	useEffect(() => localStorage.setItem("benchmarkCustomBatchSizes", customBatchSizes), [customBatchSizes]);
@@ -212,7 +210,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 			completed_evaluations: 0,
 		});
 
-		const payload: any = { model: selectedModel, variant: selectedVariant, temperature };
+		const payload: any = { model: selectedModel, variant: selectedVariant };
 
 		if (customBatchSizes.trim()) {
 			const sizes = customBatchSizes.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
@@ -233,7 +231,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		const startPromises = Array.from({ length: queueSize }, async (_, i) => {
 			const res = await fetch(`${API_BASE}/benchmark/run`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+				headers: { "Content-Type": "application/json", "X-API-Key": apiKey, "X-Access-Token": accessToken },
 				body: JSON.stringify(payload),
 			});
 			const data = await res.json();
@@ -384,7 +382,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		try {
 			const res = await fetch(`${API_BASE}/benchmark/rerun-batch`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+				headers: { "Content-Type": "application/json", "X-API-Key": apiKey, "X-Access-Token": accessToken },
 				body: JSON.stringify({ run_id: targetRunId, batch_num: batchNum }),
 			});
 			const data = await res.json();
@@ -439,7 +437,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		try {
 			const res = await fetch(`${API_BASE}/evaluate`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-Access-Token": accessToken },
 				body: JSON.stringify({ file: filePath }),
 			});
 			setResults(await res.json());
@@ -453,7 +451,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 		try {
 			await fetch(`${API_BASE}/delete-file`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-Access-Token": accessToken },
 				body: JSON.stringify({ file_path: filePath }),
 			});
 			if (selectedFile === filePath) { setSelectedFile(null); setResults(null); }
@@ -469,6 +467,20 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="p-4 bg-terminal-surface border border-terminal-border rounded">
+				<div className="flex items-center gap-4 mb-4 pb-4 border-b border-terminal-border">
+					<label className="text-gray-400 text-sm whitespace-nowrap">OpenRouter API Key:</label>
+					<input
+						type="password"
+						value={apiKey}
+						onChange={(e) => onApiKeyChange(e.target.value)}
+						placeholder="sk-or-v1-..."
+						className={`flex-1 max-w-md px-3 py-1.5 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none ${
+							keyError ? 'border-red-500' : apiKey && models.length > 0 ? 'border-green-500' : 'border-terminal-border focus:border-terminal-accent'
+						}`}
+					/>
+					{keyError && <span className="text-red-500 text-xs">{keyError}</span>}
+					{!keyError && apiKey && models.length > 0 && <span className="text-green-500 text-xs">{models.length} models available</span>}
+				</div>
 				<BenchmarkControls
 					models={models}
 					variants={variants}
@@ -476,8 +488,6 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 					setSelectedModel={setSelectedModel}
 					selectedVariant={selectedVariant}
 					setSelectedVariant={setSelectedVariant}
-					temperature={temperature}
-					setTemperature={setTemperature}
 					queueSize={queueSize}
 					setQueueSize={setQueueSize}
 					batchSize={batchSize}

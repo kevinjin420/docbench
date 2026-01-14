@@ -159,7 +159,7 @@ class EvaluatorService:
             required_score = max_score
 
         if total_forbidden > 0:
-            forbidden_penalty = (forbidden_found / total_forbidden) * (max_score * 0.3)
+            forbidden_penalty = (forbidden_found / total_forbidden) * (max_score * 0.4)
             penalties["forbidden"] = forbidden_penalty
         else:
             forbidden_penalty = 0
@@ -169,14 +169,14 @@ class EvaluatorService:
         # Legacy syntax checks
         syntax_checks = SyntaxChecker.check_syntax(code)
         
-        # jac check validation (15% penalty for invalid syntax)
+        # jac check validation (25% penalty for invalid syntax)
         jac_valid = True
         jac_errors = []
         jac_warnings = []
         if use_jac_check:
             jac_valid, jac_errors, jac_warnings = self.jac_check(code)
             if not jac_valid:
-                jac_penalty = max_score * 0.15
+                jac_penalty = max_score * 0.25
                 penalties["jac_check"] = jac_penalty
                 score = max(0, score - jac_penalty)
                 failed_checks.append(f"[FAIL] jac check failed: {len(jac_errors)} errors")
@@ -336,15 +336,24 @@ class EvaluatorService:
         patched_code, _ = patch_missing_braces(code)
         return self.evaluate_code(patched_code, test_case)
 
-    def evaluate_responses(self, responses: Dict[str, str]) -> Dict[str, Any]:
-        """Evaluate a dictionary of test responses (for API use) - parallelized"""
+    def evaluate_responses(self, responses: Dict[str, str], test_ids: List[str] = None) -> Dict[str, Any]:
+        """Evaluate a dictionary of test responses (for API use) - parallelized
+
+        Args:
+            responses: Dictionary mapping test_id to code
+            test_ids: Optional list of test IDs to filter evaluation to
+        """
         results = []
         category_scores = {}
         level_scores = {}
 
+        test_ids_set = set(test_ids) if test_ids else None
+
         tasks = []
         for test_case in self.tests:
             test_id = test_case["id"]
+            if test_ids_set and test_id not in test_ids_set:
+                continue
             if test_id in responses:
                 tasks.append((test_case, responses[test_id]))
 

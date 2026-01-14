@@ -2,6 +2,7 @@
 from flask import jsonify, request, Response
 import traceback
 from backend.services import GraphService
+from backend.utils.auth import require_auth
 from database import BenchmarkResultService
 
 
@@ -18,6 +19,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
     """Register graph routes"""
 
     @app.route('/api/graph/collections', methods=['GET'])
+    @require_auth
     def graph_collections():
         """Generate bar chart of all collections"""
         try:
@@ -58,6 +60,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/graph/evaluation', methods=['POST'])
+    @require_auth
     def graph_evaluation():
         """Generate chart for evaluation results"""
         try:
@@ -93,6 +96,7 @@ def register_routes(app, socketio=None, running_benchmarks=None):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/graph/compare', methods=['POST'])
+    @require_auth
     def graph_compare():
         """Generate comparison chart between two stashes"""
         try:
