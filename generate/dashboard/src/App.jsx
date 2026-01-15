@@ -365,7 +365,7 @@ function FileEditor() {
   }, [])
 
   return (
-    <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+    <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden flex-1 min-h-0">
       <div className="flex h-full">
         <div className="w-48 border-r border-zinc-800 bg-zinc-950 overflow-y-auto">
           <div className="p-2 text-xs text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
@@ -854,7 +854,7 @@ function App() {
         </div>
 
         {page === 'config' && (
-          <>
+          <div className="flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
             <SourcePanel
               sources={sources}
               onAdd={addSource}
@@ -863,7 +863,7 @@ function App() {
               onRefresh={fetchSources}
             />
             <FileEditor />
-          </>
+          </div>
         )}
 
         {page === 'pipeline' && (

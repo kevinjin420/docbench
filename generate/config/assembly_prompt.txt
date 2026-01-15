@@ -4,6 +4,7 @@ TARGET: 20-25KB in dense prose format. No markdown formatting.
 
 OUTPUT FORMAT:
 - Dense prose paragraphs, no markdown headers/tables/code fences
+- NO blank lines between paragraphs - continuous text
 - Inline code snippets within text flow
 - Semicolon-separated lists for related items
 - One paragraph per topic, combine related concepts
@@ -69,4 +70,4 @@ EXTRACTED CONTENT:
 
 ---
 
-Generate the complete reference as dense prose. No markdown. All 20 topics must be covered. Inline code examples within paragraphs.
+Generate the complete reference as dense prose. No markdown. No blank lines. All 20 topics must be covered. Inline code examples within paragraphs.
