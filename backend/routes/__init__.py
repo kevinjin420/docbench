@@ -11,6 +11,7 @@ from . import graphs
 from . import auth
 from . import public
 from . import admin
+from . import oauth
 
 
 def register_all_routes(app, socketio, running_benchmarks):
@@ -24,6 +25,7 @@ def register_all_routes(app, socketio, running_benchmarks):
     auth.register_routes(app, socketio, running_benchmarks)
     public.register_routes(app, socketio, running_benchmarks)
     admin.register_routes(app, socketio, running_benchmarks)
+    oauth.register_routes(app, socketio, running_benchmarks)
 
 
 __all__ = ['register_all_routes']

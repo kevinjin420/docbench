@@ -154,6 +154,25 @@ class DocumentationVariant(LocalBase):
 # PUBLIC DATABASE MODELS (PostgreSQL - shared/persistent data)
 # ============================================================================
 
+class User(PublicBase):
+    """Users authenticated via OAuth"""
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(256), unique=True, nullable=False, index=True)
+    name = Column(String(256), nullable=True)
+    github_id = Column(String(256), unique=True, nullable=False, index=True)
+    is_admin = Column(Boolean, nullable=False, default=False)
+    created_at = Column(Float, nullable=False)
+    last_login_at = Column(Float, nullable=True)
+
+    leaderboard_entries = relationship('LeaderboardEntry', back_populates='user')
+
+    __table_args__ = (
+        Index('idx_user_github', 'github_id'),
+    )
+
+
 class AccessToken(PublicBase):
     """Access tokens for authenticated users"""
     __tablename__ = 'access_tokens'
@@ -203,6 +222,9 @@ class LeaderboardEntry(PublicBase):
     model_used = Column(String(256), nullable=False)
     submitted_at = Column(Float, nullable=False, index=True)
     is_visible = Column(Boolean, nullable=False, default=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    user = relationship('User', back_populates='leaderboard_entries')
 
     __table_args__ = (
         Index('idx_leaderboard_percentage_desc', percentage.desc()),

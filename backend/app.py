@@ -27,7 +27,9 @@ def create_app(verbosity=1):
             3 (-vvv): Debug - Add detailed debugging info
             4 (-vvvv): Full Debug - All logging
     """
+    import os
     app = Flask(__name__)
+    app.secret_key = os.getenv('FLASK_SECRET_KEY', 'change-me-in-production')
 
     log_level_map = {
         1: logging.INFO,

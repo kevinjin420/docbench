@@ -5,6 +5,7 @@ from .models import (
     BenchmarkResult,
     BenchmarkRun,
     DocumentationVariant,
+    User,
     AccessToken,
     PublicTestConfig,
     LeaderboardEntry,
@@ -26,6 +27,7 @@ from .services import (
     BenchmarkRunService,
     DocumentationService,
     CollectionService,
+    UserService,
     AccessTokenService,
     PublicTestConfigService,
     LeaderboardService
@@ -39,6 +41,7 @@ __all__ = [
     'BenchmarkResult',
     'BenchmarkRun',
     'DocumentationVariant',
+    'User',
     'AccessToken',
     'PublicTestConfig',
     'LeaderboardEntry',
@@ -54,6 +57,7 @@ __all__ = [
     'BenchmarkRunService',
     'DocumentationService',
     'CollectionService',
+    'UserService',
     'AccessTokenService',
     'PublicTestConfigService',
     'LeaderboardService'

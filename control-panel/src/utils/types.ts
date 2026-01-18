@@ -132,3 +132,18 @@ export interface PublicBenchmarkStatus {
 	};
 	error?: string;
 }
+
+export interface User {
+	id: number;
+	email: string;
+	name: string | null;
+	github_id: string;
+	is_admin: boolean;
+	avatar_url: string;
+}
+
+export interface AuthState {
+	user: User | null;
+	token: string | null;
+	isLoading: boolean;
+}

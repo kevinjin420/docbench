@@ -17,6 +17,7 @@ from .models import (
     BenchmarkResult,
     BenchmarkRun,
     DocumentationVariant,
+    User,
     AccessToken,
     PublicTestConfig,
     LeaderboardEntry
@@ -512,6 +513,115 @@ class CollectionService:
                 session.query(Collection).filter_by(name=name).delete()
 
 
+class UserService:
+    """Service for managing OAuth users (uses public database)"""
+
+    @staticmethod
+    def get_or_create(
+        email: str,
+        github_id: str,
+        name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get existing user or create new one. Returns user dict."""
+        with get_public_db() as session:
+            user = session.query(User).filter_by(github_id=github_id).first()
+
+            if user:
+                user.last_login_at = time.time()
+                if name and name != user.name:
+                    user.name = name
+                if email and email != user.email:
+                    user.email = email
+            else:
+                user = User(
+                    email=email,
+                    name=name,
+                    github_id=github_id,
+                    is_admin=False,
+                    created_at=time.time(),
+                    last_login_at=time.time()
+                )
+                session.add(user)
+                session.flush()
+
+            return {
+                'id': user.id,
+                'email': user.email,
+                'name': user.name,
+                'github_id': user.github_id,
+                'is_admin': user.is_admin,
+                'created_at': user.created_at,
+                'last_login_at': user.last_login_at
+            }
+
+    @staticmethod
+    def get_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user by ID"""
+        with get_public_db() as session:
+            user = session.query(User).filter_by(id=user_id).first()
+            if not user:
+                return None
+
+            return {
+                'id': user.id,
+                'email': user.email,
+                'name': user.name,
+                'github_id': user.github_id,
+                'is_admin': user.is_admin,
+                'created_at': user.created_at,
+                'last_login_at': user.last_login_at
+            }
+
+    @staticmethod
+    def get_by_github_id(github_id: str) -> Optional[Dict[str, Any]]:
+        """Get user by GitHub ID"""
+        with get_public_db() as session:
+            user = session.query(User).filter_by(github_id=github_id).first()
+            if not user:
+                return None
+
+            return {
+                'id': user.id,
+                'email': user.email,
+                'name': user.name,
+                'github_id': user.github_id,
+                'is_admin': user.is_admin,
+                'created_at': user.created_at,
+                'last_login_at': user.last_login_at
+            }
+
+    @staticmethod
+    def set_admin(user_id: int, is_admin: bool) -> bool:
+        """Set user admin status"""
+        with get_public_db() as session:
+            user = session.query(User).filter_by(id=user_id).first()
+            if user:
+                user.is_admin = is_admin
+                return True
+            return False
+
+    @staticmethod
+    def list_all(limit: int = 100) -> List[Dict[str, Any]]:
+        """List all users"""
+        with get_public_db() as session:
+            users = session.query(User).order_by(
+                desc(User.created_at)
+            ).limit(limit).all()
+
+            return [
+                {
+                    'id': u.id,
+                    'email': u.email,
+                    'name': u.name,
+                    'github_id': u.github_id,
+                    'is_admin': u.is_admin,
+                    'created_at': u.created_at,
+                    'last_login_at': u.last_login_at
+                }
+                for u in users
+            ]
+
+
 class AccessTokenService:
     """Service for managing access tokens (uses public database)"""
 
@@ -709,7 +819,8 @@ class LeaderboardService:
         percentage: float,
         model_used: str,
         submitter_email: Optional[str] = None,
-        evaluation_snapshot: Optional[Dict] = None
+        evaluation_snapshot: Optional[Dict] = None,
+        user_id: Optional[int] = None
     ) -> int:
         """Submit a new leaderboard entry"""
         with get_public_db() as session:
@@ -723,7 +834,8 @@ class LeaderboardService:
                 evaluation_snapshot=evaluation_snapshot,
                 model_used=model_used,
                 submitted_at=time.time(),
-                is_visible=True
+                is_visible=True,
+                user_id=user_id
             )
             session.add(entry)
             session.flush()
@@ -741,7 +853,7 @@ class LeaderboardService:
 
             result = []
             for rank, entry in enumerate(entries, start=offset + 1):
-                result.append({
+                entry_dict = {
                     'id': entry.id,
                     'rank': rank,
                     'documentation_name': entry.documentation_name,
@@ -750,8 +862,16 @@ class LeaderboardService:
                     'total_score': round(entry.total_score, 2),
                     'max_score': round(entry.max_score, 2),
                     'model_used': entry.model_used,
-                    'submitted_at': entry.submitted_at
-                })
+                    'submitted_at': entry.submitted_at,
+                    'user_id': entry.user_id
+                }
+                if entry.user:
+                    entry_dict['user'] = {
+                        'id': entry.user.id,
+                        'name': entry.user.name,
+                        'github_id': entry.user.github_id
+                    }
+                result.append(entry_dict)
             return result
 
     @staticmethod
@@ -767,7 +887,7 @@ class LeaderboardService:
                 LeaderboardEntry.percentage > entry.percentage
             ).count() + 1
 
-            return {
+            entry_dict = {
                 'id': entry.id,
                 'rank': rank,
                 'documentation_name': entry.documentation_name,
@@ -779,8 +899,16 @@ class LeaderboardService:
                 'model_used': entry.model_used,
                 'submitted_at': entry.submitted_at,
                 'evaluation_snapshot': entry.evaluation_snapshot,
-                'is_visible': entry.is_visible
+                'is_visible': entry.is_visible,
+                'user_id': entry.user_id
             }
+            if entry.user:
+                entry_dict['user'] = {
+                    'id': entry.user.id,
+                    'name': entry.user.name,
+                    'github_id': entry.user.github_id
+                }
+            return entry_dict
 
     @staticmethod
     def hide_entry(entry_id: int) -> bool:

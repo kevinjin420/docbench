@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import type { PublicTest, PublicBenchmarkStatus, Model } from "@/utils/types";
+import type { PublicTest, PublicBenchmarkStatus, Model, User } from "@/utils/types";
 import { API_BASE, WS_BASE } from "@/utils/types";
+import { getAuthHeaders } from "@/utils/auth";
 
 type UrlValidationStatus = "idle" | "validating" | "valid" | "invalid";
 
-export default function PublicBenchmarkView() {
+interface PublicBenchmarkViewProps {
+	user: User | null;
+}
+
+export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) {
 	const navigate = useNavigate();
 	const [models, setModels] = useState<Model[]>([]);
 	const [publicTests, setPublicTests] = useState<PublicTest[]>([]);
@@ -172,7 +177,10 @@ export default function PublicBenchmarkView() {
 		try {
 			const res = await fetch(`${API_BASE}/public/leaderboard/submit`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					...getAuthHeaders(),
+				},
 				body: JSON.stringify({
 					run_id: status.result.run_id,
 					documentation_name: documentationName,
@@ -360,6 +368,24 @@ export default function PublicBenchmarkView() {
 									className="w-full px-3 py-2.5 bg-terminal-bg border border-terminal-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-terminal-accent transition-colors"
 								/>
 							</div>
+
+							{user && (
+								<div className="bg-terminal-accent/10 border border-terminal-accent/30 rounded-lg p-3 flex items-center gap-3">
+									<img
+										src={user.avatar_url}
+										alt={user.name || "User"}
+										className="w-8 h-8 rounded-full"
+									/>
+									<div className="flex-1 min-w-0">
+										<p className="text-sm text-text-primary truncate">
+											Submitting as <span className="font-medium">{user.name || user.email}</span>
+										</p>
+										<p className="text-xs text-text-muted">
+											Your submission will be linked to your account
+										</p>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 

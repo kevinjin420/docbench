@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import BenchmarkView from '@/views/BenchmarkView'
 import FileManager from '@/views/FileManager'
@@ -7,8 +7,12 @@ import VariantsView from '@/views/VariantsView'
 import LeaderboardView from '@/views/LeaderboardView'
 import PublicBenchmarkView from '@/views/PublicBenchmarkView'
 import HomeView from '@/views/HomeView'
-import type { Model, Variant, TestFile, Stash } from '@/utils/types'
+import AuthCallback from '@/views/AuthCallback'
+import UserMenu from '@/components/UserMenu'
+import LoginButton from '@/components/LoginButton'
+import type { Model, Variant, TestFile, Stash, User } from '@/utils/types'
 import { API_BASE } from '@/utils/types'
+import { getStoredToken, fetchCurrentUser, clearStoredToken } from '@/utils/auth'
 
 function AdminLoginModal({ isOpen, onClose, onTokenChange }: {
   isOpen: boolean
@@ -255,7 +259,17 @@ function AppContent() {
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem('accessToken') || '')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showAdminModal, setShowAdminModal] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const location = useLocation()
+
+  const handleUserLogin = useCallback((loggedInUser: User, token: string) => {
+    setUser(loggedInUser)
+  }, [])
+
+  const handleUserLogout = useCallback(() => {
+    clearStoredToken()
+    setUser(null)
+  }, [])
 
   const handleAccessTokenChange = async (token: string): Promise<boolean> => {
     if (!token) {
@@ -333,10 +347,18 @@ function AppContent() {
     const savedKey = localStorage.getItem('openRouterApiKey') || ''
     const savedToken = localStorage.getItem('accessToken') || ''
     const initializeApp = async () => {
+      const userPromise = getStoredToken() ? fetchCurrentUser() : Promise.resolve(null)
+
       await Promise.all([
         fetchModels(savedKey),
         fetchVariants()
       ])
+
+      const fetchedUser = await userPromise
+      if (fetchedUser) {
+        setUser(fetchedUser)
+      }
+
       if (savedToken) {
         const valid = await validateToken(savedToken)
         if (valid) {
@@ -517,6 +539,12 @@ function AppContent() {
               Submit
             </Link>
             <span className="border-l border-terminal-border mx-2 h-6"></span>
+            {user ? (
+              <UserMenu user={user} onLogout={handleUserLogout} />
+            ) : (
+              <LoginButton />
+            )}
+            <span className="border-l border-terminal-border mx-2 h-6"></span>
             <AdminDropdown
               isAuthenticated={isAuthenticated}
               onLoginClick={() => setShowAdminModal(true)}
@@ -533,7 +561,8 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomeView />} />
             <Route path="/leaderboard" element={<LeaderboardView />} />
-            <Route path="/submit" element={<PublicBenchmarkView />} />
+            <Route path="/submit" element={<PublicBenchmarkView user={user} />} />
+            <Route path="/auth/callback" element={<AuthCallback onLogin={handleUserLogin} />} />
             <Route
               path="/benchmark"
               element={

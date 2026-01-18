@@ -5,9 +5,10 @@ import threading
 import traceback
 import uuid
 import requests
-from flask import jsonify, request
+from flask import jsonify, request, g
 from backend.services import LLMService, EvaluatorService
 from backend.utils.rate_limit import rate_limit
+from backend.utils.auth import optional_user
 from database import (
     BenchmarkResultService,
     BenchmarkRunService,
@@ -252,6 +253,7 @@ def register_routes(app, socketio, running_benchmarks):
         return jsonify({'error': 'Benchmark not found'}), 404
 
     @app.route('/api/public/leaderboard/submit', methods=['POST'])
+    @optional_user
     def submit_to_leaderboard():
         """Submit a completed benchmark to the leaderboard"""
         data = request.json or {}
@@ -274,6 +276,10 @@ def register_routes(app, socketio, running_benchmarks):
         if result.get('percentage') is None:
             return jsonify({'error': 'Benchmark has not been evaluated yet'}), 400
 
+        user_id = None
+        if g.user_info:
+            user_id = g.user_info.get('id')
+
         entry_id = LeaderboardService.submit(
             documentation_name=documentation_name,
             documentation_url=documentation_url,
@@ -282,7 +288,8 @@ def register_routes(app, socketio, running_benchmarks):
             percentage=result['percentage'],
             benchmark_result_id=result['id'],
             model_used=result['model'],
-            submitter_email=submitter_email
+            submitter_email=submitter_email,
+            user_id=user_id
         )
 
         rank = LeaderboardService.get_rank_for_percentage(result['percentage'])
