@@ -1,34 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import type { PublicTest, PublicBenchmarkStatus, Model, User } from "@/utils/types";
+import type { PublicTest, PublicBenchmarkStatus } from "@/utils/types";
 import { API_BASE, WS_BASE } from "@/utils/types";
 import { getAuthHeaders } from "@/utils/auth";
 
 type UrlValidationStatus = "idle" | "validating" | "valid" | "invalid";
+type DocSourceType = "url" | "file";
 
-interface PublicBenchmarkViewProps {
-	user: User | null;
-}
-
-export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) {
+export default function PublicBenchmarkView() {
 	const navigate = useNavigate();
-	const [models, setModels] = useState<Model[]>([]);
 	const [publicTests, setPublicTests] = useState<PublicTest[]>([]);
 	const [apiKey, setApiKey] = useState(() =>
 		localStorage.getItem("openRouterApiKey") || ""
 	);
-	const [selectedModel, setSelectedModel] = useState("");
+	const [apiKeyValid, setApiKeyValid] = useState(false);
+	const [docSourceType, setDocSourceType] = useState<DocSourceType>("url");
 	const [documentationUrl, setDocumentationUrl] = useState("");
+	const [documentationFile, setDocumentationFile] = useState<File | null>(null);
+	const [documentationContent, setDocumentationContent] = useState("");
 	const [documentationName, setDocumentationName] = useState("");
-	const [submitterEmail, setSubmitterEmail] = useState("");
 	const [status, setStatus] = useState<PublicBenchmarkStatus>({
 		status: "idle",
 	});
 	const [keyError, setKeyError] = useState("");
 	const [urlValidation, setUrlValidation] = useState<UrlValidationStatus>("idle");
 	const [urlError, setUrlError] = useState("");
+	const [fileError, setFileError] = useState("");
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	useEffect(() => {
 		fetchPublicTests();
@@ -45,9 +45,25 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 
 	useEffect(() => {
 		if (apiKey) {
-			fetchModels();
+			validateApiKey();
+		} else {
+			setApiKeyValid(false);
 		}
 	}, [apiKey]);
+
+	const validateApiKey = async () => {
+		try {
+			const res = await fetch(`${API_BASE}/models`, {
+				headers: { "X-API-Key": apiKey },
+			});
+			const data = await res.json();
+			setApiKeyValid(!data.error);
+			setKeyError(data.error || "");
+		} catch {
+			setApiKeyValid(false);
+			setKeyError("Failed to validate API key");
+		}
+	};
 
 	useEffect(() => {
 		if (debounceRef.current) {
@@ -100,24 +116,6 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 		};
 	}, [documentationUrl]);
 
-	const fetchModels = async () => {
-		try {
-			const res = await fetch(`${API_BASE}/models`, {
-				headers: { "X-API-Key": apiKey },
-			});
-			const data = await res.json();
-			if (data.error) {
-				setKeyError(data.error);
-				setModels([]);
-			} else {
-				setKeyError("");
-				setModels(data.models || []);
-			}
-		} catch (error) {
-			console.error("Failed to fetch models:", error);
-		}
-	};
-
 	const fetchPublicTests = async () => {
 		try {
 			const res = await fetch(`${API_BASE}/public/tests`);
@@ -138,25 +136,97 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 		setKeyError("");
 	};
 
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) {
+			setDocumentationFile(null);
+			setDocumentationContent("");
+			setFileError("");
+			return;
+		}
+
+		const validExtensions = [".md", ".txt", ".rst", ".html"];
+		const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+		if (!validExtensions.includes(ext)) {
+			setFileError("Please upload a .md, .txt, .rst, or .html file");
+			setDocumentationFile(null);
+			setDocumentationContent("");
+			return;
+		}
+
+		if (file.size > 5 * 1024 * 1024) {
+			setFileError("File size must be less than 5MB");
+			setDocumentationFile(null);
+			setDocumentationContent("");
+			return;
+		}
+
+		try {
+			const content = await file.text();
+			setDocumentationFile(file);
+			setDocumentationContent(content);
+			setFileError("");
+			if (!documentationName) {
+				setDocumentationName(file.name.replace(/\.[^/.]+$/, ""));
+			}
+		} catch {
+			setFileError("Failed to read file");
+			setDocumentationFile(null);
+			setDocumentationContent("");
+		}
+	};
+
+	const handleSourceTypeChange = (type: DocSourceType) => {
+		setDocSourceType(type);
+		if (type === "url") {
+			setDocumentationFile(null);
+			setDocumentationContent("");
+			setFileError("");
+		} else {
+			setDocumentationUrl("");
+			setUrlValidation("idle");
+			setUrlError("");
+		}
+	};
+
+	const clearFile = () => {
+		setDocumentationFile(null);
+		setDocumentationContent("");
+		setFileError("");
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
+
 	const runBenchmark = async () => {
-		if (!apiKey || !selectedModel || !documentationUrl || !documentationName) {
+		const hasValidDoc =
+			(docSourceType === "url" && documentationUrl && urlValidation === "valid") ||
+			(docSourceType === "file" && documentationContent);
+
+		if (!apiKey || !apiKeyValid || !hasValidDoc || !documentationName) {
 			return;
 		}
 
 		setStatus({ status: "running", progress: "Starting benchmark..." });
 
 		try {
+			const body: Record<string, string> = {
+				documentation_name: documentationName,
+			};
+
+			if (docSourceType === "url") {
+				body.documentation_url = documentationUrl;
+			} else {
+				body.documentation_content = documentationContent;
+			}
+
 			const res = await fetch(`${API_BASE}/public/benchmark`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 					"X-API-Key": apiKey,
 				},
-				body: JSON.stringify({
-					model: selectedModel,
-					documentation_url: documentationUrl,
-					documentation_name: documentationName,
-				}),
+				body: JSON.stringify(body),
 			});
 
 			const data = await res.json();
@@ -184,8 +254,7 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 				body: JSON.stringify({
 					run_id: status.result.run_id,
 					documentation_name: documentationName,
-					documentation_url: documentationUrl,
-					submitter_email: submitterEmail || undefined,
+					documentation_url: documentationUrl || `file://${documentationFile?.name || "uploaded"}`,
 				}),
 			});
 
@@ -200,12 +269,15 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 		}
 	};
 
+	const hasValidDoc =
+		(docSourceType === "url" && documentationUrl && urlValidation === "valid") ||
+		(docSourceType === "file" && documentationContent);
+
 	const canRun =
 		apiKey &&
-		selectedModel &&
-		documentationUrl &&
+		apiKeyValid &&
+		hasValidDoc &&
 		documentationName &&
-		urlValidation === "valid" &&
 		status.status === "idle";
 
 	const getUrlInputClasses = () => {
@@ -251,7 +323,7 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 									className={`w-full px-3 py-2.5 bg-terminal-bg border rounded-lg text-text-primary placeholder-text-muted focus:outline-none transition-colors ${
 										keyError
 											? "border-red-500 focus:border-red-500"
-											: apiKey && models.length > 0
+											: apiKey && apiKeyValid
 												? "border-green-500 focus:border-green-500"
 												: "border-terminal-border focus:border-terminal-accent"
 									}`}
@@ -259,7 +331,7 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 								{keyError && (
 									<p className="text-red-400 text-xs mt-1.5">{keyError}</p>
 								)}
-								{apiKey && models.length > 0 && (
+								{apiKey && apiKeyValid && (
 									<p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
 										<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 											<polyline points="20 6 9 17 4 12"></polyline>
@@ -267,25 +339,6 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 										API key verified
 									</p>
 								)}
-							</div>
-
-							<div>
-								<label className="block text-text-secondary text-sm mb-1.5">
-									Model
-								</label>
-								<select
-									value={selectedModel}
-									onChange={(e) => setSelectedModel(e.target.value)}
-									disabled={!apiKey || models.length === 0}
-									className="w-full px-3 py-2.5 bg-terminal-bg border border-terminal-border rounded-lg text-text-primary focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-								>
-									<option value="">Select a model...</option>
-									{models.map((model) => (
-										<option key={model.id} value={model.id}>
-											{model.name || model.id}
-										</option>
-									))}
-								</select>
 							</div>
 
 							<div>
@@ -303,89 +356,151 @@ export default function PublicBenchmarkView({ user }: PublicBenchmarkViewProps) 
 
 							<div>
 								<label className="block text-text-secondary text-sm mb-1.5">
-									Documentation URL
+									Documentation Source
 								</label>
-								<div className="relative">
-									<input
-										type="url"
-										value={documentationUrl}
-										onChange={(e) => setDocumentationUrl(e.target.value)}
-										placeholder="https://example.com/docs.md"
-										className={getUrlInputClasses()}
-									/>
-									{urlValidation === "validating" && (
-										<div className="absolute right-3 top-1/2 -translate-y-1/2">
-											<div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-										</div>
-									)}
-									{urlValidation === "valid" && (
-										<div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-												<polyline points="20 6 9 17 4 12"></polyline>
-											</svg>
-										</div>
-									)}
-									{urlValidation === "invalid" && (
-										<div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-												<circle cx="12" cy="12" r="10"></circle>
-												<line x1="15" y1="9" x2="9" y2="15"></line>
-												<line x1="9" y1="9" x2="15" y2="15"></line>
-											</svg>
-										</div>
-									)}
+								<div className="flex gap-1 p-1 bg-terminal-bg rounded-lg mb-3">
+									<button
+										type="button"
+										onClick={() => handleSourceTypeChange("url")}
+										className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
+											docSourceType === "url"
+												? "bg-terminal-accent text-black font-medium"
+												: "text-text-muted hover:text-text-primary"
+										}`}
+									>
+										URL
+									</button>
+									<button
+										type="button"
+										onClick={() => handleSourceTypeChange("file")}
+										className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
+											docSourceType === "file"
+												? "bg-terminal-accent text-black font-medium"
+												: "text-text-muted hover:text-text-primary"
+										}`}
+									>
+										File Upload
+									</button>
 								</div>
-								{urlValidation === "invalid" && urlError && (
-									<p className="text-red-400 text-xs mt-1.5">{urlError}</p>
-								)}
-								{urlValidation === "valid" && (
-									<p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
-										<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<polyline points="20 6 9 17 4 12"></polyline>
-										</svg>
-										URL is accessible
-									</p>
-								)}
-								{urlValidation === "validating" && (
-									<p className="text-amber-400 text-xs mt-1.5">Validating URL...</p>
-								)}
-								{urlValidation === "idle" && documentationUrl === "" && (
-									<p className="text-text-muted text-xs mt-1.5">
-										URL to your documentation (must be publicly accessible)
-									</p>
+
+								{docSourceType === "url" ? (
+									<>
+										<div className="relative">
+											<input
+												type="url"
+												value={documentationUrl}
+												onChange={(e) => setDocumentationUrl(e.target.value)}
+												placeholder="https://example.com/docs.txt"
+												className={getUrlInputClasses()}
+											/>
+											{urlValidation === "validating" && (
+												<div className="absolute right-3 top-1/2 -translate-y-1/2">
+													<div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+												</div>
+											)}
+											{urlValidation === "valid" && (
+												<div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<polyline points="20 6 9 17 4 12"></polyline>
+													</svg>
+												</div>
+											)}
+											{urlValidation === "invalid" && (
+												<div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<circle cx="12" cy="12" r="10"></circle>
+														<line x1="15" y1="9" x2="9" y2="15"></line>
+														<line x1="9" y1="9" x2="15" y2="15"></line>
+													</svg>
+												</div>
+											)}
+										</div>
+										{urlValidation === "invalid" && urlError && (
+											<p className="text-red-400 text-xs mt-1.5">{urlError}</p>
+										)}
+										{urlValidation === "valid" && (
+											<p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
+												<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+													<polyline points="20 6 9 17 4 12"></polyline>
+												</svg>
+												URL is accessible
+											</p>
+										)}
+										{urlValidation === "validating" && (
+											<p className="text-amber-400 text-xs mt-1.5">Validating URL...</p>
+										)}
+										{urlValidation === "idle" && documentationUrl === "" && (
+											<p className="text-text-muted text-xs mt-1.5">
+												URL to your documentation must be in plaintext and publicly accessible
+											</p>
+										)}
+									</>
+								) : (
+									<>
+										{!documentationFile ? (
+											<label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-terminal-border rounded-lg cursor-pointer hover:border-terminal-accent transition-colors bg-terminal-bg">
+												<div className="flex flex-col items-center justify-center pt-5 pb-6">
+													<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted mb-2">
+														<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+														<polyline points="17 8 12 3 7 8"></polyline>
+														<line x1="12" y1="3" x2="12" y2="15"></line>
+													</svg>
+													<p className="text-sm text-text-muted">
+														Click to upload or drag and drop
+													</p>
+													<p className="text-xs text-text-muted mt-1">
+														max 5MB
+													</p>
+												</div>
+												<input
+													ref={fileInputRef}
+													type="file"
+													className="hidden"
+													accept=".md,.txt,.rst,.html"
+													onChange={handleFileChange}
+												/>
+											</label>
+										) : (
+											<div className="flex items-center gap-3 p-3 bg-terminal-bg border border-green-500 rounded-lg">
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 flex-shrink-0">
+													<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+													<polyline points="14 2 14 8 20 8"></polyline>
+												</svg>
+												<div className="flex-1 min-w-0">
+													<p className="text-text-primary text-sm font-medium truncate">
+														{documentationFile.name}
+													</p>
+													<p className="text-text-muted text-xs">
+														{(documentationFile.size / 1024).toFixed(1)} KB
+													</p>
+												</div>
+												<button
+													type="button"
+													onClick={clearFile}
+													className="p-1.5 text-text-muted hover:text-red-400 transition-colors"
+												>
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<line x1="18" y1="6" x2="6" y2="18"></line>
+														<line x1="6" y1="6" x2="18" y2="18"></line>
+													</svg>
+												</button>
+											</div>
+										)}
+										{fileError && (
+											<p className="text-red-400 text-xs mt-1.5">{fileError}</p>
+										)}
+										{documentationFile && !fileError && (
+											<p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
+												<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+													<polyline points="20 6 9 17 4 12"></polyline>
+												</svg>
+												File loaded successfully
+											</p>
+										)}
+									</>
 								)}
 							</div>
 
-							<div>
-								<label className="block text-text-secondary text-sm mb-1.5">
-									Email (optional)
-								</label>
-								<input
-									type="email"
-									value={submitterEmail}
-									onChange={(e) => setSubmitterEmail(e.target.value)}
-									placeholder="you@example.com"
-									className="w-full px-3 py-2.5 bg-terminal-bg border border-terminal-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-terminal-accent transition-colors"
-								/>
-							</div>
-
-							{user && (
-								<div className="bg-terminal-accent/10 border border-terminal-accent/30 rounded-lg p-3 flex items-center gap-3">
-									<img
-										src={user.avatar_url}
-										alt={user.name || "User"}
-										className="w-8 h-8 rounded-full"
-									/>
-									<div className="flex-1 min-w-0">
-										<p className="text-sm text-text-primary truncate">
-											Submitting as <span className="font-medium">{user.name || user.email}</span>
-										</p>
-										<p className="text-xs text-text-muted">
-											Your submission will be linked to your account
-										</p>
-									</div>
-								</div>
-							)}
 						</div>
 					</div>
 

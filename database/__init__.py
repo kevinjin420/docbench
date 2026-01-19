@@ -7,6 +7,7 @@ from .models import (
     DocumentationVariant,
     User,
     AccessToken,
+    AdminEmail,
     PublicTestConfig,
     LeaderboardEntry,
     get_db,
@@ -28,6 +29,7 @@ from .services import (
     DocumentationService,
     CollectionService,
     UserService,
+    AdminEmailService,
     AccessTokenService,
     PublicTestConfigService,
     LeaderboardService
@@ -43,6 +45,7 @@ __all__ = [
     'DocumentationVariant',
     'User',
     'AccessToken',
+    'AdminEmail',
     'PublicTestConfig',
     'LeaderboardEntry',
     'get_db',
@@ -58,6 +61,7 @@ __all__ = [
     'DocumentationService',
     'CollectionService',
     'UserService',
+    'AdminEmailService',
     'AccessTokenService',
     'PublicTestConfigService',
     'LeaderboardService'

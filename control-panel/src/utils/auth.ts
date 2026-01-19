@@ -23,6 +23,10 @@ export function getAuthHeaders(): Record<string, string> {
 	return {};
 }
 
+export function getAdminHeaders(): Record<string, string> {
+	return getAuthHeaders();
+}
+
 export async function fetchCurrentUser(): Promise<User | null> {
 	const token = getStoredToken();
 	if (!token) {

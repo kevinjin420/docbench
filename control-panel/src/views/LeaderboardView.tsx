@@ -2,6 +2,102 @@ import { useState, useEffect } from "react";
 import type { LeaderboardEntry } from "@/utils/types";
 import { API_BASE } from "@/utils/types";
 
+function Podium({ entries }: { entries: LeaderboardEntry[] }) {
+	if (entries.length < 3) return null;
+
+	const [first, second, third] = [entries[0], entries[1], entries[2]];
+
+	const TrophyIcon = ({ className }: { className?: string }) => (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			className={className}
+		>
+			<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+			<path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+			<path d="M4 22h16"></path>
+			<path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+			<path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+			<path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+		</svg>
+	);
+
+	const PodiumEntry = ({
+		entry,
+		place,
+		height,
+		bgColor,
+		borderColor,
+		iconColor,
+	}: {
+		entry: LeaderboardEntry;
+		place: number;
+		height: string;
+		bgColor: string;
+		borderColor: string;
+		iconColor: string;
+	}) => (
+		<div className="flex flex-col items-center">
+			<div className="mb-3 text-center">
+				<div
+					className={`w-14 h-14 rounded-full ${bgColor} flex items-center justify-center mb-2 mx-auto border-2 ${borderColor}`}
+				>
+					<TrophyIcon className={iconColor} />
+				</div>
+				<p className="text-text-primary font-medium text-sm truncate max-w-[140px]">
+					{entry.documentation_name}
+				</p>
+				<p className="text-terminal-accent font-mono text-lg font-bold">
+					{entry.percentage.toFixed(1)}%
+				</p>
+			</div>
+			<div
+				className={`w-32 ${height} ${bgColor} border-t-4 ${borderColor} rounded-t-lg flex flex-col items-center justify-start pt-4`}
+			>
+				<span className="text-3xl font-bold text-black/80">{place}</span>
+			</div>
+		</div>
+	);
+
+	return (
+		<div className="bg-terminal-surface border border-terminal-border rounded-lg p-8 mb-6">
+			<div className="flex items-end justify-center gap-2">
+				<PodiumEntry
+					entry={second}
+					place={2}
+					height="h-24"
+					bgColor="bg-slate-300"
+					borderColor="border-slate-400"
+					iconColor="text-slate-600"
+				/>
+				<PodiumEntry
+					entry={first}
+					place={1}
+					height="h-32"
+					bgColor="bg-amber-400"
+					borderColor="border-amber-500"
+					iconColor="text-amber-700"
+				/>
+				<PodiumEntry
+					entry={third}
+					place={3}
+					height="h-20"
+					bgColor="bg-amber-600"
+					borderColor="border-amber-700"
+					iconColor="text-amber-900"
+				/>
+			</div>
+		</div>
+	);
+}
+
 export default function LeaderboardView() {
 	const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 	const [total, setTotal] = useState(0);
@@ -95,6 +191,8 @@ export default function LeaderboardView() {
 				</div>
 			) : (
 				<>
+					{page === 0 && <Podium entries={entries} />}
+
 					<div className="bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden">
 						<table className="w-full">
 							<thead className="bg-terminal-bg">

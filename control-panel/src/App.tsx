@@ -4,6 +4,7 @@ import BenchmarkView from '@/views/BenchmarkView'
 import FileManager from '@/views/FileManager'
 import StatsPanel from '@/views/StatsPanel'
 import VariantsView from '@/views/VariantsView'
+import UsersView from '@/views/UsersView'
 import LeaderboardView from '@/views/LeaderboardView'
 import PublicBenchmarkView from '@/views/PublicBenchmarkView'
 import HomeView from '@/views/HomeView'
@@ -12,90 +13,14 @@ import UserMenu from '@/components/UserMenu'
 import LoginButton from '@/components/LoginButton'
 import type { Model, Variant, TestFile, Stash, User } from '@/utils/types'
 import { API_BASE } from '@/utils/types'
-import { getStoredToken, fetchCurrentUser, clearStoredToken } from '@/utils/auth'
-
-function AdminLoginModal({ isOpen, onClose, onTokenChange }: {
-  isOpen: boolean
-  onClose: () => void
-  onTokenChange: (token: string) => Promise<boolean>
-}) {
-  const [tokenInput, setTokenInput] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      setTokenInput('')
-      setError('')
-    }
-  }, [isOpen])
-
-  if (!isOpen) return null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!tokenInput.trim()) return
-    setLoading(true)
-    setError('')
-    const success = await onTokenChange(tokenInput)
-    setLoading(false)
-    if (success) {
-      onClose()
-    } else {
-      setError('Invalid access token')
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-terminal-surface border border-terminal-border rounded-lg p-6 w-96" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-gray-200 mb-4">Admin Login</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="password"
-            value={tokenInput}
-            onChange={e => { setTokenInput(e.target.value); setError('') }}
-            placeholder="Enter access token"
-            className={`w-full px-3 py-2 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none mb-2 ${
-              error ? 'border-red-500' : 'border-terminal-border focus:border-terminal-accent'
-            }`}
-            autoFocus
-            disabled={loading}
-          />
-          {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
-          <div className="flex gap-2 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary flex-1"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary flex-1"
-              disabled={loading || !tokenInput.trim()}
-            >
-              {loading ? 'Validating...' : 'Login'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
+import { getStoredToken, fetchCurrentUser, clearStoredToken, getAdminHeaders } from '@/utils/auth'
 
 function AdminDropdown({
   isAuthenticated,
-  onLoginClick,
-  onLogout,
   testFilesCount,
   variantsCount
 }: {
   isAuthenticated: boolean
-  onLoginClick: () => void
-  onLogout: () => void
   testFilesCount: number
   variantsCount: number
 }) {
@@ -117,21 +42,10 @@ function AdminDropdown({
     setIsOpen(false)
   }, [location.pathname])
 
-  const isAdminRoute = ['/benchmark', '/files', '/variants', '/statistics'].includes(location.pathname)
+  const isAdminRoute = ['/benchmark', '/files', '/variants', '/statistics', '/users'].includes(location.pathname)
 
   if (!isAuthenticated) {
-    return (
-      <button
-        onClick={onLoginClick}
-        className="btn btn-secondary flex items-center gap-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-        Admin
-      </button>
-    )
+    return null
   }
 
   return (
@@ -227,19 +141,22 @@ function AdminDropdown({
               </svg>
               Statistics
             </Link>
-          </div>
-          <div className="border-t border-terminal-border py-1">
-            <button
-              onClick={onLogout}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-950 transition-colors"
+            <Link
+              to="/users"
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
+                location.pathname === '/users'
+                  ? 'bg-zinc-800 text-terminal-accent'
+                  : 'text-gray-300 hover:bg-zinc-800'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              Logout
-            </button>
+              Users
+            </Link>
           </div>
         </div>
       )}
@@ -256,11 +173,10 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [openRouterKey, setOpenRouterKey] = useState(() => localStorage.getItem('openRouterApiKey') || '')
   const [keyError, setKeyError] = useState('')
-  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('accessToken') || '')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [showAdminModal, setShowAdminModal] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const location = useLocation()
+
+  const isAuthenticated = user?.is_admin || false
 
   const handleUserLogin = useCallback((loggedInUser: User, token: string) => {
     setUser(loggedInUser)
@@ -270,28 +186,6 @@ function AppContent() {
     clearStoredToken()
     setUser(null)
   }, [])
-
-  const handleAccessTokenChange = async (token: string): Promise<boolean> => {
-    if (!token) {
-      setAccessToken('')
-      localStorage.removeItem('accessToken')
-      setIsAuthenticated(false)
-      return false
-    }
-    const valid = await validateToken(token)
-    if (valid) {
-      setAccessToken(token)
-      localStorage.setItem('accessToken', token)
-    }
-    return valid
-  }
-
-  const handleLogout = () => {
-    setAccessToken('')
-    localStorage.removeItem('accessToken')
-    setIsAuthenticated(false)
-    setShowAdminModal(false)
-  }
 
   const handleApiKeyChange = (key: string) => {
     setOpenRouterKey(key)
@@ -324,28 +218,8 @@ function AppContent() {
     }
   }
 
-  const validateToken = async (token: string) => {
-    if (!token) {
-      setIsAuthenticated(false)
-      return false
-    }
-    try {
-      const res = await fetch(`${API_BASE}/auth/validate`, {
-        method: 'POST',
-        headers: { 'X-Access-Token': token }
-      })
-      const valid = res.ok
-      setIsAuthenticated(valid)
-      return valid
-    } catch {
-      setIsAuthenticated(false)
-      return false
-    }
-  }
-
   useEffect(() => {
     const savedKey = localStorage.getItem('openRouterApiKey') || ''
-    const savedToken = localStorage.getItem('accessToken') || ''
     const initializeApp = async () => {
       const userPromise = getStoredToken() ? fetchCurrentUser() : Promise.resolve(null)
 
@@ -357,17 +231,11 @@ function AppContent() {
       const fetchedUser = await userPromise
       if (fetchedUser) {
         setUser(fetchedUser)
-      }
-
-      if (savedToken) {
-        const valid = await validateToken(savedToken)
-        if (valid) {
+        if (fetchedUser.is_admin) {
           await Promise.all([fetchTestFiles(), fetchStashes(), fetchStats()])
-        } else {
-          setAccessToken('')
-          localStorage.removeItem('accessToken')
         }
       }
+
       setIsLoading(false)
     }
     initializeApp()
@@ -380,12 +248,12 @@ function AppContent() {
   }, [openRouterKey])
 
   useEffect(() => {
-    if (accessToken && isAuthenticated) {
+    if (user?.is_admin) {
       fetchTestFiles()
       fetchStashes()
       fetchStats()
     }
-  }, [isAuthenticated])
+  }, [user])
 
   const fetchVariants = async () => {
     try {
@@ -398,11 +266,10 @@ function AppContent() {
   }
 
   const fetchTestFiles = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
-      const res = await fetch(`${API_BASE}/test-files`, {
-        headers: { 'X-Access-Token': accessToken }
-      })
+      const res = await fetch(`${API_BASE}/test-files`, { headers })
       if (res.ok) {
         const data = await res.json()
         setTestFiles(data.files || [])
@@ -413,11 +280,10 @@ function AppContent() {
   }
 
   const fetchStashes = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
-      const res = await fetch(`${API_BASE}/stashes`, {
-        headers: { 'X-Access-Token': accessToken }
-      })
+      const res = await fetch(`${API_BASE}/stashes`, { headers })
       if (res.ok) {
         const data = await res.json()
         setStashes(data.stashes || [])
@@ -428,11 +294,10 @@ function AppContent() {
   }
 
   const fetchStats = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
-      const res = await fetch(`${API_BASE}/stats`, {
-        headers: { 'X-Access-Token': accessToken }
-      })
+      const res = await fetch(`${API_BASE}/stats`, { headers })
       if (res.ok) {
         const data = await res.json()
         setStats(data)
@@ -443,11 +308,12 @@ function AppContent() {
   }
 
   const stashResults = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
       await fetch(`${API_BASE}/stash`, {
         method: 'POST',
-        headers: { 'X-Access-Token': accessToken }
+        headers
       })
       await fetchTestFiles()
       await fetchStashes()
@@ -457,11 +323,12 @@ function AppContent() {
   }
 
   const cleanResults = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
       await fetch(`${API_BASE}/clean`, {
         method: 'POST',
-        headers: { 'X-Access-Token': accessToken }
+        headers
       })
       await fetchTestFiles()
       await fetchStashes()
@@ -471,11 +338,12 @@ function AppContent() {
   }
 
   const clearDatabase = async () => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
       await fetch(`${API_BASE}/clear-db`, {
         method: 'POST',
-        headers: { 'X-Access-Token': accessToken }
+        headers
       })
       await fetchTestFiles()
       await fetchStashes()
@@ -485,13 +353,14 @@ function AppContent() {
   }
 
   const deleteFile = async (filePath: string) => {
-    if (!accessToken) return
+    const headers = getAdminHeaders()
+    if (!Object.keys(headers).length) return
     try {
       await fetch(`${API_BASE}/delete-file`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Token': accessToken
+          ...headers
         },
         body: JSON.stringify({ file_path: filePath })
       })
@@ -546,9 +415,7 @@ function AppContent() {
             )}
             <span className="border-l border-terminal-border mx-2 h-6"></span>
             <AdminDropdown
-              isAuthenticated={isAuthenticated}
-              onLoginClick={() => setShowAdminModal(true)}
-              onLogout={handleLogout}
+              isAuthenticated={user?.is_admin || false}
               testFilesCount={testFiles.length}
               variantsCount={variants.length}
             />
@@ -561,7 +428,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomeView />} />
             <Route path="/leaderboard" element={<LeaderboardView />} />
-            <Route path="/submit" element={<PublicBenchmarkView user={user} />} />
+            <Route path="/submit" element={<PublicBenchmarkView />} />
             <Route path="/auth/callback" element={<AuthCallback onLogin={handleUserLogin} />} />
             <Route
               path="/benchmark"
@@ -574,7 +441,6 @@ function AppContent() {
                   apiKey={openRouterKey}
                   onApiKeyChange={handleApiKeyChange}
                   keyError={keyError}
-                  accessToken={accessToken}
                 />
               }
             />
@@ -593,12 +459,11 @@ function AppContent() {
                       fetchStashes()
                     }}
                     onDelete={deleteFile}
-                    accessToken={accessToken}
                   />
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
                     <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
-                    <p className="text-gray-500">Please enter a valid access token to view this page.</p>
+                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
                   </div>
                 )
               }
@@ -610,12 +475,11 @@ function AppContent() {
                   <VariantsView
                     variants={variants}
                     onRefresh={fetchVariants}
-                    accessToken={accessToken}
                   />
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
                     <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
-                    <p className="text-gray-500">Please enter a valid access token to view this page.</p>
+                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
                   </div>
                 )
               }
@@ -634,7 +498,20 @@ function AppContent() {
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
                     <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
-                    <p className="text-gray-500">Please enter a valid access token to view this page.</p>
+                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
+                  </div>
+                )
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                isAuthenticated ? (
+                  <UsersView />
+                ) : (
+                  <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
+                    <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
+                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
                   </div>
                 )
               }
@@ -642,19 +519,6 @@ function AppContent() {
           </Routes>
         </div>
       </main>
-
-      <footer className="bg-terminal-surface border-t border-terminal-border px-8 py-4">
-        <div className="max-w-screen-2xl mx-auto flex justify-between items-center text-sm">
-          <span className="text-text-muted">Jac Language LLM Documentation Benchmark</span>
-          <span className="text-text-muted">API: <span className="text-terminal-accent">{window.location.hostname}:5050</span></span>
-        </div>
-      </footer>
-
-      <AdminLoginModal
-        isOpen={showAdminModal}
-        onClose={() => setShowAdminModal(false)}
-        onTokenChange={handleAccessTokenChange}
-      />
     </div>
   )
 }

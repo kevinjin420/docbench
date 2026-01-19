@@ -1,11 +1,13 @@
 """Admin route handlers"""
+import os
 from flask import jsonify, request
 from backend.utils.auth import require_admin
 from database import (
-    AccessTokenService,
     PublicTestConfigService,
     LeaderboardService,
-    BenchmarkResultService
+    BenchmarkResultService,
+    UserService,
+    AdminEmailService
 )
 from backend.services import EvaluatorService
 
@@ -122,11 +124,80 @@ def register_routes(app, socketio, running_benchmarks):
         benchmark_stats = BenchmarkResultService.get_stats()
         leaderboard_count = LeaderboardService.get_total_count()
         public_test_count = len(PublicTestConfigService.get_public_test_ids())
-        token_count = len(AccessTokenService.list_all())
 
         return jsonify({
             'benchmarks': benchmark_stats,
             'leaderboard_entries': leaderboard_count,
-            'public_tests_configured': public_test_count,
-            'access_tokens': token_count
+            'public_tests_configured': public_test_count
         })
+
+    @app.route('/api/admin/users', methods=['GET'])
+    @require_admin
+    def list_users():
+        """List all users"""
+        users = UserService.list_all(limit=500)
+        admin_emails = os.getenv('ADMIN_EMAILS', '')
+        admin_email_list = [e.strip().lower() for e in admin_emails.split(',') if e.strip()]
+
+        return jsonify({
+            'users': users,
+            'admin_emails_env': admin_email_list
+        })
+
+    @app.route('/api/admin/users/<int:user_id>/admin', methods=['POST'])
+    @require_admin
+    def set_user_admin(user_id):
+        """Set user admin status"""
+        data = request.json or {}
+        is_admin = data.get('is_admin', False)
+
+        success = UserService.set_admin(user_id, is_admin)
+        if success:
+            return jsonify({'success': True, 'user_id': user_id, 'is_admin': is_admin})
+        return jsonify({'error': 'User not found'}), 404
+
+    @app.route('/api/admin/admin-emails', methods=['GET'])
+    @require_admin
+    def list_admin_emails():
+        """List all admin emails from database"""
+        emails = AdminEmailService.list_all()
+        admin_emails_env = os.getenv('ADMIN_EMAILS', '')
+        env_list = [e.strip().lower() for e in admin_emails_env.split(',') if e.strip()]
+        return jsonify({
+            'emails': emails,
+            'env_emails': env_list
+        })
+
+    @app.route('/api/admin/admin-emails', methods=['POST'])
+    @require_admin
+    def add_admin_email():
+        """Add an admin email"""
+        from flask import g
+
+        data = request.json or {}
+        email = data.get('email', '').strip()
+
+        if not email:
+            return jsonify({'error': 'email is required'}), 400
+
+        added_by = None
+        if hasattr(g, 'user_info') and g.user_info:
+            added_by = g.user_info.get('id')
+        elif hasattr(g, 'token_info') and g.token_info:
+            added_by = g.token_info.get('id')
+
+        result = AdminEmailService.add(email, added_by=added_by)
+
+        if result.get('already_exists'):
+            return jsonify({'success': True, 'email': result, 'message': 'Email already exists'})
+
+        return jsonify({'success': True, 'email': result})
+
+    @app.route('/api/admin/admin-emails/<int:email_id>', methods=['DELETE'])
+    @require_admin
+    def remove_admin_email(email_id):
+        """Remove an admin email by ID"""
+        success = AdminEmailService.remove_by_id(email_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Email removed'})
+        return jsonify({'error': 'Email not found'}), 404

@@ -417,13 +417,14 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
     def run_public_benchmark(
         self,
         model_id: str,
-        documentation_url: str,
+        documentation_url: Optional[str] = None,
+        documentation_content: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         public_test_ids: Optional[List[str]] = None,
         progress_callback: Optional[Callable] = None
     ) -> Dict:
-        """Run benchmark with only public tests and user-provided documentation URL"""
+        """Run benchmark with only public tests and user-provided documentation"""
         import requests
 
         if temperature is None:
@@ -431,12 +432,17 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
         if max_tokens is None:
             max_tokens = self._get_max_tokens_for_model(model_id)
 
-        try:
-            response = requests.get(documentation_url, timeout=60)
-            response.raise_for_status()
-            doc_content = response.text
-        except Exception as e:
-            raise ValueError(f"Failed to fetch documentation from URL: {e}")
+        if documentation_content:
+            doc_content = documentation_content
+        elif documentation_url:
+            try:
+                response = requests.get(documentation_url, timeout=60)
+                response.raise_for_status()
+                doc_content = response.text
+            except Exception as e:
+                raise ValueError(f"Failed to fetch documentation from URL: {e}")
+        else:
+            raise ValueError("Either documentation_url or documentation_content is required")
 
         if public_test_ids:
             public_test_ids_set = set(public_test_ids)

@@ -1,5 +1,6 @@
 """Public benchmark and leaderboard route handlers"""
 import json
+import os
 import re
 import threading
 import traceback
@@ -91,15 +92,14 @@ def register_routes(app, socketio, running_benchmarks):
             return jsonify({'error': 'API key required'}), 401
 
         data = request.json or {}
-        model = data.get('model')
+        model = os.getenv('PUBLIC_BENCHMARK_MODEL', 'anthropic/claude-sonnet-4')
         documentation_url = data.get('documentation_url')
+        documentation_content = data.get('documentation_content')
         documentation_name = data.get('documentation_name', 'Unnamed Documentation')
         max_tokens = data.get('max_tokens', 16000)
 
-        if not model:
-            return jsonify({'error': 'model is required'}), 400
-        if not documentation_url:
-            return jsonify({'error': 'documentation_url is required'}), 400
+        if not documentation_url and not documentation_content:
+            return jsonify({'error': 'documentation_url or documentation_content is required'}), 400
 
         public_test_ids = PublicTestConfigService.get_public_test_ids()
         if not public_test_ids:
@@ -148,6 +148,7 @@ def register_routes(app, socketio, running_benchmarks):
                 result = llm_service.run_public_benchmark(
                     model_id=model,
                     documentation_url=documentation_url,
+                    documentation_content=documentation_content,
                     max_tokens=max_tokens,
                     public_test_ids=public_test_ids,
                     progress_callback=progress_callback
@@ -267,7 +268,7 @@ def register_routes(app, socketio, running_benchmarks):
         if not documentation_name:
             return jsonify({'error': 'documentation_name is required'}), 400
         if not documentation_url:
-            return jsonify({'error': 'documentation_url is required'}), 400
+            documentation_url = 'file://uploaded'
 
         result = BenchmarkResultService.get_by_run_id(run_id)
         if not result:

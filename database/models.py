@@ -191,6 +191,16 @@ class AccessToken(PublicBase):
     )
 
 
+class AdminEmail(PublicBase):
+    """Emails that are granted admin access"""
+    __tablename__ = 'admin_emails'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(256), unique=True, nullable=False, index=True)
+    added_at = Column(Float, nullable=False)
+    added_by = Column(Integer, nullable=True)
+
+
 class PublicTestConfig(PublicBase):
     """Configuration for which tests are in the public suite"""
     __tablename__ = 'public_test_config'

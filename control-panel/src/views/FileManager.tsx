@@ -3,6 +3,7 @@ import EvaluationModal from '@/components/EvaluationModal'
 import CompareModal from '@/components/CompareModal'
 import type { TestFile, Stash } from '@/utils/types'
 import { API_BASE, MODEL_DISPLAY_NAMES } from '@/utils/types'
+import { getAdminHeaders } from '@/utils/auth'
 
 interface Props {
   files: TestFile[]
@@ -12,7 +13,6 @@ interface Props {
   onClearDb: () => void
   onRefresh: () => void
   onDelete?: (filePath: string) => void
-  accessToken: string
 }
 
 export default function FileManager({
@@ -22,8 +22,7 @@ export default function FileManager({
   onClean,
   onClearDb,
   onRefresh,
-  onDelete,
-  accessToken
+  onDelete
 }: Props) {
   const [sortBy, setSortBy] = useState<'size' | 'modified' | 'model-variant'>(() => {
     const saved = localStorage.getItem('fileManager_sortBy')
@@ -98,7 +97,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/stash-selected`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
+        headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
         body: JSON.stringify({ run_ids: Array.from(selectedFiles) })
       })
       if (res.ok) {
@@ -128,7 +127,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/export-collections-csv`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
+        headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
         body: JSON.stringify({ collections: Array.from(selectedCollections) })
       })
       if (res.ok) {
@@ -198,7 +197,7 @@ export default function FileManager({
       if (!stashFiles.has(stashName)) {
         try {
           const res = await fetch(`${API_BASE}/stash/${stashName}/files`, {
-            headers: { 'X-Access-Token': accessToken }
+            headers: { ...getAdminHeaders() }
           })
           const data = await res.json()
           setStashFiles(new Map(stashFiles.set(stashName, data.files || [])))
@@ -216,7 +215,7 @@ export default function FileManager({
     try {
       await fetch(`${API_BASE}/stash/${stashName}`, {
         method: 'DELETE',
-        headers: { 'X-Access-Token': accessToken }
+        headers: { ...getAdminHeaders() }
       })
       onRefresh()
     } catch (error) {
@@ -229,7 +228,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/evaluate-collection`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
+        headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
         body: JSON.stringify({ collection: stashName })
       })
       const data = await res.json()
@@ -253,7 +252,7 @@ export default function FileManager({
     try {
       const res = await fetch(`${API_BASE}/compare`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
+        headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
         body: JSON.stringify({ stash1: selectedStashForCompare, stash2: stashName })
       })
       const data = await res.json()

@@ -19,6 +19,7 @@ from .models import (
     DocumentationVariant,
     User,
     AccessToken,
+    AdminEmail,
     PublicTestConfig,
     LeaderboardEntry
 )
@@ -517,6 +518,24 @@ class UserService:
     """Service for managing OAuth users (uses public database)"""
 
     @staticmethod
+    def _is_admin_email(email: str) -> bool:
+        """Check if email is in ADMIN_EMAILS env var or admin_emails table"""
+        import os
+        email_lower = email.lower()
+
+        admin_emails_env = os.getenv('ADMIN_EMAILS', '')
+        if admin_emails_env:
+            env_list = [e.strip().lower() for e in admin_emails_env.split(',') if e.strip()]
+            if email_lower in env_list:
+                return True
+
+        with get_public_db() as session:
+            exists = session.query(AdminEmail).filter(
+                func.lower(AdminEmail.email) == email_lower
+            ).first()
+            return exists is not None
+
+    @staticmethod
     def get_or_create(
         email: str,
         github_id: str,
@@ -526,18 +545,22 @@ class UserService:
         with get_public_db() as session:
             user = session.query(User).filter_by(github_id=github_id).first()
 
+            should_be_admin = UserService._is_admin_email(email)
+
             if user:
                 user.last_login_at = time.time()
                 if name and name != user.name:
                     user.name = name
                 if email and email != user.email:
                     user.email = email
+                if should_be_admin and not user.is_admin:
+                    user.is_admin = True
             else:
                 user = User(
                     email=email,
                     name=name,
                     github_id=github_id,
-                    is_admin=False,
+                    is_admin=should_be_admin,
                     created_at=time.time(),
                     last_login_at=time.time()
                 )
@@ -620,6 +643,78 @@ class UserService:
                 }
                 for u in users
             ]
+
+
+class AdminEmailService:
+    """Service for managing admin emails (uses public database)"""
+
+    @staticmethod
+    def list_all() -> List[Dict[str, Any]]:
+        """List all admin emails from database"""
+        with get_public_db() as session:
+            emails = session.query(AdminEmail).order_by(
+                desc(AdminEmail.added_at)
+            ).all()
+            return [
+                {
+                    'id': e.id,
+                    'email': e.email,
+                    'added_at': e.added_at,
+                    'added_by': e.added_by
+                }
+                for e in emails
+            ]
+
+    @staticmethod
+    def add(email: str, added_by: Optional[int] = None) -> Dict[str, Any]:
+        """Add an admin email"""
+        with get_public_db() as session:
+            existing = session.query(AdminEmail).filter(
+                func.lower(AdminEmail.email) == email.lower()
+            ).first()
+            if existing:
+                return {
+                    'id': existing.id,
+                    'email': existing.email,
+                    'added_at': existing.added_at,
+                    'already_exists': True
+                }
+
+            admin_email = AdminEmail(
+                email=email.lower(),
+                added_at=time.time(),
+                added_by=added_by
+            )
+            session.add(admin_email)
+            session.flush()
+            return {
+                'id': admin_email.id,
+                'email': admin_email.email,
+                'added_at': admin_email.added_at,
+                'already_exists': False
+            }
+
+    @staticmethod
+    def remove(email: str) -> bool:
+        """Remove an admin email"""
+        with get_public_db() as session:
+            admin_email = session.query(AdminEmail).filter(
+                func.lower(AdminEmail.email) == email.lower()
+            ).first()
+            if admin_email:
+                session.delete(admin_email)
+                return True
+            return False
+
+    @staticmethod
+    def remove_by_id(email_id: int) -> bool:
+        """Remove an admin email by ID"""
+        with get_public_db() as session:
+            admin_email = session.query(AdminEmail).filter_by(id=email_id).first()
+            if admin_email:
+                session.delete(admin_email)
+                return True
+            return False
 
 
 class AccessTokenService:

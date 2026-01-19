@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import type { Variant } from '@/utils/types'
 import { API_BASE } from '@/utils/types'
+import { getAdminHeaders } from '@/utils/auth'
 
 interface Props {
   variants: Variant[]
   onRefresh: () => void
-  accessToken: string
 }
 
-export default function VariantsView({ variants, onRefresh, accessToken }: Props) {
+export default function VariantsView({ variants, onRefresh }: Props) {
   const [isAddingVariant, setIsAddingVariant] = useState(false)
   const [formData, setFormData] = useState({ variant_name: '', url: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -21,7 +21,7 @@ export default function VariantsView({ variants, onRefresh, accessToken }: Props
     try {
       const response = await fetch(`${API_BASE}/variants`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Token': accessToken },
+        headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
         body: JSON.stringify(formData)
       })
 
@@ -50,7 +50,7 @@ export default function VariantsView({ variants, onRefresh, accessToken }: Props
     try {
       const response = await fetch(`${API_BASE}/variants/${encodeURIComponent(variantName)}`, {
         method: 'DELETE',
-        headers: { 'X-Access-Token': accessToken }
+        headers: { ...getAdminHeaders() }
       })
 
       if (response.ok) {
