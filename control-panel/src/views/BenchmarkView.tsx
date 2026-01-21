@@ -15,13 +15,12 @@ interface Props {
 	testFiles: TestFile[];
 	onBenchmarkComplete: () => void;
 	apiKey: string;
-	onApiKeyChange: (key: string) => void;
-	keyError: string;
+	apiKeyValid: boolean;
 }
 
 let socket: Socket | null = null;
 
-export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete, apiKey, onApiKeyChange, keyError }: Props) {
+export default function BenchmarkView({ models, variants, testFiles, onBenchmarkComplete, apiKey, apiKeyValid }: Props) {
 	const [selectedModel, setSelectedModel] = useState(() => {
 		return localStorage.getItem("benchmarkModel") || models[0]?.id || "";
 	});
@@ -467,20 +466,6 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="p-4 bg-terminal-surface border border-terminal-border rounded">
-				<div className="flex items-center gap-4 mb-4 pb-4 border-b border-terminal-border">
-					<label className="text-gray-400 text-sm whitespace-nowrap">OpenRouter API Key:</label>
-					<input
-						type="password"
-						value={apiKey}
-						onChange={(e) => onApiKeyChange(e.target.value)}
-						placeholder="sk-or-v1-..."
-						className={`flex-1 max-w-md px-3 py-1.5 bg-zinc-900 border rounded text-sm text-gray-300 focus:outline-none ${
-							keyError ? 'border-red-500' : apiKey && models.length > 0 ? 'border-green-500' : 'border-terminal-border focus:border-terminal-accent'
-						}`}
-					/>
-					{keyError && <span className="text-red-500 text-xs">{keyError}</span>}
-					{!keyError && apiKey && models.length > 0 && <span className="text-green-500 text-xs">{models.length} models available</span>}
-				</div>
 				<BenchmarkControls
 					models={models}
 					variants={variants}
@@ -497,7 +482,7 @@ export default function BenchmarkView({ models, variants, testFiles, onBenchmark
 					isRunning={isRunning}
 					onRun={runBenchmark}
 					onCancel={cancelBenchmark}
-					canRun={!!apiKey && models.length > 0}
+					canRun={apiKeyValid}
 				/>
 				<ProgressBar
 					status={statusDisplay}

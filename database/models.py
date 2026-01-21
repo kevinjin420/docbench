@@ -212,6 +212,23 @@ class PublicTestConfig(PublicBase):
     added_by = Column(Integer, nullable=True)
 
 
+class PublicBenchmarkModel(PublicBase):
+    """Models configured for public benchmark evaluation"""
+    __tablename__ = 'public_benchmark_models'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    model_id = Column(String(256), unique=True, nullable=False, index=True)
+    display_name = Column(String(256), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    priority = Column(Integer, nullable=False, default=0)
+    added_at = Column(Float, nullable=False)
+    added_by = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        Index('idx_pbm_active_priority', 'is_active', priority.desc()),
+    )
+
+
 class LeaderboardEntry(PublicBase):
     """Public leaderboard entries for documentation submissions"""
     __tablename__ = 'leaderboard_entries'

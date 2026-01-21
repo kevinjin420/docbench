@@ -21,6 +21,7 @@ from .models import (
     AccessToken,
     AdminEmail,
     PublicTestConfig,
+    PublicBenchmarkModel,
     LeaderboardEntry
 )
 
@@ -900,6 +901,116 @@ class PublicTestConfigService:
                 }
                 for c in configs
             ]
+
+
+class PublicBenchmarkModelService:
+    """Service for managing models used in public benchmark (uses public database)"""
+
+    @staticmethod
+    def get_active_models() -> List[Dict[str, Any]]:
+        """Get list of active models ordered by priority"""
+        with get_public_db() as session:
+            models = session.query(PublicBenchmarkModel).filter_by(
+                is_active=True
+            ).order_by(desc(PublicBenchmarkModel.priority)).all()
+            return [
+                {
+                    'id': m.id,
+                    'model_id': m.model_id,
+                    'display_name': m.display_name,
+                    'priority': m.priority,
+                    'added_at': m.added_at
+                }
+                for m in models
+            ]
+
+    @staticmethod
+    def get_all_models() -> List[Dict[str, Any]]:
+        """Get all models (active and inactive)"""
+        with get_public_db() as session:
+            models = session.query(PublicBenchmarkModel).order_by(
+                desc(PublicBenchmarkModel.priority)
+            ).all()
+            return [
+                {
+                    'id': m.id,
+                    'model_id': m.model_id,
+                    'display_name': m.display_name,
+                    'is_active': m.is_active,
+                    'priority': m.priority,
+                    'added_at': m.added_at,
+                    'added_by': m.added_by
+                }
+                for m in models
+            ]
+
+    @staticmethod
+    def add_model(model_id: str, display_name: Optional[str] = None, priority: int = 0, added_by: Optional[int] = None) -> Dict[str, Any]:
+        """Add a model to the public benchmark configuration"""
+        with get_public_db() as session:
+            existing = session.query(PublicBenchmarkModel).filter_by(model_id=model_id).first()
+            if existing:
+                existing.is_active = True
+                if display_name:
+                    existing.display_name = display_name
+                existing.priority = priority
+                return {
+                    'id': existing.id,
+                    'model_id': existing.model_id,
+                    'display_name': existing.display_name,
+                    'is_active': existing.is_active,
+                    'priority': existing.priority,
+                    'already_exists': True
+                }
+
+            model = PublicBenchmarkModel(
+                model_id=model_id,
+                display_name=display_name or model_id.split('/')[-1],
+                is_active=True,
+                priority=priority,
+                added_at=time.time(),
+                added_by=added_by
+            )
+            session.add(model)
+            session.flush()
+            return {
+                'id': model.id,
+                'model_id': model.model_id,
+                'display_name': model.display_name,
+                'is_active': model.is_active,
+                'priority': model.priority,
+                'already_exists': False
+            }
+
+    @staticmethod
+    def remove_model(model_id: int) -> bool:
+        """Remove a model from the configuration by ID"""
+        with get_public_db() as session:
+            model = session.query(PublicBenchmarkModel).filter_by(id=model_id).first()
+            if model:
+                session.delete(model)
+                return True
+            return False
+
+    @staticmethod
+    def set_active(model_id: int, is_active: bool) -> bool:
+        """Set whether a model is active"""
+        with get_public_db() as session:
+            model = session.query(PublicBenchmarkModel).filter_by(id=model_id).first()
+            if model:
+                model.is_active = is_active
+                return True
+            return False
+
+    @staticmethod
+    def update_priority(model_id: int, priority: int) -> bool:
+        """Update model priority"""
+        with get_public_db() as session:
+            model = session.query(PublicBenchmarkModel).filter_by(id=model_id).first()
+            if model:
+                model.priority = priority
+                return True
+            return False
 
 
 class LeaderboardService:

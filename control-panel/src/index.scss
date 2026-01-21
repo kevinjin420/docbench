@@ -71,7 +71,6 @@ button {
 }
 
 a {
-  color: inherit;
   text-decoration: none;
 }
 
@@ -156,6 +155,11 @@ a {
     background: v.$accent-hover;
     border-color: v.$accent-hover;
   }
+
+  &::selection, *::selection {
+    background: rgba(0, 0, 0, 0.3);
+    color: #000;
+  }
 }
 
 .btn-secondary {
@@ -224,6 +228,11 @@ a {
   &:hover:not(:disabled) {
     background: #16a34a;
     border-color: #16a34a;
+  }
+
+  &::selection, *::selection {
+    background: rgba(0, 0, 0, 0.3);
+    color: #000;
   }
 }
 

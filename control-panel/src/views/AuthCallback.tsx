@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { setStoredToken } from "@/utils/auth";
+import { setStoredToken, getReturnUrl } from "@/utils/auth";
 import type { User } from "@/utils/types";
 import { API_BASE } from "@/utils/types";
 
@@ -12,8 +12,17 @@ export default function AuthCallback({ onLogin }: AuthCallbackProps) {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [error, setError] = useState<string | null>(null);
+	const returnUrlRef = useRef<string | null>(null);
+	const hasStartedAuth = useRef(false);
 
 	useEffect(() => {
+		if (hasStartedAuth.current) return;
+		hasStartedAuth.current = true;
+
+		if (returnUrlRef.current === null) {
+			returnUrlRef.current = getReturnUrl();
+		}
+
 		const token = searchParams.get("token");
 		const errorParam = searchParams.get("error");
 
@@ -41,7 +50,7 @@ export default function AuthCallback({ onLogin }: AuthCallbackProps) {
 			.then((data) => {
 				if (data.user) {
 					onLogin(data.user, token);
-					navigate("/");
+					navigate(returnUrlRef.current || "/");
 				} else {
 					setError("Failed to fetch user information");
 				}

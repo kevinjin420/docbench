@@ -1,7 +1,8 @@
-import { getGitHubLoginUrl } from "@/utils/auth";
+import { getGitHubLoginUrl, setReturnUrl } from "@/utils/auth";
 
 export default function LoginButton() {
 	const handleLogin = () => {
+		setReturnUrl(window.location.pathname);
 		window.location.href = getGitHubLoginUrl();
 	};
 

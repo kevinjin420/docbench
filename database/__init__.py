@@ -9,6 +9,7 @@ from .models import (
     AccessToken,
     AdminEmail,
     PublicTestConfig,
+    PublicBenchmarkModel,
     LeaderboardEntry,
     get_db,
     get_public_db,
@@ -32,6 +33,7 @@ from .services import (
     AdminEmailService,
     AccessTokenService,
     PublicTestConfigService,
+    PublicBenchmarkModelService,
     LeaderboardService
 )
 
@@ -47,6 +49,7 @@ __all__ = [
     'AccessToken',
     'AdminEmail',
     'PublicTestConfig',
+    'PublicBenchmarkModel',
     'LeaderboardEntry',
     'get_db',
     'get_public_db',
@@ -64,5 +67,6 @@ __all__ = [
     'AdminEmailService',
     'AccessTokenService',
     'PublicTestConfigService',
+    'PublicBenchmarkModelService',
     'LeaderboardService'
 ]

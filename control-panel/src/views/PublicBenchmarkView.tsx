@@ -11,10 +11,6 @@ type DocSourceType = "url" | "file";
 export default function PublicBenchmarkView() {
 	const navigate = useNavigate();
 	const [publicTests, setPublicTests] = useState<PublicTest[]>([]);
-	const [apiKey, setApiKey] = useState(() =>
-		localStorage.getItem("openRouterApiKey") || ""
-	);
-	const [apiKeyValid, setApiKeyValid] = useState(false);
 	const [docSourceType, setDocSourceType] = useState<DocSourceType>("url");
 	const [documentationUrl, setDocumentationUrl] = useState("");
 	const [documentationFile, setDocumentationFile] = useState<File | null>(null);
@@ -23,7 +19,6 @@ export default function PublicBenchmarkView() {
 	const [status, setStatus] = useState<PublicBenchmarkStatus>({
 		status: "idle",
 	});
-	const [keyError, setKeyError] = useState("");
 	const [urlValidation, setUrlValidation] = useState<UrlValidationStatus>("idle");
 	const [urlError, setUrlError] = useState("");
 	const [fileError, setFileError] = useState("");
@@ -42,28 +37,6 @@ export default function PublicBenchmarkView() {
 			socket.disconnect();
 		};
 	}, []);
-
-	useEffect(() => {
-		if (apiKey) {
-			validateApiKey();
-		} else {
-			setApiKeyValid(false);
-		}
-	}, [apiKey]);
-
-	const validateApiKey = async () => {
-		try {
-			const res = await fetch(`${API_BASE}/models`, {
-				headers: { "X-API-Key": apiKey },
-			});
-			const data = await res.json();
-			setApiKeyValid(!data.error);
-			setKeyError(data.error || "");
-		} catch {
-			setApiKeyValid(false);
-			setKeyError("Failed to validate API key");
-		}
-	};
 
 	useEffect(() => {
 		if (debounceRef.current) {
@@ -124,16 +97,6 @@ export default function PublicBenchmarkView() {
 		} catch (error) {
 			console.error("Failed to fetch public tests:", error);
 		}
-	};
-
-	const handleApiKeyChange = (key: string) => {
-		setApiKey(key);
-		if (key) {
-			localStorage.setItem("openRouterApiKey", key);
-		} else {
-			localStorage.removeItem("openRouterApiKey");
-		}
-		setKeyError("");
 	};
 
 	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,11 +162,12 @@ export default function PublicBenchmarkView() {
 	};
 
 	const runBenchmark = async () => {
+		const apiKey = localStorage.getItem("openRouterApiKey");
 		const hasValidDoc =
 			(docSourceType === "url" && documentationUrl && urlValidation === "valid") ||
 			(docSourceType === "file" && documentationContent);
 
-		if (!apiKey || !apiKeyValid || !hasValidDoc || !documentationName) {
+		if (!apiKey || !hasValidDoc || !documentationName) {
 			return;
 		}
 
@@ -273,9 +237,9 @@ export default function PublicBenchmarkView() {
 		(docSourceType === "url" && documentationUrl && urlValidation === "valid") ||
 		(docSourceType === "file" && documentationContent);
 
+	const apiKey = localStorage.getItem("openRouterApiKey");
 	const canRun =
 		apiKey &&
-		apiKeyValid &&
 		hasValidDoc &&
 		documentationName &&
 		status.status === "idle";
@@ -311,36 +275,6 @@ export default function PublicBenchmarkView() {
 						</h3>
 
 						<div className="space-y-4">
-							<div>
-								<label className="block text-text-secondary text-sm mb-1.5">
-									OpenRouter API Key
-								</label>
-								<input
-									type="password"
-									value={apiKey}
-									onChange={(e) => handleApiKeyChange(e.target.value)}
-									placeholder="sk-or-..."
-									className={`w-full px-3 py-2.5 bg-terminal-bg border rounded-lg text-text-primary placeholder-text-muted focus:outline-none transition-colors ${
-										keyError
-											? "border-red-500 focus:border-red-500"
-											: apiKey && apiKeyValid
-												? "border-green-500 focus:border-green-500"
-												: "border-terminal-border focus:border-terminal-accent"
-									}`}
-								/>
-								{keyError && (
-									<p className="text-red-400 text-xs mt-1.5">{keyError}</p>
-								)}
-								{apiKey && apiKeyValid && (
-									<p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
-										<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<polyline points="20 6 9 17 4 12"></polyline>
-										</svg>
-										API key verified
-									</p>
-								)}
-							</div>
-
 							<div>
 								<label className="block text-text-secondary text-sm mb-1.5">
 									Documentation Name
@@ -511,6 +445,11 @@ export default function PublicBenchmarkView() {
 					>
 						Run Benchmark
 					</button>
+					{!apiKey && (
+						<p className="text-text-muted text-xs text-center mt-2">
+							Set your OpenRouter API key using the key icon in the navbar
+						</p>
+					)}
 				</div>
 
 				<div className="space-y-4">

@@ -5,6 +5,7 @@ import FileManager from '@/views/FileManager'
 import StatsPanel from '@/views/StatsPanel'
 import VariantsView from '@/views/VariantsView'
 import UsersView from '@/views/UsersView'
+import PublicTestsConfigView from '@/views/PublicTestsConfigView'
 import LeaderboardView from '@/views/LeaderboardView'
 import PublicBenchmarkView from '@/views/PublicBenchmarkView'
 import HomeView from '@/views/HomeView'
@@ -14,6 +15,126 @@ import LoginButton from '@/components/LoginButton'
 import type { Model, Variant, TestFile, Stash, User } from '@/utils/types'
 import { API_BASE } from '@/utils/types'
 import { getStoredToken, fetchCurrentUser, clearStoredToken, getAdminHeaders } from '@/utils/auth'
+
+function ApiKeyDropdown({
+  apiKey,
+  onApiKeyChange,
+  hasModels,
+  isVerifying
+}: {
+  apiKey: string
+  onApiKeyChange: (key: string) => void
+  hasModels: boolean
+  isVerifying: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [inputValue, setInputValue] = useState(apiKey)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    setInputValue(apiKey)
+  }, [apiKey])
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value)
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(() => {
+      onApiKeyChange(value)
+    }, 500)
+  }
+
+  const handleClear = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    setInputValue('')
+    onApiKeyChange('')
+  }
+
+  const isConfigured = !!apiKey && hasModels
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`btn btn-icon ${isConfigured ? 'btn-success' : 'btn-secondary'}`}
+        title={isConfigured ? 'API Key configured' : 'Configure API Key'}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-80 bg-terminal-surface border border-terminal-border rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="p-3 border-b border-terminal-border">
+            <span className="text-xs text-text-muted uppercase tracking-wide">OpenRouter API Key</span>
+          </div>
+          <div className="p-4 space-y-3">
+            <div>
+              <input
+                type="password"
+                value={inputValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="sk-or-..."
+                className="w-full px-3 py-2 bg-terminal-elevated border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isVerifying ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                    <span className="text-xs text-text-muted">Verifying...</span>
+                  </>
+                ) : isConfigured ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-xs text-text-muted">Connected</span>
+                  </>
+                ) : apiKey ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span className="text-xs text-text-muted">Invalid key</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-gray-500"></span>
+                    <span className="text-xs text-text-muted">Not configured</span>
+                  </>
+                )}
+              </div>
+              {apiKey && (
+                <button onClick={handleClear} className="btn btn-sm btn-danger">
+                  Clear
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-text-muted">
+              Get your API key from{' '}
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-terminal-accent hover:underline">
+                openrouter.ai/keys
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function AdminDropdown({
   isAuthenticated,
@@ -42,7 +163,7 @@ function AdminDropdown({
     setIsOpen(false)
   }, [location.pathname])
 
-  const isAdminRoute = ['/benchmark', '/files', '/variants', '/statistics', '/users'].includes(location.pathname)
+  const isAdminRoute = ['/benchmark', '/files', '/variants', '/statistics', '/users', '/public-tests'].includes(location.pathname)
 
   if (!isAuthenticated) {
     return null
@@ -142,6 +263,23 @@ function AdminDropdown({
               Statistics
             </Link>
             <Link
+              to="/public-tests"
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
+                location.pathname === '/public-tests'
+                  ? 'bg-zinc-800 text-terminal-accent'
+                  : 'text-gray-300 hover:bg-zinc-800'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              Public Tests
+            </Link>
+            <Link
               to="/users"
               className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
                 location.pathname === '/users'
@@ -173,12 +311,13 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [openRouterKey, setOpenRouterKey] = useState(() => localStorage.getItem('openRouterApiKey') || '')
   const [keyError, setKeyError] = useState('')
+  const [isVerifyingKey, setIsVerifyingKey] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const location = useLocation()
 
   const isAuthenticated = user?.is_admin || false
 
-  const handleUserLogin = useCallback((loggedInUser: User, token: string) => {
+  const handleUserLogin = useCallback((loggedInUser: User, _token: string) => {
     setUser(loggedInUser)
   }, [])
 
@@ -203,6 +342,7 @@ function AppContent() {
       setModels([])
       return
     }
+    setIsVerifyingKey(true)
     try {
       const res = await fetch(`${API_BASE}/models`, { headers: { 'X-API-Key': key } })
       const data = await res.json()
@@ -215,6 +355,8 @@ function AppContent() {
       }
     } catch (error) {
       console.error('Failed to fetch models:', error)
+    } finally {
+      setIsVerifyingKey(false)
     }
   }
 
@@ -413,6 +555,12 @@ function AppContent() {
             ) : (
               <LoginButton />
             )}
+            <ApiKeyDropdown
+              apiKey={openRouterKey}
+              onApiKeyChange={handleApiKeyChange}
+              hasModels={models.length > 0}
+              isVerifying={isVerifyingKey}
+            />
             <span className="border-l border-terminal-border mx-2 h-6"></span>
             <AdminDropdown
               isAuthenticated={user?.is_admin || false}
@@ -439,8 +587,7 @@ function AppContent() {
                   testFiles={testFiles}
                   onBenchmarkComplete={handleBenchmarkComplete}
                   apiKey={openRouterKey}
-                  onApiKeyChange={handleApiKeyChange}
-                  keyError={keyError}
+                  apiKeyValid={!!openRouterKey && models.length > 0 && !keyError}
                 />
               }
             />
@@ -504,14 +651,27 @@ function AppContent() {
               }
             />
             <Route
+              path="/public-tests"
+              element={
+                isAuthenticated ? (
+                  <PublicTestsConfigView />
+                ) : (
+                  <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
+                    <h3 className="text-text-primary text-xl mb-2">Authentication Required</h3>
+                    <p className="text-text-muted">Please sign in with GitHub to access this page.</p>
+                  </div>
+                )
+              }
+            />
+            <Route
               path="/users"
               element={
                 isAuthenticated ? (
                   <UsersView />
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
-                    <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
-                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
+                    <h3 className="text-text-primary text-xl mb-2">Authentication Required</h3>
+                    <p className="text-text-muted">Please sign in with GitHub to access this page.</p>
                   </div>
                 )
               }

@@ -2,9 +2,20 @@ import type { User } from "./types";
 import { API_BASE } from "./types";
 
 const TOKEN_KEY = "userToken";
+const RETURN_URL_KEY = "authReturnUrl";
 
 export function getStoredToken(): string | null {
 	return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setReturnUrl(url: string): void {
+	localStorage.setItem(RETURN_URL_KEY, url);
+}
+
+export function getReturnUrl(): string {
+	const url = localStorage.getItem(RETURN_URL_KEY);
+	localStorage.removeItem(RETURN_URL_KEY);
+	return url || "/";
 }
 
 export function setStoredToken(token: string): void {

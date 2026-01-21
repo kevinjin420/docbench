@@ -14,6 +14,7 @@ from database import (
     BenchmarkResultService,
     BenchmarkRunService,
     PublicTestConfigService,
+    PublicBenchmarkModelService,
     LeaderboardService
 )
 
@@ -86,13 +87,12 @@ def register_routes(app, socketio, running_benchmarks):
     @app.route('/api/public/benchmark', methods=['POST'])
     @rate_limit(max_requests=10, window_seconds=3600)
     def run_public_benchmark():
-        """Run a benchmark with only public tests"""
+        """Run a benchmark with only public tests on multiple models"""
         api_key = request.headers.get('X-API-Key')
         if not api_key:
             return jsonify({'error': 'API key required'}), 401
 
         data = request.json or {}
-        model = os.getenv('PUBLIC_BENCHMARK_MODEL', 'anthropic/claude-sonnet-4')
         documentation_url = data.get('documentation_url')
         documentation_content = data.get('documentation_content')
         documentation_name = data.get('documentation_name', 'Unnamed Documentation')
@@ -105,76 +105,111 @@ def register_routes(app, socketio, running_benchmarks):
         if not public_test_ids:
             return jsonify({'error': 'No public tests configured'}), 400
 
+        active_models = PublicBenchmarkModelService.get_active_models()
+        if not active_models:
+            fallback_model = os.getenv('PUBLIC_BENCHMARK_MODEL', 'anthropic/claude-sonnet-4')
+            active_models = [{'model_id': fallback_model, 'display_name': fallback_model.split('/')[-1]}]
+
         run_id = f"public_{uuid.uuid4().hex[:12]}"
+        model_ids = [m['model_id'] for m in active_models]
 
         def run_in_background():
             try:
                 running_benchmarks[run_id] = {
                     'status': 'running',
                     'progress': 'Initializing...',
-                    'is_public': True
+                    'is_public': True,
+                    'models': model_ids,
+                    'model_results': {}
                 }
                 socketio.emit('public_benchmark_update', {
                     'run_id': run_id,
                     'status': 'running',
-                    'progress': 'Initializing...'
+                    'progress': 'Initializing...',
+                    'models': model_ids
                 })
 
                 llm_service = LLMService(api_key=api_key)
 
                 BenchmarkRunService.create(
                     run_id=run_id,
-                    model=model,
-                    model_id=model,
+                    model=','.join(model_ids),
+                    model_id=model_ids[0],
                     variant='public',
                     max_tokens=max_tokens
                 )
 
-                def progress_callback(completed, total, message, **kwargs):
-                    progress_text = f'{message} ({completed}/{total} tests)'
-                    running_benchmarks[run_id].update({
-                        'progress': progress_text,
-                        'completed': completed,
-                        'total': total
-                    })
-                    socketio.emit('public_benchmark_update', {
-                        'run_id': run_id,
-                        'status': 'running',
-                        'progress': progress_text,
-                        'completed': completed,
-                        'total': total
-                    })
+                model_run_ids = []
+                model_results = []
 
-                result = llm_service.run_public_benchmark(
-                    model_id=model,
-                    documentation_url=documentation_url,
-                    documentation_content=documentation_content,
-                    max_tokens=max_tokens,
-                    public_test_ids=public_test_ids,
-                    progress_callback=progress_callback
-                )
+                for idx, model_id in enumerate(model_ids):
+                    model_num = idx + 1
+                    total_models = len(model_ids)
 
-                actual_run_id = result.get('run_id', run_id)
+                    def progress_callback(completed, total, message, **kwargs):
+                        progress_text = f'Model {model_num}/{total_models}: {message} ({completed}/{total} tests)'
+                        running_benchmarks[run_id].update({
+                            'progress': progress_text,
+                            'completed': completed,
+                            'total': total,
+                            'current_model': model_id,
+                            'current_model_num': model_num
+                        })
+                        socketio.emit('public_benchmark_update', {
+                            'run_id': run_id,
+                            'status': 'running',
+                            'progress': progress_text,
+                            'completed': completed,
+                            'total': total,
+                            'current_model': model_id,
+                            'current_model_num': model_num,
+                            'total_models': total_models
+                        })
+
+                    try:
+                        result = llm_service.run_public_benchmark(
+                            model_id=model_id,
+                            documentation_url=documentation_url,
+                            documentation_content=documentation_content,
+                            max_tokens=max_tokens,
+                            public_test_ids=public_test_ids,
+                            progress_callback=progress_callback
+                        )
+                        model_run_id = result.get('run_id', f"{run_id}_{model_id.replace('/', '-')}")
+                        model_run_ids.append({'model_id': model_id, 'run_id': model_run_id})
+                    except Exception as e:
+                        app.logger.error(f'Model {model_id} failed: {e}')
+                        model_run_ids.append({'model_id': model_id, 'run_id': None, 'error': str(e)})
 
                 socketio.emit('public_benchmark_update', {
                     'run_id': run_id,
                     'status': 'evaluating',
-                    'progress': 'Evaluating responses...'
+                    'progress': 'Evaluating responses from all models...'
                 })
 
-                result_data = BenchmarkResultService.get_by_run_id(actual_run_id)
+                evaluator = EvaluatorService()
+                all_percentages = []
+                all_total_scores = []
+                max_score = None
+                model_evaluations = {}
 
-                if result_data:
+                for model_run in model_run_ids:
+                    if model_run.get('run_id') is None:
+                        continue
+
+                    result_data = BenchmarkResultService.get_by_run_id(model_run['run_id'])
+                    if not result_data:
+                        continue
+
                     try:
-                        BenchmarkResultService.set_evaluation_status(actual_run_id, 'evaluating')
-                        evaluator = EvaluatorService()
+                        BenchmarkResultService.set_evaluation_status(model_run['run_id'], 'evaluating')
                         eval_result = evaluator.evaluate_responses(
                             result_data['responses'],
                             test_ids=public_test_ids
                         )
 
                         BenchmarkResultService.update_evaluation(
-                            run_id=actual_run_id,
+                            run_id=model_run['run_id'],
                             evaluation_results={
                                 'category_breakdown': eval_result['evaluation_results'],
                                 'level_breakdown': eval_result.get('level_breakdown', {})
@@ -184,36 +219,50 @@ def register_routes(app, socketio, running_benchmarks):
                             percentage=eval_result['percentage']
                         )
 
-                        running_benchmarks[run_id] = {
-                            'status': 'completed',
-                            'result': {
-                                'run_id': actual_run_id,
-                                'percentage': eval_result['percentage'],
-                                'total_score': eval_result['total_score'],
-                                'max_score': eval_result['max_score'],
-                                'documentation_name': documentation_name,
-                                'documentation_url': documentation_url,
-                                'model': model
-                            }
+                        all_percentages.append(eval_result['percentage'])
+                        all_total_scores.append(eval_result['total_score'])
+                        if max_score is None:
+                            max_score = eval_result['max_score']
+
+                        model_evaluations[model_run['model_id']] = {
+                            'run_id': model_run['run_id'],
+                            'percentage': eval_result['percentage'],
+                            'total_score': eval_result['total_score'],
+                            'max_score': eval_result['max_score']
                         }
 
-                        BenchmarkRunService.complete(run_id=actual_run_id, result_id=None)
-                        socketio.emit('public_benchmark_update', {
-                            'run_id': run_id,
-                            'status': 'completed',
-                            'result': running_benchmarks[run_id]['result']
-                        })
-
                     except Exception as e:
-                        app.logger.error(f'Evaluation failed: {run_id} - {e}')
-                        traceback.print_exc()
-                        BenchmarkResultService.set_evaluation_status(actual_run_id, 'failed')
-                        running_benchmarks[run_id] = {'status': 'failed', 'error': str(e)}
-                        socketio.emit('public_benchmark_update', {
-                            'run_id': run_id,
-                            'status': 'failed',
-                            'error': str(e)
-                        })
+                        app.logger.error(f'Evaluation failed for {model_run["model_id"]}: {e}')
+                        BenchmarkResultService.set_evaluation_status(model_run['run_id'], 'failed')
+
+                if not all_percentages:
+                    raise RuntimeError("No models completed successfully")
+
+                avg_percentage = sum(all_percentages) / len(all_percentages)
+                avg_total_score = sum(all_total_scores) / len(all_total_scores)
+
+                running_benchmarks[run_id] = {
+                    'status': 'completed',
+                    'result': {
+                        'run_id': run_id,
+                        'percentage': round(avg_percentage, 2),
+                        'total_score': round(avg_total_score, 2),
+                        'max_score': max_score,
+                        'documentation_name': documentation_name,
+                        'documentation_url': documentation_url,
+                        'models': model_ids,
+                        'model_results': model_evaluations,
+                        'models_completed': len(all_percentages),
+                        'models_total': len(model_ids)
+                    }
+                }
+
+                BenchmarkRunService.complete(run_id=run_id, result_id=None)
+                socketio.emit('public_benchmark_update', {
+                    'run_id': run_id,
+                    'status': 'completed',
+                    'result': running_benchmarks[run_id]['result']
+                })
 
             except Exception as e:
                 app.logger.error(f'Public benchmark failed: {run_id} - {e}')
@@ -230,7 +279,8 @@ def register_routes(app, socketio, running_benchmarks):
         return jsonify({
             'run_id': run_id,
             'status': 'started',
-            'test_count': len(public_test_ids)
+            'test_count': len(public_test_ids),
+            'models': model_ids
         })
 
     @app.route('/api/public/benchmark/<run_id>/status', methods=['GET'])
@@ -270,12 +320,28 @@ def register_routes(app, socketio, running_benchmarks):
         if not documentation_url:
             documentation_url = 'file://uploaded'
 
-        result = BenchmarkResultService.get_by_run_id(run_id)
-        if not result:
-            return jsonify({'error': 'Benchmark result not found'}), 404
+        benchmark_data = running_benchmarks.get(run_id)
+        if benchmark_data and benchmark_data.get('status') == 'completed':
+            result = benchmark_data.get('result', {})
+            percentage = result.get('percentage')
+            total_score = result.get('total_score')
+            max_score = result.get('max_score')
+            models = result.get('models', [])
+            model_used = ', '.join(models) if models else 'unknown'
+            benchmark_result_id = None
+        else:
+            db_result = BenchmarkResultService.get_by_run_id(run_id)
+            if not db_result:
+                return jsonify({'error': 'Benchmark result not found'}), 404
 
-        if result.get('percentage') is None:
-            return jsonify({'error': 'Benchmark has not been evaluated yet'}), 400
+            if db_result.get('percentage') is None:
+                return jsonify({'error': 'Benchmark has not been evaluated yet'}), 400
+
+            percentage = db_result['percentage']
+            total_score = db_result['total_score']
+            max_score = db_result['max_score']
+            model_used = db_result['model']
+            benchmark_result_id = db_result['id']
 
         user_id = None
         if g.user_info:
@@ -284,22 +350,22 @@ def register_routes(app, socketio, running_benchmarks):
         entry_id = LeaderboardService.submit(
             documentation_name=documentation_name,
             documentation_url=documentation_url,
-            total_score=result['total_score'],
-            max_score=result['max_score'],
-            percentage=result['percentage'],
-            benchmark_result_id=result['id'],
-            model_used=result['model'],
+            total_score=total_score,
+            max_score=max_score,
+            percentage=percentage,
+            benchmark_result_id=benchmark_result_id,
+            model_used=model_used,
             submitter_email=submitter_email,
             user_id=user_id
         )
 
-        rank = LeaderboardService.get_rank_for_percentage(result['percentage'])
+        rank = LeaderboardService.get_rank_for_percentage(percentage)
 
         return jsonify({
             'success': True,
             'entry_id': entry_id,
             'rank': rank,
-            'percentage': result['percentage']
+            'percentage': percentage
         })
 
     @app.route('/api/public/leaderboard', methods=['GET'])

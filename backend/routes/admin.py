@@ -4,6 +4,7 @@ from flask import jsonify, request
 from backend.utils.auth import require_admin
 from database import (
     PublicTestConfigService,
+    PublicBenchmarkModelService,
     LeaderboardService,
     BenchmarkResultService,
     UserService,
@@ -19,17 +20,29 @@ def register_routes(app, socketio, running_benchmarks):
     def get_public_tests_config():
         """Get current public test configuration"""
         config = PublicTestConfigService.get_config()
-        public_ids = PublicTestConfigService.get_public_test_ids()
+        public_ids = set(PublicTestConfigService.get_public_test_ids())
 
         evaluator = EvaluatorService()
-        all_test_ids = [t['id'] for t in evaluator.tests]
+        all_tests = [
+            {
+                'id': t['id'],
+                'level': t.get('level', 1),
+                'category': t.get('category', 'Unknown'),
+                'task': t.get('task', ''),
+                'points': t.get('points', 0),
+                'is_public': t['id'] in public_ids
+            }
+            for t in evaluator.tests
+        ]
 
         return jsonify({
             'config': config,
-            'public_test_ids': public_ids,
+            'public_test_ids': list(public_ids),
             'public_count': len(public_ids),
-            'total_available': len(all_test_ids),
-            'all_test_ids': all_test_ids
+            'total_available': len(all_tests),
+            'total_points': sum(t['points'] for t in all_tests),
+            'public_points': sum(t['points'] for t in all_tests if t['is_public']),
+            'tests': all_tests
         })
 
     @app.route('/api/admin/public-tests', methods=['POST'])
@@ -54,8 +67,8 @@ def register_routes(app, socketio, running_benchmarks):
                 'valid_ids': list(valid_ids)
             }), 400
 
-        token_id = g.token_info.get('id') if hasattr(g, 'token_info') else None
-        PublicTestConfigService.set_public_tests(test_ids, added_by=token_id)
+        user_id = g.user_info.get('id') if hasattr(g, 'user_info') and g.user_info else None
+        PublicTestConfigService.set_public_tests(test_ids, added_by=user_id)
 
         return jsonify({
             'success': True,
@@ -81,8 +94,8 @@ def register_routes(app, socketio, running_benchmarks):
         if test_id not in valid_ids:
             return jsonify({'error': f'Invalid test ID: {test_id}'}), 400
 
-        token_id = g.token_info.get('id') if hasattr(g, 'token_info') else None
-        PublicTestConfigService.add_public_test(test_id, added_by=token_id)
+        user_id = g.user_info.get('id') if hasattr(g, 'user_info') and g.user_info else None
+        PublicTestConfigService.add_public_test(test_id, added_by=user_id)
 
         return jsonify({'success': True, 'test_id': test_id})
 
@@ -201,3 +214,62 @@ def register_routes(app, socketio, running_benchmarks):
         if success:
             return jsonify({'success': True, 'message': 'Email removed'})
         return jsonify({'error': 'Email not found'}), 404
+
+    @app.route('/api/admin/benchmark-models', methods=['GET'])
+    @require_admin
+    def get_benchmark_models():
+        """Get all configured benchmark models"""
+        models = PublicBenchmarkModelService.get_all_models()
+        active_models = [m for m in models if m['is_active']]
+        return jsonify({
+            'models': models,
+            'active_count': len(active_models)
+        })
+
+    @app.route('/api/admin/benchmark-models', methods=['POST'])
+    @require_admin
+    def add_benchmark_model():
+        """Add a model to the benchmark configuration"""
+        from flask import g
+
+        data = request.json or {}
+        model_id = data.get('model_id', '').strip()
+        display_name = data.get('display_name', '').strip() or None
+        priority = data.get('priority', 0)
+
+        if not model_id:
+            return jsonify({'error': 'model_id is required'}), 400
+
+        added_by = None
+        if hasattr(g, 'user_info') and g.user_info:
+            added_by = g.user_info.get('id')
+
+        result = PublicBenchmarkModelService.add_model(
+            model_id=model_id,
+            display_name=display_name,
+            priority=priority,
+            added_by=added_by
+        )
+
+        return jsonify({'success': True, 'model': result})
+
+    @app.route('/api/admin/benchmark-models/<int:model_id>', methods=['DELETE'])
+    @require_admin
+    def remove_benchmark_model(model_id):
+        """Remove a model from the configuration"""
+        success = PublicBenchmarkModelService.remove_model(model_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Model removed'})
+        return jsonify({'error': 'Model not found'}), 404
+
+    @app.route('/api/admin/benchmark-models/<int:model_id>/active', methods=['POST'])
+    @require_admin
+    def set_benchmark_model_active(model_id):
+        """Set whether a model is active"""
+        data = request.json or {}
+        is_active = data.get('is_active', True)
+
+        success = PublicBenchmarkModelService.set_active(model_id, is_active)
+        if success:
+            return jsonify({'success': True, 'is_active': is_active})
+        return jsonify({'error': 'Model not found'}), 404
