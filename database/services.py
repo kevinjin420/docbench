@@ -397,16 +397,29 @@ class DocumentationService:
 
     @staticmethod
     def get_all_variants() -> List[Dict[str, Any]]:
-        """Get all documentation variants"""
+        """Get all documentation variants with size information"""
+        import requests
+
         with get_db() as session:
             variants = session.query(DocumentationVariant).all()
-            return [
-                {
+            result = []
+            for v in variants:
+                size_bytes = 0
+                try:
+                    response = requests.head(v.url, timeout=5, allow_redirects=True)
+                    content_length = response.headers.get('Content-Length')
+                    if content_length:
+                        size_bytes = int(content_length)
+                except Exception:
+                    pass
+
+                result.append({
                     'name': v.variant_name,
-                    'url': v.url
-                }
-                for v in variants
-            ]
+                    'url': v.url,
+                    'size_bytes': size_bytes,
+                    'size_kb': round(size_bytes / 1024, 1) if size_bytes else 0
+                })
+            return result
 
     @staticmethod
     def delete_variant(variant_name: str) -> bool:
