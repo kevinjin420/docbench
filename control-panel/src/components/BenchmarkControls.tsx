@@ -13,8 +13,6 @@ interface Props {
 	setQueueSize: (size: number) => void;
 	batchSize: number;
 	setBatchSize: (size: number) => void;
-	customBatchSizes: string;
-	setCustomBatchSizes: (sizes: string) => void;
 	isRunning: boolean;
 	onRun: () => void;
 	onCancel: () => void;
@@ -32,8 +30,6 @@ export default function BenchmarkControls({
 	setQueueSize,
 	batchSize,
 	setBatchSize,
-	customBatchSizes,
-	setCustomBatchSizes,
 	isRunning,
 	onRun,
 	onCancel,
@@ -88,20 +84,9 @@ export default function BenchmarkControls({
 					value={batchSize || ""}
 					onChange={(e) => setBatchSize(e.target.value === "" ? 0 : parseInt(e.target.value))}
 					onBlur={(e) => { if (!e.target.value || parseInt(e.target.value) < 1) setBatchSize(45); }}
-					disabled={isRunning || customBatchSizes.trim() !== ""}
+					disabled={isRunning}
 					className="w-16 px-2 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
 					title="Tests per batch"
-				/>
-
-				<span className="text-text-muted text-sm uppercase">Custom:</span>
-				<input
-					type="text"
-					value={customBatchSizes}
-					onChange={(e) => setCustomBatchSizes(e.target.value)}
-					disabled={isRunning}
-					placeholder="30,30,30,15"
-					className="w-28 px-2 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm focus:outline-none focus:border-terminal-accent disabled:opacity-50 disabled:cursor-not-allowed text-center"
-					title="Custom batch sizes (comma-separated)"
 				/>
 			</div>
 
