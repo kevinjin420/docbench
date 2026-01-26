@@ -13,54 +13,52 @@ export default function ResultsView({ results }: Props) {
 		);
 	}
 
-	const downloadCsv = () => {
+	const downloadJson = () => {
 		if (!results?.summary?.category_breakdown) return;
 
-		const headers = [
-			"Test ID",
-			"Category",
-			"Level",
-			"Score",
-			"Max Score",
-			"Percentage",
-			"Required Penalty",
-			"Forbidden Penalty",
-			"Syntax Penalty",
-			"Jac Check Penalty",
-		];
-
-		const rows: (string | number)[][] = [];
+		const tests: any[] = [];
 		Object.values(results.summary.category_breakdown).forEach((category: any) => {
 			if (category.tests) {
 				category.tests.forEach((test: any) => {
-					const penalties = test.score_breakdown || {};
-					rows.push([
-						test.test_id,
-						test.category,
-						test.level,
-						test.score,
-						test.max_score,
-						test.percentage + "%",
-						penalties.required || 0,
-						penalties.forbidden || 0,
-						penalties.syntax || 0,
-						penalties.jac_check || 0,
-					]);
+					tests.push({
+						test_id: test.test_id,
+						category: test.category,
+						level: test.level,
+						score: test.score,
+						max_score: test.max_score,
+						percentage: test.percentage,
+						penalties: test.score_breakdown || {},
+						code: test.code || "",
+						jac_valid: test.jac_valid,
+						passed_checks: test.passed_checks || [],
+						failed_checks: test.failed_checks || [],
+					});
 				});
 			}
 		});
 
-		const csvContent =
-			"data:text/csv;charset=utf-8," +
-			[headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+		const exportData = {
+			run_id: results.run_id,
+			model: results.model,
+			variant: results.variant,
+			summary: {
+				total_score: results.summary.total_score,
+				total_max: results.summary.total_max,
+				overall_percentage: results.summary.overall_percentage,
+				tests_completed: results.summary.tests_completed,
+			},
+			tests,
+		};
 
-		const encodedUri = encodeURI(csvContent);
+		const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
 		const link = document.createElement("a");
-		link.setAttribute("href", encodedUri);
-		link.setAttribute("download", `${results.run_id || "benchmark"}_results.csv`);
+		link.href = url;
+		link.download = `${results.run_id || "benchmark"}_results.json`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	};
 
 	// Calculate total penalties for the summary display
@@ -99,14 +97,14 @@ export default function ResultsView({ results }: Props) {
 				<>
 					<div className="flex justify-end mb-4">
 						<button
-							onClick={downloadCsv}
+							onClick={downloadJson}
 							className="btn btn-secondary btn-sm flex items-center gap-2"
-							title="Download results as CSV"
+							title="Download results as JSON"
 						>
 							<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
 							</svg>
-							Download CSV
+							Download JSON
 						</button>
 					</div>
 
@@ -128,7 +126,7 @@ export default function ResultsView({ results }: Props) {
 								/>
 							</svg>
 							<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-								<span className="block text-2xl font-bold text-terminal-accent">
+								<span className="block text-2xl font-bold text-terminal-accent font-mono">
 									{results.summary.overall_percentage.toFixed(1)}%
 								</span>
 								<span className="block text-xs text-gray-400 uppercase">Score</span>
@@ -138,20 +136,20 @@ export default function ResultsView({ results }: Props) {
 						<div className="grid grid-cols-2 gap-3 w-full">
 							<div className="flex justify-between px-3 py-2 bg-terminal-surface rounded border-l-2 border-terminal-accent">
 								<span className="text-gray-400 text-sm">Total Score</span>
-								<span className="text-terminal-accent font-semibold text-sm">
+								<span className="text-terminal-accent font-semibold text-sm font-mono">
 									{results.summary.total_score} / {results.summary.total_max}
 								</span>
 							</div>
 							<div className="flex justify-between px-3 py-2 bg-terminal-surface rounded border-l-2 border-terminal-accent">
 								<span className="text-gray-400 text-sm">Tests</span>
-								<span className="text-terminal-accent font-semibold text-sm">
+								<span className="text-terminal-accent font-semibold text-sm font-mono">
 									{results.summary.tests_completed}
 								</span>
 							</div>
 							{results.batch_size && (
 								<div className="flex justify-between px-3 py-2 bg-terminal-surface rounded border-l-2 border-terminal-accent">
 									<span className="text-gray-400 text-sm">Batch Size</span>
-									<span className="text-terminal-accent font-semibold text-sm">
+									<span className="text-terminal-accent font-semibold text-sm font-mono">
 										{results.batch_size} ({results.num_batches} batches)
 									</span>
 								</div>
@@ -159,7 +157,7 @@ export default function ResultsView({ results }: Props) {
 							{results.temperature !== undefined && (
 								<div className="flex justify-between px-3 py-2 bg-terminal-surface rounded border-l-2 border-terminal-accent">
 									<span className="text-gray-400 text-sm">Temperature</span>
-									<span className="text-terminal-accent font-semibold text-sm">
+									<span className="text-terminal-accent font-semibold text-sm font-mono">
 										{results.temperature}
 									</span>
 								</div>
@@ -167,7 +165,7 @@ export default function ResultsView({ results }: Props) {
 							{results.max_tokens && (
 								<div className="flex justify-between px-3 py-2 bg-terminal-surface rounded border-l-2 border-terminal-accent">
 									<span className="text-gray-400 text-sm">Max Tokens</span>
-									<span className="text-terminal-accent font-semibold text-sm">
+									<span className="text-terminal-accent font-semibold text-sm font-mono">
 										{results.max_tokens}
 									</span>
 								</div>
@@ -221,7 +219,7 @@ export default function ResultsView({ results }: Props) {
 								return (
 									<div key={key} className="flex justify-between px-3 py-2 bg-zinc-900 rounded border-l-2 border-terminal-border">
 										<span className="text-gray-400 text-sm">{label} Lost</span>
-										<span className={`${colorClass} font-semibold text-sm`}>-{value.toFixed(1)}%</span>
+										<span className={`${colorClass} font-semibold text-sm font-mono`}>-{value.toFixed(1)}%</span>
 									</div>
 								);
 							})}
@@ -253,10 +251,10 @@ export default function ResultsView({ results }: Props) {
 								className="bg-zinc-900 p-4 rounded border border-terminal-border text-center"
 							>
 								<div className="text-gray-400 text-xs uppercase mb-2">{variant}</div>
-								<div className="text-3xl font-bold text-terminal-accent mb-1">
+								<div className="text-3xl font-bold text-terminal-accent mb-1 font-mono">
 									{data.summary.overall_percentage.toFixed(1)}%
 								</div>
-								<div className="flex flex-col gap-0.5 text-xs text-gray-500">
+								<div className="flex flex-col gap-0.5 text-xs text-gray-500 font-mono">
 									<span>
 										{data.summary.total_score} / {data.summary.total_max}
 									</span>
@@ -301,7 +299,7 @@ function BreakdownSection({
 					<div key={name} className="bg-zinc-900 p-3 rounded border border-terminal-border">
 						<div className="flex justify-between mb-2">
 							<span className="text-gray-300 text-sm">{name}</span>
-							<span className="text-terminal-accent text-xs">
+							<span className="text-terminal-accent text-xs font-mono">
 								{item.score.toFixed(2)} / {item.max} ({item.percentage.toFixed(1)}%)
 							</span>
 						</div>
@@ -341,7 +339,7 @@ function BreakdownSection({
 							</div>
 						)}
 
-						<div className="flex justify-end text-xs text-gray-500 mt-1">{item.count} tests</div>
+						<div className="flex justify-end text-xs text-gray-500 mt-1 font-mono">{item.count} tests</div>
 					</div>
 				))}
 			</div>

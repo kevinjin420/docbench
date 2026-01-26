@@ -40,8 +40,7 @@ def register_routes(app, socketio, running_benchmarks):
 
                 llm_service = LLMService(api_key=api_key)
                 BenchmarkRunService.create(
-                    run_id=run_id, model=model, model_id=model, variant=variant,
-                    max_tokens=max_tokens
+                    run_id=run_id, model=model, variant=variant
                 )
 
                 def progress_callback(completed, total, message, batch_num=None, num_batches=None, failed=0, batch_statuses=None):
@@ -160,7 +159,8 @@ def register_routes(app, socketio, running_benchmarks):
             }), 500
 
         eval_results = result.get('evaluation_results')
-        needs_eval = not eval_results or 'category_breakdown' not in eval_results
+        force_eval = data.get('force', False)
+        needs_eval = force_eval or not eval_results or 'category_breakdown' not in eval_results
 
         if needs_eval:
             evaluator = EvaluatorService()

@@ -16,11 +16,25 @@ export interface Model {
 	};
 }
 
+export interface VariantValidation {
+	is_valid: boolean;
+	jac_check?: {
+		total_blocks: number;
+		passed: number;
+		failed: number;
+		skipped: number;
+		pass_rate: number;
+		errors?: Array<{ block: number; error: string; preview: string }>;
+	};
+	token_count?: number;
+}
+
 export interface Variant {
 	name: string;
 	url: string;
 	size_bytes: number;
 	size_kb: number;
+	validation?: VariantValidation;
 }
 
 export interface TestFile {
@@ -146,4 +160,35 @@ export interface AuthState {
 	user: User | null;
 	token: string | null;
 	isLoading: boolean;
+}
+
+export interface TestDefinition {
+	id: string;
+	level: number;
+	category: string;
+	task: string;
+	required_elements: string[];
+	points: number;
+	forbidden_elements?: string[];
+	type?: 'generate' | 'debug' | 'complete' | 'refactor' | 'functional';
+	broken_code?: string;
+	partial_code?: string;
+	python_code?: string;
+	test_harness?: string;
+	error_hint?: string;
+	completion_hint?: string;
+	is_active?: boolean;
+	db_id?: number;
+	created_at?: number;
+	updated_at?: number;
+	created_by?: number;
+}
+
+export interface TestDefinitionStats {
+	total_tests: number;
+	inactive_tests: number;
+	total_points: number;
+	by_level: Record<number, { count: number; points: number }>;
+	by_category: Record<string, { count: number; points: number }>;
+	by_type: Record<string, number>;
 }

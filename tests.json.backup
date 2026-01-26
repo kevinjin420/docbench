@@ -8,7 +8,10 @@
       "#*",
       "*#"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Multi-line comment delimiters"
+    ]
   },
   {
     "id": "L1_entry_01",
@@ -19,7 +22,10 @@
       "with entry",
       "print"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Entry point syntax using 'with entry'"
+    ]
   },
   {
     "id": "L1_entry_02",
@@ -30,7 +36,10 @@
       "with entry:main",
       "print"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Named entry points"
+    ]
   },
   {
     "id": "L1_stdlib_01",
@@ -41,7 +50,10 @@
       "for",
       "range("
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "range() generates a sequence of numbers"
+    ]
   },
   {
     "id": "L1_strings_01",
@@ -53,7 +65,10 @@
       "{",
       "}"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "F-string interpolation"
+    ]
   },
   {
     "id": "L1_strings_02",
@@ -63,7 +78,10 @@
     "required_elements": [
       "\"\"\""
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Triple-quoted strings"
+    ]
   },
   {
     "id": "L1_types_01",
@@ -76,7 +94,10 @@
       ": str",
       ": bool"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Basic type annotations"
+    ]
   },
   {
     "id": "L1_types_02",
@@ -89,7 +110,10 @@
       "ACTIVE",
       "COMPLETED"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Enum declaration syntax"
+    ]
   },
   {
     "id": "L1_vars_01",
@@ -101,7 +125,10 @@
       ": str",
       "="
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Type annotation syntax"
+    ]
   },
   {
     "id": "L1_vars_02",
@@ -114,7 +141,11 @@
       ": int",
       ":g:"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Global variable declaration",
+      "Global access with :g:"
+    ]
   },
   {
     "id": "L1_vars_03",
@@ -126,7 +157,10 @@
       "str",
       "int"
     ],
-    "points": 10
+    "points": 5,
+    "hints": [
+      "Union type syntax with pipe"
+    ]
   },
   {
     "id": "L2_coll_01",
@@ -139,7 +173,10 @@
       "in",
       "]"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "List comprehension syntax"
+    ]
   },
   {
     "id": "L2_coll_02",
@@ -151,7 +188,10 @@
       ":",
       "}"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Dictionary literal syntax"
+    ]
   },
   {
     "id": "L2_coll_03",
@@ -162,7 +202,10 @@
       "{",
       "}"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Set literals and operations"
+    ]
   },
   {
     "id": "L2_control_01",
@@ -174,7 +217,10 @@
       "to",
       "by"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Jac for loop: for i=1 to 10 by 2"
+    ]
   },
   {
     "id": "L2_control_02",
@@ -186,7 +232,10 @@
       "{",
       "}"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "While loop syntax"
+    ]
   },
   {
     "id": "L2_control_03",
@@ -198,7 +247,10 @@
       "elif",
       "else"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Conditional branching"
+    ]
   },
   {
     "id": "L2_control_04",
@@ -209,7 +261,10 @@
       "match",
       "case"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Pattern matching with match/case"
+    ]
   },
   {
     "id": "L2_func_01",
@@ -217,13 +272,16 @@
     "category": "Functions",
     "task": "Write a function 'add' that takes two int parameters and returns their sum with return type annotation",
     "required_elements": [
-      "def",
+      "can",
       "(",
       ")",
       "->",
       "return"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Function definition with 'can' keyword"
+    ]
   },
   {
     "id": "L2_func_02",
@@ -231,10 +289,13 @@
     "category": "Functions",
     "task": "Write a function with a default parameter value",
     "required_elements": [
-      "def",
+      "can",
       "="
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Default parameter syntax"
+    ]
   },
   {
     "id": "L2_func_03",
@@ -247,7 +308,10 @@
       "{",
       "}"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "Lambda syntax: |x: int| -> int { x * 2 }"
+    ]
   },
   {
     "id": "L2_stdlib_01",
@@ -257,7 +321,10 @@
     "required_elements": [
       "len("
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "len() returns the length of a collection"
+    ]
   },
   {
     "id": "L2_stdlib_02",
@@ -268,18 +335,23 @@
       "enumerate(",
       "for"
     ],
-    "points": 15
+    "points": 10,
+    "hints": [
+      "enumerate() provides index with each item"
+    ]
   },
   {
     "id": "L3_ability_01",
     "level": 3,
     "category": "Abilities",
-    "task": "Define an ability using 'can' keyword inside an object",
+    "task": "Define a standalone ability using 'can' that can be attached to objects",
     "required_elements": [
-      "obj",
       "can"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Abilities are standalone functions that can be composed"
+    ]
   },
   {
     "id": "L3_access_01",
@@ -290,7 +362,10 @@
       ":priv",
       "has"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Private attributes use :priv modifier"
+    ]
   },
   {
     "id": "L3_access_02",
@@ -299,9 +374,12 @@
     "task": "Create an object with a protected method using :prot modifier",
     "required_elements": [
       ":prot",
-      "def"
+      "can"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Protected methods use :prot modifier"
+    ]
   },
   {
     "id": "L3_access_03",
@@ -312,7 +390,10 @@
       ":pub",
       "can"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Public abilities use :pub modifier"
+    ]
   },
   {
     "id": "L3_access_04",
@@ -324,7 +405,10 @@
       ":priv",
       ":prot"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Mix access modifiers in single object"
+    ]
   },
   {
     "id": "L3_access_05",
@@ -334,9 +418,13 @@
     "required_elements": [
       "obj",
       "(",
-      ":prot"
+      ":prot",
+      "can"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Override protected method in child class"
+    ]
   },
   {
     "id": "L3_check_01",
@@ -347,7 +435,10 @@
       "test",
       "check"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "check is a soft assertion unlike assert"
+    ]
   },
   {
     "id": "L3_debug_01",
@@ -361,7 +452,10 @@
       "with entry",
       "print"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Add 'with entry' block to make code execute"
+    ]
   },
   {
     "id": "L3_error_01",
@@ -372,7 +466,10 @@
       "try",
       "except"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Exception handling"
+    ]
   },
   {
     "id": "L3_error_02",
@@ -382,7 +479,10 @@
     "required_elements": [
       "assert"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Assertion syntax"
+    ]
   },
   {
     "id": "L3_obj_01",
@@ -394,7 +494,10 @@
       "has name: str",
       "has age: int"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Object definition with 'obj' keyword and 'has' for attributes"
+    ]
   },
   {
     "id": "L3_obj_02",
@@ -406,7 +509,10 @@
       "can",
       "return"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Methods inside objects use 'can'"
+    ]
   },
   {
     "id": "L3_obj_03",
@@ -417,7 +523,10 @@
       "obj",
       "postinit"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "postinit runs after object initialization"
+    ]
   },
   {
     "id": "L3_obj_04",
@@ -428,7 +537,10 @@
       "obj",
       "("
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Inheritance syntax: obj Child(Parent) { ... }"
+    ]
   },
   {
     "id": "L3_obj_05",
@@ -439,7 +551,10 @@
       "Person(",
       ".name"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Object instantiation and attribute access"
+    ]
   },
   {
     "id": "L3_test_01",
@@ -450,7 +565,10 @@
       "test",
       "assert"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Built-in test syntax"
+    ]
   },
   {
     "id": "L3_test_02",
@@ -460,7 +578,10 @@
     "required_elements": [
       "test"
     ],
-    "points": 20
+    "points": 15,
+    "hints": [
+      "Test with context setup"
+    ]
   },
   {
     "id": "L4_complete_01",
@@ -475,8 +596,12 @@
       ": float",
       ": int"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Add type annotations after colons"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -495,8 +620,12 @@
     "required_elements": [
       "++>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Use ++> for directed connection"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -515,8 +644,12 @@
     "required_elements": [
       "++>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Use ++> for directed edge connection"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -535,8 +668,12 @@
     "required_elements": [
       ".name"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Access the correct attribute name"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -553,8 +690,12 @@
       "edge Road",
       "has distance: float"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Edge definition with 'edge' keyword"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -570,8 +711,12 @@
     "required_elements": [
       "++>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Directed edge connection: node1 ++> node2"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -587,8 +732,12 @@
     "required_elements": [
       "<++>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Bidirectional edge: node1 <++> node2"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -605,8 +754,12 @@
       "+>:",
       ":+>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Typed edge connection: node1 +>:EdgeType:+> node2"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -624,8 +777,12 @@
       "edge",
       "++>"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Build a connected graph structure"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -641,8 +798,12 @@
     "required_elements": [
       "`root"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Root node access: `root"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -658,8 +819,12 @@
     "required_elements": [
       "del"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Edge deletion"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -677,8 +842,12 @@
       "has name: str",
       "has population: int"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Node definition with 'node' keyword"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -696,8 +865,12 @@
       "can",
       "return"
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Nodes can have methods like objects"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -713,8 +886,12 @@
     "required_elements": [
       "City("
     ],
-    "points": 25,
+    "points": 20,
+    "hints": [
+      "Node instantiation syntax"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -732,8 +909,12 @@
       "can",
       "with"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Node abilities can specify walker type trigger"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -751,8 +932,12 @@
       "can",
       "with"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Walker abilities can specify node type trigger"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -772,8 +957,12 @@
       "with",
       "entry"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Walker abilities use 'with Type entry' syntax"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -793,8 +982,12 @@
       "[-->:",
       ":]"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Use [-->:EdgeType:] for filtered visit"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -814,8 +1007,12 @@
       "visit",
       "-->"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Add visit statement to continue traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -834,8 +1031,12 @@
     "required_elements": [
       "<--"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Use <-- for reverse traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -851,8 +1052,12 @@
     "required_elements": [
       "disengage"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "disengage stops traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -869,8 +1074,12 @@
       "walker",
       "skip"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "skip bypasses current node but continues traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -887,8 +1096,12 @@
       "visit",
       "-->"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "visit --> traverses outgoing edges"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -908,8 +1121,12 @@
       "[-->:",
       ":]"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Filtered traversal: visit [-->:EdgeType:]"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -925,8 +1142,12 @@
     "required_elements": [
       "here"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "'here' refers to current node during traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -944,8 +1165,12 @@
     "required_elements": [
       "visit"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "visit adds to BFS queue"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -963,8 +1188,12 @@
       "has visited_count: int",
       "= 0"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Walker definition with attributes"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -985,8 +1214,12 @@
       "with entry",
       "with exit"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Walker lifecycle: entry executes first, exit last"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1005,8 +1238,12 @@
       "spawn",
       "root"
     ],
-    "points": 30,
+    "points": 25,
+    "hints": [
+      "Walker spawning: Walker() spawn root"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1025,8 +1262,12 @@
       "async",
       "walker"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Async walker definition"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1046,8 +1287,12 @@
       "?(",
       ")"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Use ?(condition) for filtering"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1066,8 +1311,12 @@
     "required_elements": [
       "++>"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Connect new node to root with ++>"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1084,8 +1333,12 @@
       "self",
       "here"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Walker self-reference and node reference"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1105,8 +1358,12 @@
       "?",
       ">"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Use Jac filter syntax: nodes?(condition)"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1126,8 +1383,12 @@
       "++>",
       "Item("
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Use ++> to connect new node to root"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1144,8 +1405,12 @@
       "?",
       "=="
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Filter syntax: nodes?(attr == value)"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1164,8 +1429,12 @@
       "?",
       "and"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Compound filter: ?(cond1 and cond2)"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1177,13 +1446,17 @@
     "id": "L6_filter_03",
     "level": 6,
     "category": "Filtering",
-    "task": "Filter edges by type using edge type filter syntax",
+    "task": "Filter edges by type and attribute using [-->:Type:](?cond) syntax",
     "required_elements": [
-      "-->",
-      ":"
+      "[-->:",
+      ":(?"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Edge filtering: [-->:Type:](?attr > value)"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1195,13 +1468,16 @@
     "id": "L6_ignore_01",
     "level": 6,
     "category": "Control",
-    "task": "Use skip or conditional logic to bypass certain nodes during walker traversal",
+    "task": "Use ignore to skip processing current node but continue traversal",
     "required_elements": [
-      "walker",
-      "if"
+      "ignore"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "ignore skips but continues, unlike disengage"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1217,8 +1493,12 @@
     "required_elements": [
       "&"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Reference syntax for nodes"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1234,8 +1514,12 @@
     "required_elements": [
       ".edges"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Accessing connected edges"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1247,12 +1531,17 @@
     "id": "L6_ref_03",
     "level": 6,
     "category": "References",
-    "task": "Use & reference syntax to lookup a node by its ID",
+    "task": "Use &\"n::id\" syntax to lookup a node by its ID",
     "required_elements": [
-      "&"
+      "&\"n::",
+      "\""
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Reference syntax for node lookup by ID"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1268,8 +1557,12 @@
     "required_elements": [
       "report"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Report collects values from walker execution"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1289,8 +1582,12 @@
       "if",
       "here"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Conditional skip: if here.property skip"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1306,8 +1603,12 @@
     "required_elements": [
       "spawn"
     ],
-    "points": 35,
+    "points": 30,
+    "hints": [
+      "Parallel walker execution"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1321,11 +1622,15 @@
     "category": "Agents",
     "task": "Create a simple agentic loop with AI decision making",
     "required_elements": [
-      "by llm",
+      "by llm()",
       "while"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Agentic AI pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1337,13 +1642,17 @@
     "id": "L7_ai_byllm_01",
     "level": 7,
     "category": "AI Abilities",
-    "task": "Create a function using 'by llm' that summarizes text",
+    "task": "Create a function decorated with 'by llm()' that summarizes text",
     "required_elements": [
-      "by llm",
-      "def"
+      "by llm()",
+      "can"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "by llm() decorator for AI-powered functions"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1362,8 +1671,12 @@
       "by llm(",
       "model="
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Specify model in by llm() decorator"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1377,11 +1690,15 @@
     "category": "AI Abilities",
     "task": "Create an AI function that returns a structured object type",
     "required_elements": [
-      "by llm",
+      "by llm()",
       "->"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Typed return from LLM function"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1399,8 +1716,12 @@
       "from",
       "Model"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "LLM model import"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1414,11 +1735,15 @@
     "category": "Multimodal",
     "task": "Create an AI function that accepts image input",
     "required_elements": [
-      "by llm",
+      "by llm()",
       "image"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Multimodal AI with image processing"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1430,13 +1755,17 @@
     "id": "L7_ai_obj_01",
     "level": 7,
     "category": "AI Objects",
-    "task": "Create an object with AI-powered method using by llm",
+    "task": "Create an object with AI-powered method using by llm()",
     "required_elements": [
       "obj",
-      "by llm"
+      "by llm()"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Objects can have AI methods"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1448,13 +1777,17 @@
     "id": "L7_ai_rag_01",
     "level": 7,
     "category": "RAG",
-    "task": "Create an AI function that uses additional context in its prompt",
+    "task": "Use RAG context in an AI function with 'context' parameter",
     "required_elements": [
-      "by llm",
-      "str"
+      "by llm(",
+      "context"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "RAG integration for grounded responses"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1470,8 +1803,12 @@
     "required_elements": [
       "str \""
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Semantic strings provide context to LLM"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1486,10 +1823,14 @@
     "task": "Create a walker with an AI ability that processes node data",
     "required_elements": [
       "walker",
-      "by llm"
+      "by llm()"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Walkers can use AI for decision making"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1509,8 +1850,12 @@
       "->",
       "by"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Use -> for return type, by llm() for AI"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1529,8 +1874,12 @@
     "required_elements": [
       "str \""
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Semantic strings use 'str \"description\"' syntax"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1547,11 +1896,15 @@
     "broken_code": "@llm\ncan summarize(text: str) -> str;",
     "error_hint": "Wrong decorator syntax for AI ability",
     "required_elements": [
-      "by llm",
-      "def"
+      "by llm()",
+      "can"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Use 'by llm()' after the signature"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1563,16 +1916,20 @@
     "id": "L7_debug_02",
     "level": 7,
     "category": "Debugging",
-    "task": "Fix the AI function syntax to use proper 'by llm' pattern",
+    "task": "Fix the missing model parameter in AI function",
     "type": "debug",
     "broken_code": "can classify(text: str) -> str by llm();",
-    "error_hint": "AI function should use 'def' and proper 'by llm' syntax",
+    "error_hint": "AI function needs model specification",
     "required_elements": [
-      "by llm",
-      "def"
+      "by llm(",
+      "model="
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Specify model in by llm() decorator"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1589,8 +1946,12 @@
       "&",
       "spawn"
     ],
-    "points": 40,
+    "points": 35,
+    "hints": [
+      "Cross-graph node references"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1608,8 +1969,12 @@
       "walker",
       "__specs__"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Async walker for long-running tasks"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1626,8 +1991,12 @@
       "import os",
       "getenv"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Environment variable access"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1644,8 +2013,12 @@
       "import logging",
       "logger"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Production logging patterns"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1662,8 +2035,12 @@
       "__specs__",
       "path"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Custom API path configuration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1680,8 +2057,12 @@
       "__jac__",
       "access"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Node access control"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1698,8 +2079,12 @@
       "walker",
       "schedule"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Scheduled task execution"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1717,8 +2102,12 @@
       "__specs__",
       "methods"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "__specs__ defines API endpoint configuration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1737,8 +2126,12 @@
       "__specs__",
       "auth"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Authentication configuration in specs"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1755,8 +2148,12 @@
       "walker",
       "webhook"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "External webhook integration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1773,8 +2170,12 @@
       "walker",
       "socket.notify"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "WebSocket integration for real-time"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1794,8 +2195,12 @@
       "__specs__",
       "\"methods\""
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Use __specs__ with methods and auth keys"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1815,8 +2220,12 @@
       "__specs__",
       "methods"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Use __specs__ as static class attribute"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1830,13 +2239,16 @@
     "category": "Deployment",
     "task": "Read environment variable for database connection string",
     "required_elements": [
-      "import from",
+      "import:py",
       "os",
-      "environ",
-      "from"
+      "environ"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Access environment variables for configuration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1854,8 +2266,12 @@
       "NoPerm",
       "ReadPerm"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Permission levels control node access"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1875,8 +2291,12 @@
       "has name",
       "has email"
     ],
-    "points": 45,
+    "points": 40,
+    "hints": [
+      "Use node keyword, has for attributes"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1893,11 +2313,15 @@
     "partial_code": "____datetime import datetime, timedelta;",
     "completion_hint": "Add Python import syntax",
     "required_elements": [
-      "import from",
+      "import:py",
       "from"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Use 'import:py from module import items' syntax"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1913,8 +2337,12 @@
     "required_elements": [
       "@"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Decorator syntax"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1928,13 +2356,16 @@
     "category": "Deployment",
     "task": "Configure application settings from environment with fallback defaults",
     "required_elements": [
-      "import from",
+      "import:py",
       "os",
-      "get(",
-      "from"
+      "get("
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Use dict.get() for fallback defaults"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1951,8 +2382,12 @@
       "open",
       "read"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "File reading"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1969,8 +2404,12 @@
       "open",
       "write"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "File writing"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -1988,8 +2427,12 @@
       "dumps",
       "loads"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "JSON serialization"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2005,8 +2448,12 @@
     "required_elements": [
       "yield"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Generator functions"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2023,8 +2470,12 @@
       "glob",
       "node"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Glob nodes persist across executions"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2041,8 +2492,12 @@
       "glob",
       "has"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Glob nodes for shared configuration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2059,8 +2514,12 @@
       "import",
       "from"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Module imports between Jac files"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2074,11 +2533,14 @@
     "category": "Imports",
     "task": "Import Python module and use its functions in Jac",
     "required_elements": [
-      "import from",
-      "from"
+      "import:py"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Python interop with import:py"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2096,8 +2558,12 @@
     "required_elements": [
       "include"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "File inclusion for code organization"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2114,8 +2580,12 @@
       "__jac__",
       "grant"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Grant permissions to share access"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2131,8 +2601,12 @@
     "required_elements": [
       "save"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Graph persistence"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2148,8 +2622,12 @@
     "required_elements": [
       "load"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Graph loading"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2165,8 +2643,12 @@
     "required_elements": [
       "commit()"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "commit() persists all pending changes"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2183,8 +2665,12 @@
       "commit(",
       "node"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Selective persistence with commit(Type)"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2201,8 +2687,12 @@
       "root",
       "++>"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Nodes connected to root are auto-persisted"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2222,8 +2712,12 @@
       "->",
       "return"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Use can keyword for abilities"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2244,8 +2738,12 @@
       "has port",
       "has debug"
     ],
-    "points": 50,
+    "points": 45,
+    "hints": [
+      "Use obj keyword, has with defaults"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2266,7 +2764,11 @@
       "?"
     ],
     "points": 60,
+    "hints": [
+      "RBAC implementation"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2286,8 +2788,12 @@
       "visit",
       "report"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Aggregation during traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2303,10 +2809,14 @@
     "required_elements": [
       "walker",
       "node",
-      "by llm"
+      "by llm()"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Conversational AI with graph memory"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2321,11 +2831,15 @@
     "task": "Create a content classifier that tags nodes using AI",
     "required_elements": [
       "walker",
-      "by llm",
+      "by llm()",
       "node"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "AI-powered node classification"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2339,12 +2853,17 @@
     "category": "AI Integration",
     "task": "Create an entity extractor that builds a knowledge graph from text",
     "required_elements": [
-      "by llm",
+      "by llm()",
       "node",
-      "edge"
+      "edge",
+      "spawn"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Knowledge graph construction with AI"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2356,14 +2875,19 @@
     "id": "L10_api_auth_01",
     "level": 10,
     "category": "API Patterns",
-    "task": "Implement authenticated API endpoint with auth configuration",
+    "task": "Implement authenticated API endpoint with JWT validation",
     "required_elements": [
       "walker",
       "__specs__",
-      "auth"
+      "auth",
+      "jwt"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "JWT authentication"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2381,8 +2905,12 @@
       "__specs__",
       "methods"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "RESTful CRUD pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2394,14 +2922,18 @@
     "id": "L10_api_paginate_01",
     "level": 10,
     "category": "API Patterns",
-    "task": "Implement paginated list endpoint with limit and offset parameters",
+    "task": "Implement paginated list endpoint with limit and offset",
     "required_elements": [
       "walker",
-      "limit",
-      "offset"
+      "has limit",
+      "has offset"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Pagination pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2419,8 +2951,12 @@
       "node AuditLog",
       "timestamp"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Audit logging pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2438,8 +2974,12 @@
       "for",
       "visit"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Batch processing pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2457,8 +2997,12 @@
       "has cache",
       "has ttl"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Caching pattern with expiration"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2470,14 +3014,19 @@
     "id": "L10_error_01",
     "level": 10,
     "category": "Resilience",
-    "task": "Implement error handling in a walker using try-except",
+    "task": "Implement error handling with retry logic in a walker",
     "required_elements": [
       "walker",
       "try",
-      "except"
+      "except",
+      "retry"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Retry pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2496,8 +3045,12 @@
       "has subscribers",
       "visit"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Event-driven architecture"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2514,11 +3067,15 @@
       "node",
       "edge",
       "walker",
-      "by llm",
+      "by llm()",
       "__specs__"
     ],
     "points": 60,
+    "hints": [
+      "Complete Jac application"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2534,13 +3091,18 @@
     "required_elements": [
       "walker",
       "__specs__",
-      "by llm",
+      "auth",
+      "by llm()",
       "node",
       "++>",
       "report"
     ],
     "points": 80,
+    "hints": [
+      "Combine authentication, AI, persistence, and API patterns"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2552,16 +3114,21 @@
     "id": "L10_int_fullstack_02",
     "level": 10,
     "category": "Full Integration",
-    "task": "Create a complete task management app with: 1) Task and Project nodes, 2) Assignment edges, 3) CRUD API walkers, 4) AI prioritization",
+    "task": "Create a complete task management app with: 1) Task and Project nodes, 2) Assignment edges, 3) CRUD API walkers, 4) AI prioritization, 5) Real-time notifications",
     "required_elements": [
       "node",
       "edge",
       "walker",
       "__specs__",
-      "by llm"
+      "by llm()",
+      "socket.notify"
     ],
     "points": 100,
+    "hints": [
+      "Full-featured application with all Jac capabilities"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2576,13 +3143,18 @@
     "task": "Create a multi-agent workflow where: 1) Researcher walker gathers data, 2) Analyzer walker processes it with AI, 3) Reporter walker summarizes results, 4) All share a common graph",
     "required_elements": [
       "walker",
-      "by llm",
+      "by llm()",
       "spawn",
+      "visit",
       "report",
       "node"
     ],
     "points": 100,
+    "hints": [
+      "Chain multiple AI walkers for complex workflow"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2594,15 +3166,21 @@
     "id": "L10_int_persist_api_01",
     "level": 10,
     "category": "Full Integration",
-    "task": "Create a CRUD API that: 1) Stores items in graph, 2) Implements CRUD operations with walkers, 3) Returns data via report",
+    "task": "Create a persistent API that: 1) Stores items in graph, 2) Implements CRUD operations, 3) Auto-persists on changes, 4) Supports filtering",
     "required_elements": [
       "walker",
       "__specs__",
       "methods",
+      "save",
+      "?",
       "report"
     ],
     "points": 80,
+    "hints": [
+      "CRUD with persistence and filtering"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2614,15 +3192,21 @@
     "id": "L10_int_realtime_01",
     "level": 10,
     "category": "Full Integration",
-    "task": "Create a collaborative document system that: 1) Maintains Document nodes, 2) Allows walker updates, 3) Returns changes via report",
+    "task": "Create a real-time collaborative system that: 1) Maintains Document nodes, 2) Allows walker updates, 3) Broadcasts changes via WebSocket, 4) Includes permission checks",
     "required_elements": [
       "node Document",
       "walker",
+      "socket.notify",
+      "__jac__",
       "++>",
       "report"
     ],
     "points": 80,
+    "hints": [
+      "Real-time collaboration with permissions"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2641,8 +3225,12 @@
       "walker",
       "visit"
     ],
-    "points": 60,
+    "points": 50,
+    "hints": [
+      "Complete social graph implementation"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2663,8 +3251,12 @@
       "-->",
       "-->"
     ],
-    "points": 60,
+    "points": 50,
+    "hints": [
+      "Multi-hop graph traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2683,8 +3275,12 @@
       "walker",
       "visit"
     ],
-    "points": 60,
+    "points": 50,
+    "hints": [
+      "Hierarchical graph structure"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2702,8 +3298,12 @@
       "edge State",
       "walker"
     ],
-    "points": 60,
+    "points": 50,
+    "hints": [
+      "State machine pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2721,8 +3321,12 @@
       "has metrics",
       "report"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Metrics collection pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2742,7 +3346,11 @@
       "del"
     ],
     "points": 60,
+    "hints": [
+      "Graph migration pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2757,12 +3365,17 @@
     "task": "Create a multi-agent system with multiple AI walkers that collaborate on a shared graph",
     "required_elements": [
       "walker",
-      "by llm",
+      "by llm()",
       "spawn",
+      "visit",
       "report"
     ],
     "points": 60,
+    "hints": [
+      "Multi-agent AI collaboration pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2780,8 +3393,12 @@
       "revoke",
       "walker"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Revoke permissions to remove access"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2799,8 +3416,12 @@
       "can register",
       "can execute"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Plugin architecture pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2819,8 +3440,12 @@
       "walker",
       "?"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Priority queue with graph"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2841,8 +3466,12 @@
       "(",
       "can speak"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Use node with parentheses for inheritance"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2864,7 +3493,11 @@
       "-->"
     ],
     "points": 60,
+    "hints": [
+      "Walkers naturally handle graph traversal"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2883,8 +3516,12 @@
       "set()",
       "visit"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "DFS with cycle detection"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2898,14 +3535,19 @@
     "id": "L10_search_02",
     "level": 10,
     "category": "Algorithms",
-    "task": "Implement path finding between two nodes using walker traversal",
+    "task": "Implement shortest path finding between two nodes using walker traversal",
     "required_elements": [
       "walker",
-      "has",
+      "has path",
+      "has distance",
       "visit"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Path finding algorithm"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2924,8 +3566,12 @@
       "spawn",
       "node"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Graph transformation pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2943,8 +3589,12 @@
       "assert",
       "visit"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Data validation pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2963,8 +3613,12 @@
       "has history",
       "edge"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Version control pattern for graph data"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2976,14 +3630,18 @@
     "id": "L10_ws_collab_01",
     "level": 10,
     "category": "Real-time",
-    "task": "Implement collaborative editing with walkers that update shared nodes",
+    "task": "Implement collaborative editing with change broadcasting",
     "required_elements": [
       "walker",
-      "node",
-      "report"
+      "socket",
+      "broadcast"
     ],
-    "points": 60,
+    "points": 55,
+    "hints": [
+      "Collaborative real-time pattern"
+    ],
     "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",
@@ -2995,312 +3653,17 @@
     "id": "L10_ws_realtime_01",
     "level": 10,
     "category": "Real-time",
-    "task": "Create a notification system that tracks and reports events",
+    "task": "Create a real-time notification system using WebSocket channels",
     "required_elements": [
       "walker",
-      "node",
-      "report"
+      "socket.notify_channels"
     ],
-    "points": 60,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L6_onelang_def_01",
-    "level": 6,
-    "category": "Onelang Functions",
-    "task": "Create a standalone function using 'def' keyword that calculates the area of a rectangle",
-    "required_elements": [
-      "def",
-      "(",
-      ")",
-      "->",
-      "return"
+    "points": 55,
+    "hints": [
+      "Channel-based notifications"
     ],
-    "points": 35,
     "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L6_onelang_server_01",
-    "level": 6,
-    "category": "Onelang Server",
-    "task": "Create a basic server block using 'sv { }' syntax with a simple walker endpoint",
-    "required_elements": [
-      "sv {",
-      "walker",
-      "}"
-    ],
-    "points": 35,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L6_onelang_client_01",
-    "level": 6,
-    "category": "Onelang Client",
-    "task": "Create a basic client block using 'cl { }' syntax",
-    "required_elements": [
-      "cl {",
-      "}"
-    ],
-    "points": 35,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L7_jsx_component_01",
-    "level": 7,
-    "category": "JSX Components",
-    "task": "Create a JSX component with props that displays a greeting",
-    "required_elements": [
-      "cl {",
-      "props",
-      "<",
-      "/>"
-    ],
-    "points": 40,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L7_jsx_event_01",
-    "level": 7,
-    "category": "JSX Events",
-    "task": "Create a button component with onClick event handler",
-    "required_elements": [
-      "cl {",
-      "onClick",
-      "<button"
-    ],
-    "points": 40,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L7_effect_entry_01",
-    "level": 7,
-    "category": "Effects",
-    "task": "Create a component with mount effect using 'can with entry { }'",
-    "required_elements": [
-      "cl {",
-      "can",
-      "with entry"
-    ],
-    "points": 40,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L7_effect_exit_01",
-    "level": 7,
-    "category": "Effects",
-    "task": "Create a component with cleanup effect using 'can with exit { }'",
-    "required_elements": [
-      "cl {",
-      "can",
-      "with exit"
-    ],
-    "points": 40,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L8_state_has_01",
-    "level": 8,
-    "category": "Reactive State",
-    "task": "Create a component with reactive state using 'has' inside cl block",
-    "required_elements": [
-      "cl {",
-      "has",
-      ": int"
-    ],
-    "points": 45,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L8_state_effect_dep_01",
-    "level": 8,
-    "category": "Dependency Effects",
-    "task": "Create an effect with dependency tracking using 'can with [dep] entry { }'",
-    "required_elements": [
-      "cl {",
-      "can",
-      "with",
-      "[",
-      "]",
-      "entry"
-    ],
-    "points": 45,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L8_props_keyword_01",
-    "level": 8,
-    "category": "Props",
-    "task": "Create a component that accepts and uses props keyword for input",
-    "required_elements": [
-      "cl {",
-      "props",
-      "has"
-    ],
-    "points": 45,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L8_jsx_list_01",
-    "level": 8,
-    "category": "JSX Lists",
-    "task": "Create a component that renders a dynamic list using .map()",
-    "required_elements": [
-      "cl {",
-      ".map(",
-      "<"
-    ],
-    "points": 45,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L9_fullstack_api_01",
-    "level": 9,
-    "category": "Fullstack Integration",
-    "task": "Create a fullstack app with sv walker endpoint and cl fetch integration",
-    "required_elements": [
-      "sv {",
-      "cl {",
-      "walker",
-      "fetch"
-    ],
-    "points": 50,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L9_fullstack_form_01",
-    "level": 9,
-    "category": "Fullstack Forms",
-    "task": "Create a form with controlled inputs and server submission",
-    "required_elements": [
-      "cl {",
-      "sv {",
-      "<form",
-      "<input",
-      "onChange"
-    ],
-    "points": 50,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L10_fullstack_todo_01",
-    "level": 10,
-    "category": "Full Applications",
-    "task": "Create a complete todo app with: node for tasks, walker API, sv server block, cl client with JSX",
-    "required_elements": [
-      "node",
-      "walker",
-      "sv {",
-      "cl {",
-      "<",
-      "has"
-    ],
-    "points": 100,
-    "forbidden_elements": [
-      "class ",
-      "function ",
-      "const ",
-      "let ",
-      "var "
-    ]
-  },
-  {
-    "id": "L10_fullstack_counter_01",
-    "level": 10,
-    "category": "Full Applications",
-    "task": "Create a counter app with state, effects, and server sync",
-    "required_elements": [
-      "sv {",
-      "cl {",
-      "has count",
-      "with entry",
-      "onClick"
-    ],
-    "points": 100,
-    "forbidden_elements": [
+      "def ",
       "class ",
       "function ",
       "const ",

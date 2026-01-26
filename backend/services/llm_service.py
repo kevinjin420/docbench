@@ -20,8 +20,21 @@ class LLMService:
 
     _models_cache: Optional[Dict[str, Dict]] = None
 
-    def __init__(self, tests_file: str = "tests.json", api_key: Optional[str] = None):
-        self.tests = self._load_tests(tests_file)
+    def __init__(self, tests_file: str = None, api_key: Optional[str] = None, use_db: bool = True):
+        """Initialize LLM service.
+
+        Args:
+            tests_file: Path to tests.json file (used if use_db=False)
+            api_key: OpenRouter API key
+            use_db: If True, load tests from database. If False, load from file.
+        """
+        if use_db:
+            self.tests = self._load_from_db()
+        elif tests_file:
+            self.tests = self._load_tests(tests_file)
+        else:
+            self.tests = self._load_from_db()
+
         self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
         if not self.api_key:
             raise RuntimeError("API key required: provide via header or OPENROUTER_API_KEY env var")
@@ -34,6 +47,17 @@ class LLMService:
                 "X-Title": "Jac LLM Benchmark"
             }
         )
+
+    def _load_from_db(self) -> List[Dict]:
+        """Load test cases from database"""
+        try:
+            from database import TestDefinitionService
+            tests = TestDefinitionService.get_all(include_inactive=False)
+            if tests:
+                return tests
+        except Exception as e:
+            logger.warning(f"Could not load tests from database: {e}")
+        return self._load_tests("tests.json")
 
     def _load_tests(self, tests_file: str) -> List[Dict]:
         with open(tests_file, 'r') as f:
@@ -110,8 +134,7 @@ class LLMService:
                 "level": test["level"],
                 "category": test["category"],
                 "task": test["task"],
-                "points": test["points"],
-                "hints": test["hints"]
+                "points": test["points"]
             }
             test_type = test.get("type", "generate")
             test_data["type"] = test_type

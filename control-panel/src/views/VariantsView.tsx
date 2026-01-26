@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Variant } from '@/utils/types'
+import { useState, useEffect } from 'react'
+import type { Variant, VariantValidation } from '@/utils/types'
 import { API_BASE } from '@/utils/types'
 import { getAdminHeaders } from '@/utils/auth'
 
@@ -13,6 +13,30 @@ export default function VariantsView({ variants, onRefresh }: Props) {
   const [formData, setFormData] = useState({ variant_name: '', url: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [validations, setValidations] = useState<Record<string, VariantValidation | null>>({})
+
+  useEffect(() => {
+    const fetchValidations = async () => {
+      const results: Record<string, VariantValidation | null> = {}
+      for (const variant of variants) {
+        const validationUrl = variant.url.replace(/\.txt$/, '.validation.json')
+        try {
+          const res = await fetch(validationUrl)
+          if (res.ok) {
+            results[variant.name] = await res.json()
+          } else {
+            results[variant.name] = null
+          }
+        } catch {
+          results[variant.name] = null
+        }
+      }
+      setValidations(results)
+    }
+    if (variants.length > 0) {
+      fetchValidations()
+    }
+  }, [variants])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,44 +160,74 @@ export default function VariantsView({ variants, onRefresh }: Props) {
               <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">URL</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Size</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Jac Check</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-terminal-border/50">
             {variants.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-text-muted">
+                <td colSpan={5} className="px-4 py-8 text-center text-text-muted">
                   No variants found. Add your first variant to get started.
                 </td>
               </tr>
             ) : (
-              variants.map((variant) => (
-                <tr key={variant.name} className="hover:bg-terminal-elevated/50 transition-colors">
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-text-primary">{variant.name}</td>
-                  <td className="px-4 py-3 text-sm text-text-secondary max-w-md truncate">
-                    <a href={variant.url} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-terminal-accent transition-colors">
-                      {variant.url}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-text-muted">{variant.size_kb} KB</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                    <button
-                      onClick={() => handleDelete(variant.name)}
-                      className={`btn btn-sm ${deleteConfirm === variant.name ? 'btn-danger-solid' : 'btn-danger'}`}
-                    >
-                      {deleteConfirm === variant.name ? 'Confirm' : 'Delete'}
-                    </button>
-                    {deleteConfirm === variant.name && (
+              variants.map((variant) => {
+                const validation = validations[variant.name]
+                const jacCheck = validation?.jac_check
+                return (
+                  <tr key={variant.name} className="hover:bg-terminal-elevated/50 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-text-primary">{variant.name}</td>
+                    <td className="px-4 py-3 text-sm text-text-secondary max-w-md truncate">
+                      <a href={variant.url} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-terminal-accent transition-colors">
+                        {variant.url}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-text-muted">{variant.size_kb} KB</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      {validation === undefined ? (
+                        <span className="text-text-muted">Loading...</span>
+                      ) : validation === null ? (
+                        <span className="text-text-muted">No validation</span>
+                      ) : jacCheck ? (
+                        <div className="flex items-center gap-2">
+                          <span className={`font-mono ${jacCheck.pass_rate >= 80 ? 'text-green-400' : jacCheck.pass_rate >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {jacCheck.pass_rate.toFixed(0)}%
+                          </span>
+                          <span className="text-text-muted text-xs">
+                            ({jacCheck.passed}/{jacCheck.passed + jacCheck.failed})
+                          </span>
+                          {jacCheck.failed > 0 && (
+                            <span className="text-red-400 text-xs" title={jacCheck.errors?.map(e => `Block ${e.block}: ${e.error}`).join('\n')}>
+                              {jacCheck.failed} failed
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className={validation.is_valid ? 'text-green-400' : 'text-red-400'}>
+                          {validation.is_valid ? 'Valid' : 'Invalid'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <button
-                        onClick={() => setDeleteConfirm(null)}
-                        className="btn btn-secondary btn-sm ml-2"
+                        onClick={() => handleDelete(variant.name)}
+                        className={`btn btn-sm ${deleteConfirm === variant.name ? 'btn-danger-solid' : 'btn-danger'}`}
                       >
-                        Cancel
+                        {deleteConfirm === variant.name ? 'Confirm' : 'Delete'}
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))
+                      {deleteConfirm === variant.name && (
+                        <button
+                          onClick={() => setDeleteConfirm(null)}
+                          className="btn btn-secondary btn-sm ml-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

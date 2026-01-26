@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Database models and schemas for Jaseci Benchmark
+Database models and schemas for Jaseci Benchmark (PostgreSQL only)
 
 Two separate databases:
-1. Public DB (PostgreSQL) - access_tokens, leaderboard_entries, public_test_config
-2. Local DB (SQLite) - benchmark_results, benchmark_runs, collections, documentation_variants
+1. Public DB (PostgreSQL) - users, access_tokens, leaderboard_entries, test_definitions
+2. Local DB (PostgreSQL) - benchmark_results, benchmark_runs, collections, documentation_variants
 """
 
 import os
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Boolean, JSON, Index, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Boolean, Index, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.pool import QueuePool
@@ -21,38 +21,29 @@ PublicBase = declarative_base()
 
 
 def _get_local_db_url() -> str:
-    """Get local database URL"""
+    """Get local database URL (PostgreSQL required)"""
     url = os.getenv('LOCAL_DATABASE_URL') or os.getenv('DATABASE_URL')
     if not url:
-        db_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        db_path = os.path.join(db_dir, 'benchmark.db')
-        return f'sqlite:///{db_path}'
+        raise RuntimeError(
+            "LOCAL_DATABASE_URL or DATABASE_URL environment variable is required. "
+            "Example: postgresql://user:pass@localhost:5432/jaseci_benchmark"
+        )
     return url
 
 
 def _get_public_db_url() -> str:
-    """Get public database URL"""
+    """Get public database URL (PostgreSQL required)"""
     url = os.getenv('PUBLIC_DATABASE_URL') or os.getenv('DATABASE_URL')
     if not url:
-        db_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        db_path = os.path.join(db_dir, 'public.db')
-        return f'sqlite:///{db_path}'
+        raise RuntimeError(
+            "PUBLIC_DATABASE_URL or DATABASE_URL environment variable is required. "
+            "Example: postgresql://user:pass@localhost:5432/jaseci_public"
+        )
     return url
 
 
-def _is_postgres(url: str) -> bool:
-    return 'postgresql' in url
-
-
-def _get_json_type(url: str):
-    """Return JSONB for PostgreSQL, JSON for SQLite"""
-    if _is_postgres(url):
-        return JSONB
-    return JSON
-
-
 # ============================================================================
-# LOCAL DATABASE MODELS (SQLite - ephemeral/dev data)
+# LOCAL DATABASE MODELS (PostgreSQL - benchmark data)
 # ============================================================================
 
 class Collection(LocalBase):
@@ -89,10 +80,10 @@ class BenchmarkResult(LocalBase):
     batch_size = Column(Integer, nullable=True)
     num_batches = Column(Integer, nullable=True)
 
-    responses = Column(JSON, nullable=False)
-    run_metadata = Column(JSON, nullable=True)
+    responses = Column(JSONB, nullable=False)
+    run_metadata = Column(JSONB, nullable=True)
 
-    evaluation_results = Column(JSON, nullable=True)
+    evaluation_results = Column(JSONB, nullable=True)
     total_score = Column(Float, nullable=True, index=True)
     max_score = Column(Float, nullable=True)
     percentage = Column(Float, nullable=True, index=True)
@@ -121,11 +112,7 @@ class BenchmarkRun(LocalBase):
     run_id = Column(String(256), unique=True, nullable=False, index=True)
 
     model = Column(String(256), nullable=False, index=True)
-    model_id = Column(String(256), nullable=False)
     variant = Column(String(128), nullable=False)
-
-    temperature = Column(Float, nullable=False)
-    max_tokens = Column(Integer, nullable=False)
 
     status = Column(String(32), nullable=False, index=True)
     progress = Column(String(512), nullable=True)
@@ -134,7 +121,6 @@ class BenchmarkRun(LocalBase):
     started_at = Column(Float, nullable=False, index=True)
     completed_at = Column(Float, nullable=True)
     error_message = Column(Text, nullable=True)
-    run_metadata = Column(JSON, nullable=True)
 
     __table_args__ = (
         Index('idx_status_started', 'status', started_at.desc()),
@@ -244,7 +230,7 @@ class LeaderboardEntry(PublicBase):
 
     # Store result data directly (no FK since different databases)
     benchmark_result_id = Column(Integer, nullable=True)
-    evaluation_snapshot = Column(JSON, nullable=True)
+    evaluation_snapshot = Column(JSONB, nullable=True)
 
     model_used = Column(String(256), nullable=False)
     submitted_at = Column(Float, nullable=False, index=True)
@@ -260,29 +246,59 @@ class LeaderboardEntry(PublicBase):
     )
 
 
+class TestDefinition(PublicBase):
+    """Test definitions for benchmarking (migrated from tests.json)"""
+    __tablename__ = 'test_definitions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    test_id = Column(String(64), unique=True, nullable=False, index=True)
+
+    level = Column(Integer, nullable=False, index=True)
+    category = Column(String(128), nullable=False, index=True)
+    task = Column(Text, nullable=False)
+    points = Column(Integer, nullable=False, default=10)
+
+    test_type = Column(String(32), nullable=False, default='generate')
+
+    required_elements = Column(JSONB, nullable=False, default=list)
+    forbidden_elements = Column(JSONB, nullable=True)
+
+    broken_code = Column(Text, nullable=True)
+    partial_code = Column(Text, nullable=True)
+    python_code = Column(Text, nullable=True)
+    test_harness = Column(Text, nullable=True)
+    error_hint = Column(Text, nullable=True)
+    completion_hint = Column(Text, nullable=True)
+
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    created_at = Column(Float, nullable=False)
+    updated_at = Column(Float, nullable=True)
+    created_by = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        Index('idx_test_level_category', 'level', 'category'),
+        Index('idx_test_active_level', 'is_active', 'level'),
+    )
+
+
 # ============================================================================
 # DATABASE ENGINES AND SESSIONS
 # ============================================================================
 
 def _create_engine(db_url: str):
-    """Create engine with appropriate settings"""
-    engine_kwargs = {
-        'echo': os.getenv('SQL_ECHO', 'false').lower() == 'true'
-    }
-
-    if _is_postgres(db_url):
-        engine_kwargs.update({
-            'poolclass': QueuePool,
-            'pool_size': int(os.getenv('DB_POOL_SIZE', '10')),
-            'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '20')),
-            'pool_pre_ping': True,
-            'pool_recycle': 3600,
-        })
-
-    return create_engine(db_url, **engine_kwargs)
+    """Create PostgreSQL engine with connection pooling"""
+    return create_engine(
+        db_url,
+        echo=os.getenv('SQL_ECHO', 'false').lower() == 'true',
+        poolclass=QueuePool,
+        pool_size=int(os.getenv('DB_POOL_SIZE', '10')),
+        max_overflow=int(os.getenv('DB_MAX_OVERFLOW', '20')),
+        pool_pre_ping=True,
+        pool_recycle=3600,
+    )
 
 
-# Local database (SQLite)
+# Local database (PostgreSQL)
 local_engine = _create_engine(_get_local_db_url())
 LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=local_engine)
 

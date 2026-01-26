@@ -22,7 +22,8 @@ from .models import (
     AdminEmail,
     PublicTestConfig,
     PublicBenchmarkModel,
-    LeaderboardEntry
+    LeaderboardEntry,
+    TestDefinition
 )
 
 
@@ -283,20 +284,14 @@ class BenchmarkRunService:
     def create(
         run_id: str,
         model: str,
-        model_id: str,
-        variant: str,
-        max_tokens: int,
-        temperature: float = 0.1
+        variant: str
     ) -> int:
         """Create new benchmark run"""
         with get_db() as session:
             run = BenchmarkRun(
                 run_id=run_id,
                 model=model,
-                model_id=model_id,
                 variant=variant,
-                temperature=temperature,
-                max_tokens=max_tokens,
                 status='running',
                 started_at=time.time()
             )
@@ -1164,4 +1159,341 @@ class LeaderboardService:
                 LeaderboardEntry.percentage > percentage
             ).count()
             return better_count + 1
+
+
+class TestDefinitionService:
+    """Service for managing test definitions (uses public database)"""
+
+    @staticmethod
+    def _to_dict(test: TestDefinition) -> Dict[str, Any]:
+        """Convert TestDefinition model to dict matching tests.json format"""
+        result = {
+            'id': test.test_id,
+            'level': test.level,
+            'category': test.category,
+            'task': test.task,
+            'points': test.points,
+            'required_elements': test.required_elements or [],
+        }
+        if test.forbidden_elements:
+            result['forbidden_elements'] = test.forbidden_elements
+        if test.test_type and test.test_type != 'generate':
+            result['type'] = test.test_type
+        if test.broken_code:
+            result['broken_code'] = test.broken_code
+        if test.partial_code:
+            result['partial_code'] = test.partial_code
+        if test.python_code:
+            result['python_code'] = test.python_code
+        if test.test_harness:
+            result['test_harness'] = test.test_harness
+        if test.error_hint:
+            result['error_hint'] = test.error_hint
+        if test.completion_hint:
+            result['completion_hint'] = test.completion_hint
+        return result
+
+    @staticmethod
+    def _to_full_dict(test: TestDefinition) -> Dict[str, Any]:
+        """Convert TestDefinition model to full dict including metadata"""
+        result = TestDefinitionService._to_dict(test)
+        result['db_id'] = test.id
+        result['is_active'] = test.is_active
+        result['created_at'] = test.created_at
+        result['updated_at'] = test.updated_at
+        result['created_by'] = test.created_by
+        return result
+
+    @staticmethod
+    def get_all(include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Get all test definitions in tests.json format"""
+        with get_public_db() as session:
+            query = session.query(TestDefinition)
+            if not include_inactive:
+                query = query.filter(TestDefinition.is_active == True)
+            tests = query.order_by(TestDefinition.level, TestDefinition.test_id).all()
+            return [TestDefinitionService._to_dict(t) for t in tests]
+
+    @staticmethod
+    def get_all_full(include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Get all test definitions with full metadata"""
+        with get_public_db() as session:
+            query = session.query(TestDefinition)
+            if not include_inactive:
+                query = query.filter(TestDefinition.is_active == True)
+            tests = query.order_by(TestDefinition.level, TestDefinition.test_id).all()
+            return [TestDefinitionService._to_full_dict(t) for t in tests]
+
+    @staticmethod
+    def get_by_test_id(test_id: str) -> Optional[Dict[str, Any]]:
+        """Get single test by test_id"""
+        with get_public_db() as session:
+            test = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if test:
+                return TestDefinitionService._to_full_dict(test)
+            return None
+
+    @staticmethod
+    def get_by_level(level: int, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Get tests by level"""
+        with get_public_db() as session:
+            query = session.query(TestDefinition).filter_by(level=level)
+            if not include_inactive:
+                query = query.filter(TestDefinition.is_active == True)
+            tests = query.order_by(TestDefinition.test_id).all()
+            return [TestDefinitionService._to_dict(t) for t in tests]
+
+    @staticmethod
+    def get_by_category(category: str, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Get tests by category"""
+        with get_public_db() as session:
+            query = session.query(TestDefinition).filter_by(category=category)
+            if not include_inactive:
+                query = query.filter(TestDefinition.is_active == True)
+            tests = query.order_by(TestDefinition.level, TestDefinition.test_id).all()
+            return [TestDefinitionService._to_dict(t) for t in tests]
+
+    @staticmethod
+    def create(
+        test_id: str,
+        level: int,
+        category: str,
+        task: str,
+        required_elements: List[str],
+        points: int = 10,
+        test_type: str = 'generate',
+        forbidden_elements: Optional[List[str]] = None,
+        broken_code: Optional[str] = None,
+        partial_code: Optional[str] = None,
+        python_code: Optional[str] = None,
+        test_harness: Optional[str] = None,
+        error_hint: Optional[str] = None,
+        completion_hint: Optional[str] = None,
+        created_by: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Create a new test definition"""
+        with get_public_db() as session:
+            existing = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if existing:
+                raise ValueError(f"Test with id '{test_id}' already exists")
+
+            test = TestDefinition(
+                test_id=test_id,
+                level=level,
+                category=category,
+                task=task,
+                required_elements=required_elements,
+                points=points,
+                test_type=test_type,
+                forbidden_elements=forbidden_elements,
+                broken_code=broken_code,
+                partial_code=partial_code,
+                python_code=python_code,
+                test_harness=test_harness,
+                error_hint=error_hint,
+                completion_hint=completion_hint,
+                is_active=True,
+                created_at=time.time(),
+                created_by=created_by
+            )
+            session.add(test)
+            session.flush()
+            return TestDefinitionService._to_full_dict(test)
+
+    @staticmethod
+    def update(test_id: str, **kwargs) -> Optional[Dict[str, Any]]:
+        """Update a test definition"""
+        allowed_fields = {
+            'level', 'category', 'task', 'required_elements', 'points',
+            'test_type', 'forbidden_elements', 'broken_code', 'partial_code',
+            'python_code', 'test_harness', 'error_hint', 'completion_hint', 'is_active'
+        }
+
+        with get_public_db() as session:
+            test = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if not test:
+                return None
+
+            for key, value in kwargs.items():
+                if key in allowed_fields:
+                    setattr(test, key, value)
+
+            test.updated_at = time.time()
+            session.flush()
+            return TestDefinitionService._to_full_dict(test)
+
+    @staticmethod
+    def delete(test_id: str) -> bool:
+        """Soft delete a test definition (set is_active=False)"""
+        with get_public_db() as session:
+            test = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if test:
+                test.is_active = False
+                test.updated_at = time.time()
+                return True
+            return False
+
+    @staticmethod
+    def restore(test_id: str) -> bool:
+        """Restore a soft-deleted test definition"""
+        with get_public_db() as session:
+            test = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if test:
+                test.is_active = True
+                test.updated_at = time.time()
+                return True
+            return False
+
+    @staticmethod
+    def hard_delete(test_id: str) -> bool:
+        """Permanently delete a test definition"""
+        with get_public_db() as session:
+            test = session.query(TestDefinition).filter_by(test_id=test_id).first()
+            if test:
+                session.delete(test)
+                return True
+            return False
+
+    @staticmethod
+    def bulk_create(tests: List[Dict[str, Any]], created_by: Optional[int] = None) -> Dict[str, Any]:
+        """Bulk create or update tests from list of dicts (tests.json format)"""
+        created_count = 0
+        updated_count = 0
+        errors = []
+
+        with get_public_db() as session:
+            existing_tests = {t.test_id: t for t in session.query(TestDefinition).all()}
+
+            for test_data in tests:
+                test_id = test_data.get('id')
+                if not test_id:
+                    errors.append('Test missing id field')
+                    continue
+
+                try:
+                    if test_id in existing_tests:
+                        test = existing_tests[test_id]
+                        test.level = test_data.get('level', 1)
+                        test.category = test_data.get('category', 'Unknown')
+                        test.task = test_data.get('task', '')
+                        test.required_elements = test_data.get('required_elements', [])
+                        test.points = test_data.get('points', 10)
+                        test.test_type = test_data.get('type', 'generate')
+                        test.forbidden_elements = test_data.get('forbidden_elements')
+                        test.broken_code = test_data.get('broken_code')
+                        test.partial_code = test_data.get('partial_code')
+                        test.python_code = test_data.get('python_code')
+                        test.test_harness = test_data.get('test_harness')
+                        test.error_hint = test_data.get('error_hint')
+                        test.completion_hint = test_data.get('completion_hint')
+                        test.is_active = True
+                        updated_count += 1
+                    else:
+                        test = TestDefinition(
+                            test_id=test_id,
+                            level=test_data.get('level', 1),
+                            category=test_data.get('category', 'Unknown'),
+                            task=test_data.get('task', ''),
+                            required_elements=test_data.get('required_elements', []),
+                            points=test_data.get('points', 10),
+                            test_type=test_data.get('type', 'generate'),
+                            forbidden_elements=test_data.get('forbidden_elements'),
+                            broken_code=test_data.get('broken_code'),
+                            partial_code=test_data.get('partial_code'),
+                            python_code=test_data.get('python_code'),
+                            test_harness=test_data.get('test_harness'),
+                            error_hint=test_data.get('error_hint'),
+                            completion_hint=test_data.get('completion_hint'),
+                            is_active=True,
+                            created_at=time.time(),
+                            created_by=created_by
+                        )
+                        session.add(test)
+                        created_count += 1
+                except Exception as e:
+                    errors.append(f"Error processing {test_id}: {str(e)}")
+
+        return {
+            'created': created_count,
+            'updated': updated_count,
+            'errors': errors
+        }
+
+    @staticmethod
+    def get_stats() -> Dict[str, Any]:
+        """Get statistics about test definitions"""
+        with get_public_db() as session:
+            total = session.query(TestDefinition).filter(TestDefinition.is_active == True).count()
+            inactive = session.query(TestDefinition).filter(TestDefinition.is_active == False).count()
+
+            level_stats = session.query(
+                TestDefinition.level,
+                func.count(TestDefinition.id).label('count'),
+                func.sum(TestDefinition.points).label('points')
+            ).filter(TestDefinition.is_active == True).group_by(
+                TestDefinition.level
+            ).order_by(TestDefinition.level).all()
+
+            category_stats = session.query(
+                TestDefinition.category,
+                func.count(TestDefinition.id).label('count'),
+                func.sum(TestDefinition.points).label('points')
+            ).filter(TestDefinition.is_active == True).group_by(
+                TestDefinition.category
+            ).order_by(TestDefinition.category).all()
+
+            type_stats = session.query(
+                TestDefinition.test_type,
+                func.count(TestDefinition.id).label('count')
+            ).filter(TestDefinition.is_active == True).group_by(
+                TestDefinition.test_type
+            ).all()
+
+            total_points = session.query(
+                func.sum(TestDefinition.points)
+            ).filter(TestDefinition.is_active == True).scalar() or 0
+
+            return {
+                'total_tests': total,
+                'inactive_tests': inactive,
+                'total_points': total_points,
+                'by_level': {
+                    level: {'count': count, 'points': points or 0}
+                    for level, count, points in level_stats
+                },
+                'by_category': {
+                    category: {'count': count, 'points': points or 0}
+                    for category, count, points in category_stats
+                },
+                'by_type': {
+                    test_type: count
+                    for test_type, count in type_stats
+                }
+            }
+
+    @staticmethod
+    def search(query: str, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Search tests by task or test_id"""
+        with get_public_db() as session:
+            search_pattern = f'%{query}%'
+            db_query = session.query(TestDefinition).filter(
+                (TestDefinition.test_id.ilike(search_pattern)) |
+                (TestDefinition.task.ilike(search_pattern)) |
+                (TestDefinition.category.ilike(search_pattern))
+            )
+            if not include_inactive:
+                db_query = db_query.filter(TestDefinition.is_active == True)
+            tests = db_query.order_by(TestDefinition.level, TestDefinition.test_id).all()
+            return [TestDefinitionService._to_full_dict(t) for t in tests]
+
+    @staticmethod
+    def export_all() -> List[Dict[str, Any]]:
+        """Export all active tests in tests.json format"""
+        return TestDefinitionService.get_all(include_inactive=False)
+
+    @staticmethod
+    def count() -> int:
+        """Get count of active tests"""
+        with get_public_db() as session:
+            return session.query(TestDefinition).filter(TestDefinition.is_active == True).count()
 

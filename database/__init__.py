@@ -11,6 +11,7 @@ from .models import (
     PublicTestConfig,
     PublicBenchmarkModel,
     LeaderboardEntry,
+    TestDefinition,
     get_db,
     get_public_db,
     init_db,
@@ -34,7 +35,8 @@ from .services import (
     AccessTokenService,
     PublicTestConfigService,
     PublicBenchmarkModelService,
-    LeaderboardService
+    LeaderboardService,
+    TestDefinitionService
 )
 
 __all__ = [
@@ -51,6 +53,7 @@ __all__ = [
     'PublicTestConfig',
     'PublicBenchmarkModel',
     'LeaderboardEntry',
+    'TestDefinition',
     'get_db',
     'get_public_db',
     'init_db',
@@ -68,5 +71,6 @@ __all__ = [
     'AccessTokenService',
     'PublicTestConfigService',
     'PublicBenchmarkModelService',
-    'LeaderboardService'
+    'LeaderboardService',
+    'TestDefinitionService'
 ]

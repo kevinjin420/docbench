@@ -61,7 +61,8 @@ class SyntaxChecker:
             'with exit': r'\bwith\s+exit\s*\{',
             'visit': r'\bvisit\s+[^\s;]+',
             'spawn': r'\bspawn\s+\w+\s*\(',
-            'by llm': r'\bby\s+llm\s*\(',
+            'by llm': r'\bby\s+llm\b',
+            'by llm(': r'\bby\s+llm\s*\(',
             'import': r'\bimport\s+',
             'from': r'\bfrom\s+\w+\s*\{',
             'return': r'\breturn\s+',
@@ -75,6 +76,13 @@ class SyntaxChecker:
             '-[': r'-\[\w+\]->',
             '-->': r'-->',
             '<--': r'<--',
+            # Onelang patterns
+            'sv {': r'\bsv\s*\{',
+            'cl {': r'\bcl\s*\{',
+            'props': r'\bprops\b',
+            ':protect': r':protect\b',
+            'lambda': r'lambda\s+\w+',
+            'import from': r'\bimport\s+from\b',
         }
 
         if element in strict_patterns:

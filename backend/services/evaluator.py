@@ -16,9 +16,30 @@ MAX_WORKERS = os.cpu_count() or 4
 class EvaluatorService:
     """Service for evaluating Jac code against test requirements"""
 
-    def __init__(self, tests_file: str = "tests.json"):
-        """Initialize evaluator with test cases"""
-        self.tests = self._load_test_cases(tests_file)
+    def __init__(self, tests_file: str = None, use_db: bool = True):
+        """Initialize evaluator with test cases.
+
+        Args:
+            tests_file: Path to tests.json file (used if use_db=False)
+            use_db: If True, load tests from database. If False, load from file.
+        """
+        if use_db:
+            self.tests = self._load_from_db()
+        elif tests_file:
+            self.tests = self._load_test_cases(tests_file)
+        else:
+            self.tests = self._load_from_db()
+
+    def _load_from_db(self) -> List[Dict]:
+        """Load test cases from database"""
+        try:
+            from database import TestDefinitionService
+            tests = TestDefinitionService.get_all(include_inactive=False)
+            if tests:
+                return tests
+        except Exception as e:
+            print(f"Warning: Could not load tests from database: {e}")
+        return self._load_test_cases("tests.json")
 
     def _load_test_cases(self, tests_file: str) -> List[Dict]:
         """Load test cases from JSON file"""
@@ -83,6 +104,43 @@ class EvaluatorService:
                 pass
 
         return is_valid, errors, warnings
+
+    def jac_run(self, code: str) -> Tuple[bool, str]:
+        """
+        Run jac run on code and return (success, output).
+        Used for runtime validation of generated code.
+        """
+        with tempfile.NamedTemporaryFile(
+            mode='w', suffix='.jac', delete=False
+        ) as f:
+            f.write(code)
+            temp_path = f.name
+
+        try:
+            jac_cmd = self._get_jac_cmd()
+            result = subprocess.run(
+                [jac_cmd, 'run', temp_path],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            output = result.stdout + result.stderr
+            success = result.returncode == 0
+
+            return success, output
+
+        except subprocess.TimeoutExpired:
+            return False, "Runtime execution timed out"
+        except FileNotFoundError:
+            return True, "jac command not found - skipping runtime validation"
+        except Exception as e:
+            return False, f"Runtime execution failed: {str(e)}"
+        finally:
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
 
     def run_functional_test(self, code: str, harness: str) -> Tuple[bool, str]:
         """
@@ -169,14 +227,14 @@ class EvaluatorService:
         # Legacy syntax checks
         syntax_checks = SyntaxChecker.check_syntax(code)
         
-        # jac check validation (25% penalty for invalid syntax)
+        # jac check validation (50% penalty for invalid syntax)
         jac_valid = True
         jac_errors = []
         jac_warnings = []
         if use_jac_check:
             jac_valid, jac_errors, jac_warnings = self.jac_check(code)
             if not jac_valid:
-                jac_penalty = max_score * 0.25
+                jac_penalty = max_score * 0.50
                 penalties["jac_check"] = jac_penalty
                 score = max(0, score - jac_penalty)
                 failed_checks.append(f"[FAIL] jac check failed: {len(jac_errors)} errors")
@@ -350,12 +408,15 @@ class EvaluatorService:
         test_ids_set = set(test_ids) if test_ids else None
 
         tasks = []
+        missing_tests = []
         for test_case in self.tests:
             test_id = test_case["id"]
             if test_ids_set and test_id not in test_ids_set:
                 continue
             if test_id in responses:
                 tasks.append((test_case, responses[test_id]))
+            else:
+                missing_tests.append(test_case)
 
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = {
@@ -387,6 +448,44 @@ class EvaluatorService:
                 level_scores[level]["max"] += result["max_score"]
                 level_scores[level]["count"] += 1
 
+        for test_case in missing_tests:
+            missing_result = {
+                "test_id": test_case["id"],
+                "category": test_case["category"],
+                "level": test_case["level"],
+                "score": 0,
+                "max_score": test_case["points"],
+                "score_breakdown": {"required": test_case["points"], "forbidden": 0, "syntax": 0, "jac_check": 0, "functional": 0},
+                "percentage": 0,
+                "required_found": "0/0",
+                "forbidden_found": 0,
+                "passed_checks": [],
+                "failed_checks": ["[FAIL] No response generated for this test"],
+                "syntax_feedback": [],
+                "syntax_errors": 0,
+                "jac_valid": False,
+                "jac_errors": ["No code to check"],
+                "jac_warnings": [],
+                "code": ""
+            }
+            results.append(missing_result)
+
+            category = test_case["category"]
+            if category not in category_scores:
+                category_scores[category] = {
+                    "score": 0, "max": 0, "count": 0,
+                    "penalties": {"required": 0, "forbidden": 0, "syntax": 0, "jac_check": 0, "functional": 0}
+                }
+            category_scores[category]["max"] += test_case["points"]
+            category_scores[category]["count"] += 1
+            category_scores[category]["penalties"]["required"] += test_case["points"]
+
+            level = test_case["level"]
+            if level not in level_scores:
+                level_scores[level] = {"score": 0, "max": 0, "count": 0}
+            level_scores[level]["max"] += test_case["points"]
+            level_scores[level]["count"] += 1
+
         total_score = sum(r["score"] for r in results)
         total_max = sum(r["max_score"] for r in results)
         overall_percentage = (total_score / total_max * 100) if total_max > 0 else 0
@@ -415,7 +514,8 @@ class EvaluatorService:
             "total_score": round(total_score, 2),
             "max_score": total_max,
             "percentage": round(overall_percentage, 2),
-            "tests_completed": len(results)
+            "tests_completed": len(results),
+            "tests_missing": len(missing_tests)
         }
 
     def get_test_stats(self) -> Dict[str, Any]:

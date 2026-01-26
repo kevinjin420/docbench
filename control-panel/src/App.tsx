@@ -2,10 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import BenchmarkView from '@/views/BenchmarkView'
 import FileManager from '@/views/FileManager'
-import StatsPanel from '@/views/StatsPanel'
 import VariantsView from '@/views/VariantsView'
 import UsersView from '@/views/UsersView'
-import PublicTestsConfigView from '@/views/PublicTestsConfigView'
+import TestManagementView from '@/views/TestManagementView'
 import LeaderboardView from '@/views/LeaderboardView'
 import PublicBenchmarkView from '@/views/PublicBenchmarkView'
 import HomeView from '@/views/HomeView'
@@ -163,7 +162,7 @@ function AdminDropdown({
     setIsOpen(false)
   }, [location.pathname])
 
-  const isAdminRoute = ['/benchmark', '/files', '/variants', '/statistics', '/users', '/public-tests'].includes(location.pathname)
+  const isAdminRoute = ['/benchmark', '/files', '/variants', '/tests', '/users'].includes(location.pathname)
 
   if (!isAuthenticated) {
     return null
@@ -248,36 +247,19 @@ function AdminDropdown({
               )}
             </Link>
             <Link
-              to="/statistics"
+              to="/tests"
               className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
-                location.pathname === '/statistics'
+                location.pathname === '/tests'
                   ? 'bg-zinc-800 text-terminal-accent'
                   : 'text-gray-300 hover:bg-zinc-800'
               }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
+                <path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l3.58-3.58c.94-.94.94-2.48 0-3.42L9 5Z"></path>
+                <path d="M6 9.01V9"></path>
+                <path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path>
               </svg>
-              Statistics
-            </Link>
-            <Link
-              to="/public-tests"
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
-                location.pathname === '/public-tests'
-                  ? 'bg-zinc-800 text-terminal-accent'
-                  : 'text-gray-300 hover:bg-zinc-800'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              Public Tests
+              Tests
             </Link>
             <Link
               to="/users"
@@ -307,7 +289,6 @@ function AppContent() {
   const [variants, setVariants] = useState<Variant[]>([])
   const [testFiles, setTestFiles] = useState<TestFile[]>([])
   const [stashes, setStashes] = useState<Stash[]>([])
-  const [stats, setStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [openRouterKey, setOpenRouterKey] = useState(() => localStorage.getItem('openRouterApiKey') || '')
   const [keyError, setKeyError] = useState('')
@@ -374,7 +355,7 @@ function AppContent() {
       if (fetchedUser) {
         setUser(fetchedUser)
         if (fetchedUser.is_admin) {
-          await Promise.all([fetchTestFiles(), fetchStashes(), fetchStats()])
+          await Promise.all([fetchTestFiles(), fetchStashes()])
         }
       }
 
@@ -393,7 +374,6 @@ function AppContent() {
     if (user?.is_admin) {
       fetchTestFiles()
       fetchStashes()
-      fetchStats()
     }
   }, [user])
 
@@ -435,20 +415,6 @@ function AppContent() {
     }
   }
 
-  const fetchStats = async () => {
-    const headers = getAdminHeaders()
-    if (!Object.keys(headers).length) return
-    try {
-      const res = await fetch(`${API_BASE}/stats`, { headers })
-      if (res.ok) {
-        const data = await res.json()
-        setStats(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error)
-    }
-  }
-
   const stashResults = async () => {
     const headers = getAdminHeaders()
     if (!Object.keys(headers).length) return
@@ -485,7 +451,8 @@ function AppContent() {
     try {
       await fetch(`${API_BASE}/clear-db`, {
         method: 'POST',
-        headers
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nuke: true })
       })
       await fetchTestFiles()
       await fetchStashes()
@@ -632,29 +599,10 @@ function AppContent() {
               }
             />
             <Route
-              path="/statistics"
+              path="/tests"
               element={
                 isAuthenticated ? (
-                  stats ? (
-                    <StatsPanel stats={stats} apiKeyConfigured={!!openRouterKey && models.length > 0} />
-                  ) : (
-                    <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
-                      <h3 className="text-gray-300 text-xl mb-2">Loading Statistics...</h3>
-                    </div>
-                  )
-                ) : (
-                  <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
-                    <h3 className="text-gray-300 text-xl mb-2">Authentication Required</h3>
-                    <p className="text-gray-500">Please sign in with GitHub to access this page.</p>
-                  </div>
-                )
-              }
-            />
-            <Route
-              path="/public-tests"
-              element={
-                isAuthenticated ? (
-                  <PublicTestsConfigView />
+                  <TestManagementView apiKeyConfigured={!!openRouterKey && models.length > 0} />
                 ) : (
                   <div className="bg-terminal-surface border border-terminal-border rounded p-12 text-center">
                     <h3 className="text-text-primary text-xl mb-2">Authentication Required</h3>

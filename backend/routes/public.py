@@ -134,9 +134,7 @@ def register_routes(app, socketio, running_benchmarks):
                 BenchmarkRunService.create(
                     run_id=run_id,
                     model=','.join(model_ids),
-                    model_id=model_ids[0],
-                    variant='public',
-                    max_tokens=max_tokens
+                    variant='public'
                 )
 
                 model_run_ids = []

@@ -12,7 +12,7 @@ export default function TestFileList({ files, selectedFile, onFileClick, onFileD
 		<div className="bg-terminal-surface border border-terminal-border rounded flex flex-col">
 			<div className="flex justify-between items-center p-4 border-b border-terminal-border">
 				<h3 className="text-terminal-accent text-base m-0">Test Results</h3>
-				<span className="text-xs text-gray-500 bg-zinc-900 px-2 py-1 rounded">
+				<span className="text-xs text-gray-500 bg-zinc-900 px-2 py-1 rounded font-mono">
 					{files.length} files
 				</span>
 			</div>
@@ -42,7 +42,7 @@ export default function TestFileList({ files, selectedFile, onFileClick, onFileD
 										isDisabled
 											? "bg-zinc-900 border-terminal-border opacity-50 cursor-not-allowed"
 											: selectedFile === file.path
-											? "bg-green-950 border-terminal-accent cursor-pointer"
+											? "bg-terminal-accent/10 border-terminal-accent cursor-pointer"
 											: "bg-zinc-900 border-terminal-border hover:bg-zinc-800 hover:border-gray-600 cursor-pointer"
 									}`}
 									onClick={() => !isDisabled && onFileClick(file.path)}
@@ -63,7 +63,7 @@ export default function TestFileList({ files, selectedFile, onFileClick, onFileD
 													</div>
 												)}
 											</div>
-											<div className="text-gray-500 text-xs">
+											<div className="text-gray-500 text-xs font-mono">
 												{(file.size / 1024).toFixed(1)} KB
 											</div>
 										</div>

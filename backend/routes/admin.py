@@ -8,7 +8,8 @@ from database import (
     LeaderboardService,
     BenchmarkResultService,
     UserService,
-    AdminEmailService
+    AdminEmailService,
+    TestDefinitionService
 )
 from backend.services import EvaluatorService
 
@@ -273,3 +274,202 @@ def register_routes(app, socketio, running_benchmarks):
         if success:
             return jsonify({'success': True, 'is_active': is_active})
         return jsonify({'error': 'Model not found'}), 404
+
+    @app.route('/api/admin/tests', methods=['GET'])
+    @require_admin
+    def get_test_definitions():
+        """Get all test definitions with filters"""
+        level = request.args.get('level', type=int)
+        category = request.args.get('category')
+        test_type = request.args.get('type')
+        search = request.args.get('search')
+        include_inactive = request.args.get('include_inactive', 'false').lower() == 'true'
+
+        if search:
+            tests = TestDefinitionService.search(search, include_inactive=include_inactive)
+        elif level:
+            tests = TestDefinitionService.get_by_level(level, include_inactive=include_inactive)
+        elif category:
+            tests = TestDefinitionService.get_by_category(category, include_inactive=include_inactive)
+        else:
+            tests = TestDefinitionService.get_all_full(include_inactive=include_inactive)
+
+        if test_type:
+            tests = [t for t in tests if t.get('type', 'generate') == test_type]
+
+        return jsonify({
+            'tests': tests,
+            'total': len(tests)
+        })
+
+    @app.route('/api/admin/tests', methods=['POST'])
+    @require_admin
+    def create_test_definition():
+        """Create a new test definition"""
+        from flask import g
+
+        data = request.json or {}
+
+        required_fields = ['id', 'level', 'category', 'task', 'required_elements']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        user_id = g.user_info.get('id') if hasattr(g, 'user_info') and g.user_info else None
+
+        try:
+            test = TestDefinitionService.create(
+                test_id=data['id'],
+                level=data['level'],
+                category=data['category'],
+                task=data['task'],
+                required_elements=data['required_elements'],
+                points=data.get('points', 10),
+                test_type=data.get('type', 'generate'),
+                forbidden_elements=data.get('forbidden_elements'),
+                broken_code=data.get('broken_code'),
+                partial_code=data.get('partial_code'),
+                python_code=data.get('python_code'),
+                test_harness=data.get('test_harness'),
+                error_hint=data.get('error_hint'),
+                completion_hint=data.get('completion_hint'),
+                created_by=user_id
+            )
+            return jsonify({'success': True, 'test': test}), 201
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
+    @app.route('/api/admin/tests/<test_id>', methods=['GET'])
+    @require_admin
+    def get_test_definition(test_id):
+        """Get a single test definition"""
+        test = TestDefinitionService.get_by_test_id(test_id)
+        if test:
+            return jsonify({'test': test})
+        return jsonify({'error': 'Test not found'}), 404
+
+    @app.route('/api/admin/tests/<test_id>', methods=['PUT'])
+    @require_admin
+    def update_test_definition(test_id):
+        """Update a test definition"""
+        data = request.json or {}
+
+        update_data = {}
+        field_mapping = {
+            'level': 'level',
+            'category': 'category',
+            'task': 'task',
+            'required_elements': 'required_elements',
+            'points': 'points',
+            'type': 'test_type',
+            'forbidden_elements': 'forbidden_elements',
+            'broken_code': 'broken_code',
+            'partial_code': 'partial_code',
+            'python_code': 'python_code',
+            'test_harness': 'test_harness',
+            'error_hint': 'error_hint',
+            'completion_hint': 'completion_hint',
+            'is_active': 'is_active'
+        }
+
+        for json_field, db_field in field_mapping.items():
+            if json_field in data:
+                update_data[db_field] = data[json_field]
+
+        if not update_data:
+            return jsonify({'error': 'No valid fields to update'}), 400
+
+        result = TestDefinitionService.update(test_id, **update_data)
+        if result:
+            return jsonify({'success': True, 'test': result})
+        return jsonify({'error': 'Test not found'}), 404
+
+    @app.route('/api/admin/tests/<test_id>', methods=['DELETE'])
+    @require_admin
+    def delete_test_definition(test_id):
+        """Soft delete a test definition"""
+        success = TestDefinitionService.delete(test_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Test deactivated'})
+        return jsonify({'error': 'Test not found'}), 404
+
+    @app.route('/api/admin/tests/<test_id>/restore', methods=['POST'])
+    @require_admin
+    def restore_test_definition(test_id):
+        """Restore a soft-deleted test definition"""
+        success = TestDefinitionService.restore(test_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Test restored'})
+        return jsonify({'error': 'Test not found'}), 404
+
+    @app.route('/api/admin/tests/<test_id>/hard-delete', methods=['DELETE'])
+    @require_admin
+    def hard_delete_test_definition(test_id):
+        """Permanently delete a test definition"""
+        success = TestDefinitionService.hard_delete(test_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Test permanently deleted'})
+        return jsonify({'error': 'Test not found'}), 404
+
+    @app.route('/api/admin/tests/bulk', methods=['POST'])
+    @require_admin
+    def bulk_create_tests():
+        """Bulk create test definitions"""
+        from flask import g
+
+        data = request.json or {}
+        tests = data.get('tests', [])
+
+        if not tests:
+            return jsonify({'error': 'No tests provided'}), 400
+
+        user_id = g.user_info.get('id') if hasattr(g, 'user_info') and g.user_info else None
+        result = TestDefinitionService.bulk_create(tests, created_by=user_id)
+
+        return jsonify({
+            'success': True,
+            'created': result['created'],
+            'updated': result['updated'],
+            'errors': result['errors']
+        })
+
+    @app.route('/api/admin/tests/export', methods=['GET'])
+    @require_admin
+    def export_tests():
+        """Export all tests in tests.json format"""
+        tests = TestDefinitionService.export_all()
+        return jsonify(tests)
+
+    @app.route('/api/admin/tests/import', methods=['POST'])
+    @require_admin
+    def import_tests():
+        """Import tests from JSON"""
+        from flask import g
+
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        if isinstance(data, list):
+            tests = data
+        elif isinstance(data, dict) and 'tests' in data:
+            tests = data['tests']
+        else:
+            return jsonify({'error': 'Invalid format. Expected array or {tests: [...]}'}), 400
+
+        user_id = g.user_info.get('id') if hasattr(g, 'user_info') and g.user_info else None
+        result = TestDefinitionService.bulk_create(tests, created_by=user_id)
+
+        return jsonify({
+            'success': True,
+            'created': result['created'],
+            'updated': result['updated'],
+            'errors': result['errors']
+        })
+
+    @app.route('/api/admin/tests/stats', methods=['GET'])
+    @require_admin
+    def get_test_stats():
+        """Get test definition statistics"""
+        stats = TestDefinitionService.get_stats()
+        return jsonify(stats)
