@@ -40,7 +40,7 @@ export default function BenchmarkControls({
 			<div className="flex gap-4 items-center flex-wrap">
 				<div className="flex items-center gap-2">
 					<label className="text-text-secondary text-sm font-medium uppercase tracking-wide">Model:</label>
-					<div className="min-w-[280px]">
+					<div className="min-w-[260px]">
 						<ModelSelector
 							models={models}
 							selectedModel={selectedModel}
@@ -52,7 +52,7 @@ export default function BenchmarkControls({
 
 				<div className="flex items-center gap-2">
 					<label className="text-text-secondary text-sm font-medium uppercase tracking-wide">Documentation:</label>
-					<div className="min-w-[220px]">
+					<div className="min-w-[150px]">
 						<DocumentationSelector
 							variants={variants}
 							selectedVariant={selectedVariant}
