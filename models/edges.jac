@@ -1,0 +1,13 @@
+edge HasUser {}
+edge HasToken {}
+edge HasAdminEmail {}
+edge HasCollection {}
+edge InCollection {}
+edge HasResult {}
+edge HasRun {}
+edge HasVariant {}
+edge HasTest {}
+edge HasPublicConfig {}
+edge HasBenchmarkModel {}
+edge HasEntry {}
+edge SubmittedBy {}

@@ -1,26 +1,10 @@
 #!/bin/bash
+set -e
 
-trap 'kill 0' EXIT
-
-if command -v bun &> /dev/null; then
-  PKG_MGR="bun"
-  INSTALL_CMD="bun install"
-  DEV_CMD="bun dev"
-else
-  PKG_MGR="npm"
-  INSTALL_CMD="npm install"
-  DEV_CMD="npm run dev"
+if command -v conda &> /dev/null; then
+    eval "$(conda shell.bash hook)"
+    conda activate jac 2>/dev/null || true
 fi
 
-if [ ! -d "control-panel/node_modules" ]; then
-  echo "Installing frontend dependencies..."
-  (cd control-panel && $INSTALL_CMD)
-fi
-
-python3 api.py "$@" &
-(cd control-panel && $DEV_CMD) &
-
-echo "Backend: http://localhost:5050"
-echo "Frontend: http://localhost:5555 ($PKG_MGR)"
-
-wait
+echo "Starting Jaseci DocBench..."
+jac start main.jac

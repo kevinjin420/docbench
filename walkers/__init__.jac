@@ -1,0 +1,10 @@
+include:jac health;
+include:jac benchmarks;
+include:jac public;
+include:jac admin;
+include:jac oauth;
+include:jac files;
+include:jac models_variants;
+include:jac graphs;
+include:jac results;
+include:jac websocket;
