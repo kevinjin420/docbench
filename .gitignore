@@ -48,6 +48,7 @@ htmlcov/
 *.swo
 *~
 .DS_Store
+.claude
 
 # Node.js (for control-panel if applicable)
 node_modules/

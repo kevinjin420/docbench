@@ -44,7 +44,7 @@ class LLMService:
             api_key=self.api_key,
             default_headers={
                 "HTTP-Referer": "https://github.com/jaseci-llmdocs",
-                "X-Title": "Jac LLM Benchmark"
+                "X-Title": "Jaseci DocBench"
             }
         )
 
