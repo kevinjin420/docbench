@@ -4,11 +4,7 @@ import from models.nodes { TestDefNode, PublicTestConfigNode, BenchmarkModelNode
 import from models.edges { HasTest, HasPublicConfig, HasBenchmarkModel, HasEntry, HasUser, HasAdminEmail, HasResult, HasRun, HasCollection }
 import from services.evaluator { get_test_stats }
 
-walker AdminGetPublicTests {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminGetPublicTests {
     can gather with `root entry {
         public_configs: list = [];
         for pc in [->:HasPublicConfig:->(`?PublicTestConfigNode)] {
@@ -44,13 +40,9 @@ walker AdminGetPublicTests {
     }
 }
 
-walker AdminSetPublicTests {
+walker : pub AdminSetPublicTests {
     has test_ids: list = [];
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can set_tests with `root entry {
         for pc in [->:HasPublicConfig:->(`?PublicTestConfigNode)] {
             here del--> pc;
@@ -65,13 +57,9 @@ walker AdminSetPublicTests {
     }
 }
 
-walker AdminAddPublicTest {
+walker : pub AdminAddPublicTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can add with `root entry {
         for pc in [->:HasPublicConfig:->(`?PublicTestConfigNode)] {
             if pc.test_id == self.test_id {
@@ -86,13 +74,9 @@ walker AdminAddPublicTest {
     }
 }
 
-walker AdminRemovePublicTest {
+walker : pub AdminRemovePublicTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can remove with `root entry {
         for pc in [->:HasPublicConfig:->(`?PublicTestConfigNode)] {
             if pc.test_id == self.test_id {
@@ -106,13 +90,9 @@ walker AdminRemovePublicTest {
     }
 }
 
-walker AdminHideEntry {
+walker : pub AdminHideEntry {
     has entry_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can hide with `root entry {
         for enode in [->:HasEntry:->(`?LeaderboardNode)] {
             if str(enode) == self.entry_id {
@@ -125,13 +105,9 @@ walker AdminHideEntry {
     }
 }
 
-walker AdminUnhideEntry {
+walker : pub AdminUnhideEntry {
     has entry_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can unhide with `root entry {
         for enode in [->:HasEntry:->(`?LeaderboardNode)] {
             if str(enode) == self.entry_id {
@@ -144,11 +120,7 @@ walker AdminUnhideEntry {
     }
 }
 
-walker AdminGetStats {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminGetStats {
     can gather with `root entry {
         result_count: int = len([->:HasResult:->(`?ResultNode)]);
         run_count: int = len([->:HasRun:->(`?RunNode)]);
@@ -168,11 +140,7 @@ walker AdminGetStats {
     }
 }
 
-walker AdminListUsers {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminListUsers {
     can gather with `root entry {
         users: list = [];
         for unode in [->:HasUser:->(`?UserNode)] {
@@ -190,14 +158,10 @@ walker AdminListUsers {
     }
 }
 
-walker AdminSetAdmin {
+walker : pub AdminSetAdmin {
     has user_id: str;
     has is_admin: bool;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can set_admin with `root entry {
         for unode in [->:HasUser:->(`?UserNode)] {
             if str(unode) == self.user_id {
@@ -210,11 +174,7 @@ walker AdminSetAdmin {
     }
 }
 
-walker AdminListEmails {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminListEmails {
     can gather with `root entry {
         emails: list = [];
         for ae in [->:HasAdminEmail:->(`?AdminEmailNode)] {
@@ -228,13 +188,9 @@ walker AdminListEmails {
     }
 }
 
-walker AdminAddEmail {
+walker : pub AdminAddEmail {
     has email: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can add with `root entry {
         for ae in [->:HasAdminEmail:->(`?AdminEmailNode)] {
             if ae.email.lower() == self.email.lower() {
@@ -247,13 +203,9 @@ walker AdminAddEmail {
     }
 }
 
-walker AdminRemoveEmail {
+walker : pub AdminRemoveEmail {
     has email_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can remove with `root entry {
         for ae in [->:HasAdminEmail:->(`?AdminEmailNode)] {
             if str(ae) == self.email_id {
@@ -267,11 +219,7 @@ walker AdminRemoveEmail {
     }
 }
 
-walker AdminListModels {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminListModels {
     can gather with `root entry {
         models: list = [];
         for bm in [->:HasBenchmarkModel:->(`?BenchmarkModelNode)] {
@@ -289,15 +237,11 @@ walker AdminListModels {
     }
 }
 
-walker AdminAddModel {
+walker : pub AdminAddModel {
     has model_id: str;
     has display_name: str = "";
     has priority: int = 0;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can add with `root entry {
         for bm in [->:HasBenchmarkModel:->(`?BenchmarkModelNode)] {
             if bm.model_id == self.model_id {
@@ -316,13 +260,9 @@ walker AdminAddModel {
     }
 }
 
-walker AdminRemoveModel {
+walker : pub AdminRemoveModel {
     has model_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can remove with `root entry {
         for bm in [->:HasBenchmarkModel:->(`?BenchmarkModelNode)] {
             if bm.model_id == self.model_id {
@@ -336,14 +276,10 @@ walker AdminRemoveModel {
     }
 }
 
-walker AdminToggleModel {
+walker : pub AdminToggleModel {
     has model_id: str;
     has is_active: bool;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can toggle with `root entry {
         for bm in [->:HasBenchmarkModel:->(`?BenchmarkModelNode)] {
             if bm.model_id == self.model_id {
@@ -356,17 +292,13 @@ walker AdminToggleModel {
     }
 }
 
-walker AdminGetTests {
+walker : pub AdminGetTests {
     has level: int | None = None;
     has category: str = "";
     has test_type: str = "";
     has search: str = "";
     has include_inactive: bool = False;
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
     can gather with `root entry {
         tests: list = [];
         for tnode in [->:HasTest:->(`?TestDefNode)] {
@@ -411,7 +343,7 @@ walker AdminGetTests {
     }
 }
 
-walker AdminCreateTest {
+walker : pub AdminCreateTest {
     has test_id: str;
     has level: int;
     has category: str;
@@ -427,10 +359,6 @@ walker AdminCreateTest {
     has error_hint: str = "";
     has completion_hint: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can create with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -453,13 +381,9 @@ walker AdminCreateTest {
     }
 }
 
-walker AdminGetTest {
+walker : pub AdminGetTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
     can fetch with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -489,14 +413,10 @@ walker AdminGetTest {
     }
 }
 
-walker AdminUpdateTest {
+walker : pub AdminUpdateTest {
     has test_id: str;
     has updates: dict = {};
 
-    obj __specs__ {
-        static has methods: list = ["put", "post"];
-        static has auth: bool = True;
-    }
     can update with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -522,13 +442,9 @@ walker AdminUpdateTest {
     }
 }
 
-walker AdminDeleteTest {
+walker : pub AdminDeleteTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can soft_delete with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -542,13 +458,9 @@ walker AdminDeleteTest {
     }
 }
 
-walker AdminRestoreTest {
+walker : pub AdminRestoreTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can restore with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -562,13 +474,9 @@ walker AdminRestoreTest {
     }
 }
 
-walker AdminHardDeleteTest {
+walker : pub AdminHardDeleteTest {
     has test_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can hard_delete with `root entry {
         for tnode in [->:HasTest:->(`?TestDefNode)] {
             if tnode.test_id == self.test_id {
@@ -582,13 +490,9 @@ walker AdminHardDeleteTest {
     }
 }
 
-walker AdminBulkCreate {
+walker : pub AdminBulkCreate {
     has tests: list = [];
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can bulk_create with `root entry {
         existing_ids: set = set();
         for tnode in [->:HasTest:->(`?TestDefNode)] {
@@ -627,11 +531,7 @@ walker AdminBulkCreate {
     }
 }
 
-walker AdminExportTests {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminExportTests {
     can export with `root entry {
         tests: list = [];
         for tnode in [->:HasTest:->(`?TestDefNode)] {
@@ -658,13 +558,9 @@ walker AdminExportTests {
     }
 }
 
-walker AdminImportTests {
+walker : pub AdminImportTests {
     has tests: list = [];
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can import_tests with `root entry {
         existing_ids: set = set();
         for tnode in [->:HasTest:->(`?TestDefNode)] {
@@ -722,11 +618,7 @@ walker AdminImportTests {
     }
 }
 
-walker AdminTestStats {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub AdminTestStats {
     can gather with `root entry {
         tests: list = [];
         for tnode in [->:HasTest:->(`?TestDefNode)] {

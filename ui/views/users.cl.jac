@@ -15,11 +15,11 @@ def:pub UsersView() -> any {
         is_loading = True;
         user_result: any = root spawn AdminListUsers();
         if user_result.reports {
-            users = user_result.reports[0].get("users", []);
+            users = (user_result.reports[0]["users"] or []);
         }
         email_result: any = root spawn AdminListEmails();
         if email_result.reports {
-            admin_emails = email_result.reports[0].get("emails", []);
+            admin_emails = (email_result.reports[0]["emails"] or []);
         }
         is_loading = False;
     }
@@ -67,24 +67,24 @@ def:pub UsersView() -> any {
                             </tr>
                         </thead>
                         <tbody>
-                            {[<tr key={u.get("id", String(i))} className="border-b border-terminal-border">
+                            {[<tr key={(u["id"] or String(users.indexOf(u)))} className="border-b border-terminal-border">
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-3">
-                                        {(<img src={u["avatar_url"]} className="w-8 h-8 rounded-full" />) if u.get("avatar_url", "") else (<div className="w-8 h-8 rounded-full bg-terminal-accent-muted"></div>)}
-                                        <span className="text-text-primary text-sm">{u.get("username", "")}</span>
+                                        {(<img src={u["avatar_url"]} className="w-8 h-8 rounded-full" />) if (u["avatar_url"] or "") else (<div className="w-8 h-8 rounded-full bg-terminal-accent-muted"></div>)}
+                                        <span className="text-text-primary text-sm">{(u["username"] or "")}</span>
                                     </div>
                                 </td>
-                                <td className="px-4 py-3 text-text-secondary text-sm">{u.get("email", "")}</td>
+                                <td className="px-4 py-3 text-text-secondary text-sm">{(u["email"] or "")}</td>
                                 <td className="px-4 py-3 text-center">
                                     <button
-                                        onClick={lambda e: any -> None { toggle_admin(u.get("id", ""), not u.get("is_admin", False)); }}
-                                        className={("px-2 py-1 text-xs rounded bg-terminal-accent text-white") if u.get("is_admin", False) else ("px-2 py-1 text-xs rounded bg-terminal-bg text-text-muted border border-terminal-border")}
+                                        onClick={lambda e: any -> None { toggle_admin((u["id"] or ""), not (u["is_admin"] or False)); }}
+                                        className={("px-2 py-1 text-xs rounded bg-terminal-accent text-white") if (u["is_admin"] or False) else ("px-2 py-1 text-xs rounded bg-terminal-bg text-text-muted border border-terminal-border")}
                                     >
-                                        {("Admin") if u.get("is_admin", False) else ("User")}
+                                        {("Admin") if (u["is_admin"] or False) else ("User")}
                                     </button>
                                 </td>
                               </tr>
-                              for (i, u) in enumerate(users)
+                              for u in users
                             ]}
                         </tbody>
                     </table>

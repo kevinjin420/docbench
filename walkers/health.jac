@@ -1,21 +1,13 @@
 import from models.nodes { RunNode }
 import from models.edges { HasRun }
 
-walker HealthCheck {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
+walker : pub HealthCheck {
     can check with `root entry {
         report {"status": "healthy"};
     }
 }
 
-walker GetRunning {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
+walker : pub GetRunning {
     can gather with `root entry {
         visit [->:HasRun:->];
     }
@@ -32,13 +24,8 @@ walker GetRunning {
     }
 }
 
-walker ClearDatabase {
+walker : pub ClearDatabase {
     has nuke: bool = False;
-
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can clear with `root entry {
         import from models.nodes { ResultNode, CollectionNode }
         import from models.edges { HasResult, HasCollection, HasRun }

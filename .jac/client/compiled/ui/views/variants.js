@@ -15,7 +15,7 @@ function VariantsView(props) {
     setIs_loading(true);
     let result = await __jacSpawn("ListVariants", "", {});
     if (result.reports) {
-      setVariants(result.reports[0].get("variants", []));
+      setVariants((result.reports[0]["variants"] || []));
     }
     setIs_loading(false);
   }
@@ -50,7 +50,7 @@ function VariantsView(props) {
     setNew_url(e.target.value);
   }, "placeholder": "https://example.com/jac-docs.md", "className": "w-full px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [])]), (error_msg ? __jacJsx("p", {"className": "text-red-400 text-xs"}, [error_msg]) : __jacJsx("span", {}, [])), __jacJsx("button", {"onClick": e => {
     add_variant();
-  }, "className": "btn btn-primary"}, ["Add Variant"])])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden"}, [__jacJsx("div", {"className": "px-4 py-3 border-b border-terminal-border"}, [__jacJsx("h3", {"className": "text-text-primary font-medium"}, ["Variants (", String(variants.length), ")"])]), ((variants.length > 0) ? __jacJsx("div", {}, [variants.map(v => __jacJsx("div", {"key": v["variant_name"], "className": "px-4 py-3 border-b border-terminal-border flex items-center justify-between"}, [__jacJsx("div", {}, [__jacJsx("div", {"className": "text-text-primary font-medium"}, [v["variant_name"]]), __jacJsx("div", {"className": "text-text-muted text-xs truncate max-w-md"}, [v.get("url", "")])]), __jacJsx("button", {"onClick": e => {
+  }, "className": "btn btn-primary"}, ["Add Variant"])])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden"}, [__jacJsx("div", {"className": "px-4 py-3 border-b border-terminal-border"}, [__jacJsx("h3", {"className": "text-text-primary font-medium"}, ["Variants (", String(variants.length), ")"])]), ((variants.length > 0) ? __jacJsx("div", {}, [variants.map(v => __jacJsx("div", {"key": v["variant_name"], "className": "px-4 py-3 border-b border-terminal-border flex items-center justify-between"}, [__jacJsx("div", {}, [__jacJsx("div", {"className": "text-text-primary font-medium"}, [v["variant_name"]]), __jacJsx("div", {"className": "text-text-muted text-xs truncate max-w-md"}, [(v["url"] || "")])]), __jacJsx("button", {"onClick": e => {
     remove_variant(v["variant_name"]);
   }, "className": "btn btn-danger btn-sm"}, ["Delete"])]))]) : __jacJsx("div", {"className": "p-8 text-center"}, [__jacJsx("p", {"className": "text-text-muted"}, ["No documentation variants configured."])]))])]);
 }

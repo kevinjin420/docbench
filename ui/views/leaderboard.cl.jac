@@ -19,8 +19,8 @@ def:pub LeaderboardView() -> any {
         );
         if result.reports {
             data: dict = result.reports[0];
-            entries = data.get("entries", []);
-            total = data.get("total", 0);
+            entries = data["entries"] or [];
+            total = data["total"] or 0;
         }
         is_loading = False;
     }
@@ -59,33 +59,33 @@ def:pub LeaderboardView() -> any {
                     </tr>
                 </thead>
                 <tbody>
-                    {[<tr key={String(i)} className="border-b border-terminal-border hover:bg-terminal-elevated">
+                    {[<tr key={String(entries.indexOf(entry))} className="border-b border-terminal-border hover:bg-terminal-elevated">
                         <td className="px-4 py-3 text-text-secondary font-mono">
-                            {String(current_page * page_size + i + 1)}
+                            {String(current_page * page_size + entries.indexOf(entry) + 1)}
                         </td>
                         <td className="px-4 py-3">
-                            <div className="text-text-primary font-medium">{entry.get("documentation_name", "")}</div>
-                            <div className="text-xs text-text-muted truncate max-w-xs">{entry.get("documentation_url", "")}</div>
+                            <div className="text-text-primary font-medium">{(entry["documentation_name"] or "")}</div>
+                            <div className="text-xs text-text-muted truncate max-w-xs">{(entry["documentation_url"] or "")}</div>
                         </td>
-                        <td className="px-4 py-3 text-text-secondary text-sm">{entry.get("model_used", "")}</td>
+                        <td className="px-4 py-3 text-text-secondary text-sm">{(entry["model_used"] or "")}</td>
                         <td className="px-4 py-3 text-right font-mono text-text-secondary">
-                            {String(entry.get("total_score", 0)) + "/" + String(entry.get("max_score", 0))}
+                            {String(entry["total_score"] or 0) + "/" + String(entry["max_score"] or 0)}
                         </td>
                         <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
                                 <div className="w-24 bg-terminal-bg rounded-full h-2 overflow-hidden">
                                     <div
                                         className="h-full bg-terminal-accent rounded-full"
-                                        style={"width: " + String(entry.get("percentage", 0)) + "%"}
+                                        style={"width: " + String(entry["percentage"] or 0) + "%"}
                                     ></div>
                                 </div>
                                 <span className="font-mono text-terminal-accent font-medium">
-                                    {String(entry.get("percentage", 0)) + "%"}
+                                    {String(entry["percentage"] or 0) + "%"}
                                 </span>
                             </div>
                         </td>
                       </tr>
-                      for (i, entry) in enumerate(entries)
+                      for entry in entries
                     ]}
                 </tbody>
             </table>
@@ -124,11 +124,11 @@ def:pub PodiumCard(props: dict) -> any {
             {"#" + String(rank)}
         </div>
         <h3 className="text-text-primary font-semibold text-lg mb-1 truncate">
-            {entry.get("documentation_name", "")}
+            {(entry["documentation_name"] or "")}
         </h3>
-        <p className="text-text-muted text-sm mb-3">{entry.get("model_used", "")}</p>
+        <p className="text-text-muted text-sm mb-3">{(entry["model_used"] or "")}</p>
         <div className="text-3xl font-bold text-terminal-accent font-mono">
-            {String(entry.get("percentage", 0)) + "%"}
+            {String(entry["percentage"] or 0) + "%"}
         </div>
     </div>;
 }

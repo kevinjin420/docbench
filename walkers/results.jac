@@ -2,11 +2,7 @@ import from models.nodes { ResultNode, CollectionNode, TestDefNode }
 import from models.edges { HasResult, HasCollection, InCollection, HasTest }
 import from services.evaluator { get_test_stats }
 
-walker GetStats {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
+walker : pub GetStats {
     can gather with `root entry {
         tests: list = [];
         for tnode in [->:HasTest:->(`?TestDefNode)] {
@@ -24,14 +20,10 @@ walker GetStats {
     }
 }
 
-walker CompareStashes {
+walker : pub CompareStashes {
     has stash1: str;
     has stash2: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can compare with `root entry {
         def compute_stash_stats(stash_name: str) -> dict {
             for cnode in [->:HasCollection:->(`?CollectionNode)] {

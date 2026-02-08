@@ -2,13 +2,9 @@ import from models.nodes { VariantNode }
 import from models.edges { HasVariant }
 import from services.llm_service { fetch_available_models }
 
-walker ListModels {
+walker : pub ListModels {
     has api_key: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can fetch with `root entry {
         if not self.api_key {
             report {"error": "API key required"};
@@ -19,11 +15,7 @@ walker ListModels {
     }
 }
 
-walker ListVariants {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
+walker : pub ListVariants {
     can gather with `root entry {
         variants: list = [];
         for vnode in [->:HasVariant:->(`?VariantNode)] {
@@ -36,14 +28,10 @@ walker ListVariants {
     }
 }
 
-walker CreateVariant {
+walker : pub CreateVariant {
     has variant_name: str;
     has url: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can create with `root entry {
         if not self.variant_name or not self.url {
             report {"error": "variant_name and url are required"};
@@ -62,13 +50,9 @@ walker CreateVariant {
     }
 }
 
-walker DeleteVariant {
+walker : pub DeleteVariant {
     has variant_name: str;
 
-    obj __specs__ {
-        static has methods: list = ["delete", "post"];
-        static has auth: bool = True;
-    }
     can remove with `root entry {
         for vnode in [->:HasVariant:->(`?VariantNode)] {
             if vnode.variant_name == self.variant_name {

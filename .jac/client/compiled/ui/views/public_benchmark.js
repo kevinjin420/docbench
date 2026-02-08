@@ -19,8 +19,8 @@ function PublicBenchmarkView(props) {
     let test_result = await __jacSpawn("GetPublicTests", "", {});
     if (test_result.reports) {
       let data = test_result.reports[0];
-      setPublic_tests(data.get("tests", []));
-      setTest_count(data.get("count", 0));
+      setPublic_tests((data["tests"] || []));
+      setTest_count((data["count"] || 0));
     }
   }
   useEffect(() => {
@@ -36,13 +36,13 @@ function PublicBenchmarkView(props) {
     let vresult = await __jacSpawn("ValidateURL", "", {"url": doc_url});
     if (vresult.reports) {
       let data = vresult.reports[0];
-      setUrl_valid(data.get("valid", false));
-      setUrl_error(data.get("error", ""));
+      setUrl_valid((data["valid"] || false));
+      setUrl_error((data["error"] || ""));
     }
     setIs_validating(false);
   }
   async function run_benchmark() {
-    let api_key = props.get("api_key", "");
+    let api_key = (props["api_key"] || "");
     if (!api_key) {
       setUrl_error("API key required. Configure it in the header.");
       return;
@@ -57,7 +57,7 @@ function PublicBenchmarkView(props) {
         setIs_running(false);
         return;
       }
-      setRun_id(data.get("run_id", ""));
+      setRun_id((data["run_id"] || ""));
       await poll_status();
     }
   }
@@ -66,13 +66,13 @@ function PublicBenchmarkView(props) {
       let status_result = await __jacSpawn("GetPublicBenchmarkStatus", "", {"run_id": run_id});
       if (status_result.reports) {
         let data = status_result.reports[0];
-        let status = data.get("status", "");
-        setProgress(data.get("progress", ""));
+        let status = (data["status"] || "");
+        setProgress((data["progress"] || ""));
         if ((status === "completed")) {
-          setResult(data.get("result", {}));
+          setResult((data["result"] || {}));
           setIs_running(false);
         } else if ((status === "failed")) {
-          setUrl_error(data.get("error", "Benchmark failed"));
+          setUrl_error((data["error"] || "Benchmark failed"));
           setIs_running(false);
         }
       }
@@ -88,7 +88,7 @@ function PublicBenchmarkView(props) {
     let sub_result = await __jacSpawn("SubmitToLeaderboard", "", {"run_id": run_id, "documentation_name": (doc_name || doc_url), "documentation_url": doc_url});
     if (sub_result.reports) {
       let data = sub_result.reports[0];
-      if (data.get("success")) {
+      if (data["success"]) {
         setSubmitted(true);
       }
     }
@@ -103,7 +103,7 @@ function PublicBenchmarkView(props) {
     validate_url();
   }, "disabled": (is_validating || is_running), "className": "btn btn-secondary btn-sm"}, [(is_validating ? "Checking..." : "Validate")])]), (url_error ? __jacJsx("p", {"className": "text-red-400 text-xs mt-1"}, [url_error]) : (url_valid ? __jacJsx("p", {"className": "text-green-400 text-xs mt-1"}, ["URL is reachable"]) : __jacJsx("span", {}, [])))])]), __jacJsx("div", {"className": "mt-6"}, [((!is_running && !result) ? __jacJsx("button", {"onClick": e => {
     run_benchmark();
-  }, "disabled": (!url_valid || !doc_url), "className": "btn btn-primary btn-lg btn-block"}, [(("Run Benchmark (" + String(test_count)) + " tests)")]) : __jacJsx("span", {}, []))])]), (is_running ? __jacJsx("div", {"className": "bg-terminal-surface border border-blue-600/30 rounded-lg p-6 mb-6"}, [__jacJsx("div", {"className": "flex items-center gap-3 mb-3"}, [__jacJsx("div", {"className": "w-3 h-3 rounded-full bg-blue-500 animate-pulse"}, []), __jacJsx("span", {"className": "text-blue-400 font-medium"}, ["Benchmark Running"])]), __jacJsx("p", {"className": "text-text-secondary text-sm"}, [progress])]) : __jacJsx("span", {}, [])), (result ? __jacJsx("div", {"className": "bg-terminal-surface border border-green-600/30 rounded-lg p-6 mb-6"}, [__jacJsx("div", {"className": "flex items-center justify-between mb-4"}, [__jacJsx("h3", {"className": "text-xl font-semibold text-text-primary"}, ["Results"]), __jacJsx("span", {"className": "text-3xl font-bold text-terminal-accent font-mono"}, [(String(result.get("percentage", 0)) + "%")])]), __jacJsx("div", {"className": "grid grid-cols-3 gap-4 mb-4"}, [__jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String(result.get("total_score", 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Total Score"])]), __jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String(result.get("max_score", 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Max Score"])]), __jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [((String(result.get("models_completed", 0)) + "/") + String(result.get("models_total", 0)))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Models"])])]), (!submitted ? __jacJsx("button", {"onClick": e => {
+  }, "disabled": (!url_valid || !doc_url), "className": "btn btn-primary btn-lg btn-block"}, [(("Run Benchmark (" + String(test_count)) + " tests)")]) : __jacJsx("span", {}, []))])]), (is_running ? __jacJsx("div", {"className": "bg-terminal-surface border border-blue-600/30 rounded-lg p-6 mb-6"}, [__jacJsx("div", {"className": "flex items-center gap-3 mb-3"}, [__jacJsx("div", {"className": "w-3 h-3 rounded-full bg-blue-500 animate-pulse"}, []), __jacJsx("span", {"className": "text-blue-400 font-medium"}, ["Benchmark Running"])]), __jacJsx("p", {"className": "text-text-secondary text-sm"}, [progress])]) : __jacJsx("span", {}, [])), (result ? __jacJsx("div", {"className": "bg-terminal-surface border border-green-600/30 rounded-lg p-6 mb-6"}, [__jacJsx("div", {"className": "flex items-center justify-between mb-4"}, [__jacJsx("h3", {"className": "text-xl font-semibold text-text-primary"}, ["Results"]), __jacJsx("span", {"className": "text-3xl font-bold text-terminal-accent font-mono"}, [(String((result["percentage"] || 0)) + "%")])]), __jacJsx("div", {"className": "grid grid-cols-3 gap-4 mb-4"}, [__jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String((result["total_score"] || 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Total Score"])]), __jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String((result["max_score"] || 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Max Score"])]), __jacJsx("div", {"className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [((String((result["models_completed"] || 0)) + "/") + String((result["models_total"] || 0)))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, ["Models"])])]), (!submitted ? __jacJsx("button", {"onClick": e => {
     submit_to_leaderboard();
   }, "className": "btn btn-success-solid btn-block"}, ["Submit to Leaderboard"]) : __jacJsx("div", {"className": "text-center py-3 text-green-400 font-medium"}, ["Submitted to leaderboard!"]))]) : __jacJsx("span", {}, []))]);
 }

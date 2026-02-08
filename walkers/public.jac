@@ -13,11 +13,7 @@ import from utils.rate_limit { is_rate_allowed }
 import from utils.logger { log_info, log_error }
 import from walkers.benchmarks { running_benchmarks }
 
-walker GetPublicTests {
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
+walker : pub GetPublicTests {
     can gather with `root entry {
         public_ids: set = set();
         for pc in [->:HasPublicConfig:->(`?PublicTestConfigNode)] {
@@ -42,13 +38,9 @@ walker GetPublicTests {
     }
 }
 
-walker ValidateURL {
+walker : pub ValidateURL {
     has url: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = False;
-    }
     can validate with `root entry {
         if not self.url.strip() {
             report {"valid": False, "error": "URL is required"};
@@ -91,17 +83,13 @@ walker ValidateURL {
     }
 }
 
-walker RunPublicBenchmark {
+walker : pub RunPublicBenchmark {
     has documentation_url: str = "";
     has documentation_content: str = "";
     has documentation_name: str = "Unnamed Documentation";
     has max_tokens: int = 16000;
     has api_key: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = False;
-    }
     can execute with `root entry {
         if not self.api_key {
             report {"error": "API key required"};
@@ -319,13 +307,9 @@ walker RunPublicBenchmark {
     }
 }
 
-walker GetPublicBenchmarkStatus {
+walker : pub GetPublicBenchmarkStatus {
     has run_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can check with `root entry {
         if self.run_id in running_benchmarks {
             report running_benchmarks[self.run_id];
@@ -349,16 +333,12 @@ walker GetPublicBenchmarkStatus {
     }
 }
 
-walker SubmitToLeaderboard {
+walker : pub SubmitToLeaderboard {
     has run_id: str;
     has documentation_name: str;
     has documentation_url: str = "";
     has submitter_email: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = False;
-    }
     can submit with `root entry {
         if not self.run_id {
             report {"error": "run_id is required"};
@@ -430,14 +410,10 @@ walker SubmitToLeaderboard {
     }
 }
 
-walker GetLeaderboard {
+walker : pub GetLeaderboard {
     has limit: int = 50;
     has offset: int = 0;
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can gather with `root entry {
         entries: list = [];
         for enode in [->:HasEntry:->(`?LeaderboardNode)] {
@@ -466,13 +442,9 @@ walker GetLeaderboard {
     }
 }
 
-walker GetLeaderboardEntry {
+walker : pub GetLeaderboardEntry {
     has entry_id: str;
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can fetch with `root entry {
         for enode in [->:HasEntry:->(`?LeaderboardNode)] {
             if str(enode) == self.entry_id {

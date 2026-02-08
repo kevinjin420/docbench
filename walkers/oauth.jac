@@ -3,15 +3,12 @@ import from models.nodes { UserNode, AdminEmailNode }
 import from models.edges { HasUser, HasAdminEmail }
 import from services.oauth_service { get_github_authorize_url, exchange_github_code }
 import from utils.auth { create_jwt, verify_jwt }
+import os;
 import from env { FRONTEND_URL }
 
-walker GitHubLogin {
+walker : pub GitHubLogin {
     has redirect_uri: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can login with `root entry {
         if not self.redirect_uri {
             self.redirect_uri = f"{FRONTEND_URL}/auth/callback";
@@ -21,15 +18,11 @@ walker GitHubLogin {
     }
 }
 
-walker GitHubCallback {
+walker : pub GitHubCallback {
     has code: str = "";
     has state: str = "";
     has redirect_uri: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = False;
-    }
     can callback with `root entry {
         if not self.code {
             report {"error": "Authorization code required"};
@@ -56,6 +49,12 @@ walker GitHubCallback {
         admin_emails: set = set();
         for ae in [->:HasAdminEmail:->(`?AdminEmailNode)] {
             admin_emails.add(ae.email.lower());
+        }
+        env_emails: str = os.getenv("ADMIN_EMAILS", "");
+        if env_emails {
+            for em in env_emails.split(",") {
+                admin_emails.add(em.strip().lower());
+            }
         }
         is_admin: bool = user_info.get("email", "").lower() in admin_emails;
 
@@ -91,19 +90,16 @@ walker GitHubCallback {
                 "id": str(user_node),
                 "email": user_node.email,
                 "name": user_node.name,
-                "is_admin": user_node.is_admin
+                "is_admin": user_node.is_admin,
+                "avatar_url": f"https://avatars.githubusercontent.com/u/{user_node.github_id}"
             }
         };
     }
 }
 
-walker GetCurrentUser {
+walker : pub GetCurrentUser {
     has token: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
     can fetch with `root entry {
         payload: dict | None = verify_jwt(self.token);
         if not payload {
@@ -111,32 +107,21 @@ walker GetCurrentUser {
             disengage;
         }
 
-        user_id: str = payload.get("sub", "");
-        for unode in [->:HasUser:->(`?UserNode)] {
-            if str(unode) == user_id {
-                report {
-                    "id": str(unode),
-                    "email": unode.email,
-                    "name": unode.name,
-                    "github_id": unode.github_id,
-                    "is_admin": unode.is_admin,
-                    "created_at": unode.created_at,
-                    "last_login_at": unode.last_login_at
-                };
-                disengage;
-            }
-        }
-        report {"error": "User not found"};
+        github_id: str = payload.get("github_id", "");
+        report {
+            "id": payload.get("sub", ""),
+            "email": payload.get("email", ""),
+            "name": payload.get("name", ""),
+            "github_id": github_id,
+            "is_admin": payload.get("is_admin", False),
+            "avatar_url": f"https://avatars.githubusercontent.com/u/{github_id}"
+        };
     }
 }
 
-walker VerifyToken {
+walker : pub VerifyToken {
     has token: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = False;
-    }
     can verify with `root entry {
         if not self.token {
             report {"valid": False, "error": "Token required"};

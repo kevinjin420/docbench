@@ -1,8 +1,8 @@
 sv import from walkers.files { ListTestFiles, ListStashes, CreateStash, DeleteStash, DeleteFile, CleanResults, ExportCSV, GetStashFiles }
 
 def:pub FileManagerView(props: dict) -> any {
-    has files: list = props.get("files", []);
-    has stashes: list = props.get("stashes", []);
+    has files: list = (props["files"] or []);
+    has stashes: list = (props["stashes"] or []);
     has selected_stash: str = "";
     has stash_files: list = [];
     has is_loading: bool = False;
@@ -11,11 +11,11 @@ def:pub FileManagerView(props: dict) -> any {
         is_loading = True;
         file_result: any = root spawn ListTestFiles();
         if file_result.reports {
-            files = file_result.reports[0].get("files", []);
+            files = (file_result.reports[0]["files"] or []);
         }
         stash_result: any = root spawn ListStashes();
         if stash_result.reports {
-            stashes = stash_result.reports[0].get("stashes", []);
+            stashes = (stash_result.reports[0]["stashes"] or []);
         }
         is_loading = False;
     }
@@ -44,14 +44,14 @@ def:pub FileManagerView(props: dict) -> any {
         selected_stash = name;
         result: any = root spawn GetStashFiles(stash_name=name);
         if result.reports {
-            stash_files = result.reports[0].get("files", []);
+            stash_files = (result.reports[0]["files"] or []);
         }
     }
 
     async def export_csv() -> None {
         result: any = root spawn ExportCSV();
         if result.reports {
-            csv_data: str = result.reports[0].get("csv", "");
+            csv_data: str = (result.reports[0]["csv"] or "");
         }
     }
 
@@ -85,7 +85,7 @@ def:pub FileManagerView(props: dict) -> any {
                             <div className="text-text-primary text-sm font-mono truncate max-w-xs">{f["run_id"]}</div>
                             <div className="text-text-muted text-xs">{f["model"]} / {f["variant"]}</div>
                             {(<span className="text-terminal-accent text-xs font-mono">{String(f["percentage"]) + "%"}</span>)
-                            if f.get("percentage", 0) > 0
+                            if (f["percentage"] or 0) > 0
                             else (<span className="text-text-muted text-xs">Not evaluated</span>)}
                         </div>
                         <button
@@ -117,7 +117,7 @@ def:pub FileManagerView(props: dict) -> any {
                                 >
                                     {s["name"]}
                                 </button>
-                                <div className="text-text-muted text-xs">{String(s.get("result_count", 0))} files</div>
+                                <div className="text-text-muted text-xs">{String(s["result_count"] or 0)} files</div>
                             </div>
                             <button
                                 onClick={lambda e: any -> None { delete_stash(s["name"]); }}
@@ -130,7 +130,7 @@ def:pub FileManagerView(props: dict) -> any {
                             {[<div key={sf["run_id"]} className="text-xs text-text-secondary font-mono flex justify-between">
                                 <span className="truncate">{sf["run_id"]}</span>
                                 {(<span className="text-terminal-accent">{String(sf["percentage"]) + "%"}</span>)
-                                if sf.get("percentage", 0) > 0
+                                if (sf["percentage"] or 0) > 0
                                 else None}
                               </div>
                               for sf in stash_files

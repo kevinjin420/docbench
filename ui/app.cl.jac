@@ -156,6 +156,7 @@ def:pub UserMenuComponent(props: dict) -> any {
             onClick={lambda e: any -> None { is_open = not is_open; }}
             className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
         >
+            {(<img src={props["user"]["avatar_url"]} alt="" className="w-8 h-8 rounded-full" />) if props["user"]["avatar_url"] else (<div className="w-8 h-8 rounded-full bg-terminal-accent-muted"></div>)}
             <span className="text-sm text-gray-300 max-w-[120px] truncate">
                 {props["user"]["name"] or props["user"]["email"] or "User"}
             </span>

@@ -35,8 +35,8 @@ function TestsView() {
     let result = await __jacSpawn("AdminGetTests", "", {"limit": page_size, "offset": (current_page * page_size), "level": filter_level, "category": filter_category, "search": search_query, "include_deleted": show_deleted});
     if (result.reports) {
       let data = result.reports[0];
-      setTests(data.get("tests", []));
-      setTotal_tests(data.get("total", 0));
+      setTests((data["tests"] || []));
+      setTotal_tests((data["total"] || 0));
     }
     setIs_loading(false);
   }
@@ -44,11 +44,11 @@ function TestsView() {
     let result = await __jacSpawn("AdminGetPublicTests", "", {});
     if (result.reports) {
       let data = result.reports[0];
-      setPublic_test_ids(data.get("test_ids", []));
+      setPublic_test_ids((data["test_ids"] || []));
     }
     let model_result = await __jacSpawn("AdminListModels", "", {});
     if (model_result.reports) {
-      setBenchmark_models(model_result.reports[0].get("models", []));
+      setBenchmark_models((model_result.reports[0]["models"] || []));
     }
   }
   async function delete_test(test_id) {
@@ -61,7 +61,7 @@ function TestsView() {
     await load_tests();
   }
   async function save_test(test_data) {
-    if (test_data.get("id")) {
+    if (test_data["id"]) {
       let result = await __jacSpawn("AdminUpdateTest", "", {"test_id": test_data["id"], "updates": test_data});
     } else {
       result = await __jacSpawn("AdminCreateTest", "", {"test_data": test_data});
@@ -126,30 +126,30 @@ function TestsView() {
   }}, [])))]);
 }
 function OverviewTab(props) {
-  setStats(props.get("stats", {}));
-  let levels = stats.get("by_level", []);
-  let categories = stats.get("by_category", []);
-  return __jacJsx("div", {"className": "grid grid-cols-1 md:grid-cols-3 gap-6"}, [__jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-terminal-accent font-mono"}, [String(stats.get("total", 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Total Tests"])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-text-primary font-mono"}, [String(stats.get("active", 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Active"])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-red-400 font-mono"}, [String(stats.get("deleted", 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Deleted"])]), __jacJsx("div", {"className": "md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-4"}, ["By Level"]), __jacJsx("div", {"className": "grid grid-cols-5 gap-3"}, [levels.map(l => __jacJsx("div", {"key": l.get("level", ""), "className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String(l.get("count", 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, [l.get("level", "")])]))])]), __jacJsx("div", {"className": "md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-4"}, ["By Category"]), __jacJsx("div", {"className": "grid grid-cols-3 gap-3"}, [categories.map(c => __jacJsx("div", {"key": c.get("category", ""), "className": "flex justify-between items-center py-1 border-b border-terminal-border"}, [__jacJsx("span", {"className": "text-text-secondary text-sm"}, [c.get("category", "")]), __jacJsx("span", {"className": "text-text-primary font-mono text-sm"}, [String(c.get("count", 0))])]))])])]);
+  setStats((props["stats"] || {}));
+  let levels = (stats["by_level"] || []);
+  let categories = (stats["by_category"] || []);
+  return __jacJsx("div", {"className": "grid grid-cols-1 md:grid-cols-3 gap-6"}, [__jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-terminal-accent font-mono"}, [String((stats["total"] || 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Total Tests"])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-text-primary font-mono"}, [String((stats["active"] || 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Active"])]), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center"}, [__jacJsx("div", {"className": "text-3xl font-bold text-red-400 font-mono"}, [String((stats["deleted"] || 0))]), __jacJsx("div", {"className": "text-text-muted text-sm mt-1"}, ["Deleted"])]), __jacJsx("div", {"className": "md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-4"}, ["By Level"]), __jacJsx("div", {"className": "grid grid-cols-5 gap-3"}, [levels.map(l => __jacJsx("div", {"key": (l["level"] || ""), "className": "text-center"}, [__jacJsx("div", {"className": "text-lg font-mono text-text-primary"}, [String((l["count"] || 0))]), __jacJsx("div", {"className": "text-xs text-text-muted"}, [(l["level"] || "")])]))])]), __jacJsx("div", {"className": "md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-4"}, ["By Category"]), __jacJsx("div", {"className": "grid grid-cols-3 gap-3"}, [categories.map(c => __jacJsx("div", {"key": (c["category"] || ""), "className": "flex justify-between items-center py-1 border-b border-terminal-border"}, [__jacJsx("span", {"className": "text-text-secondary text-sm"}, [(c["category"] || "")]), __jacJsx("span", {"className": "text-text-primary font-mono text-sm"}, [String((c["count"] || 0))])]))])])]);
 }
 function DefinitionsTab(props) {
-  setTests(props.get("tests", []));
-  let total = props.get("total", 0);
-  let page = props.get("page", 0);
-  setPage_size(props.get("page_size", 25));
-  return __jacJsx("div", {}, [__jacJsx("div", {"className": "flex gap-3 items-center mb-4 flex-wrap"}, [__jacJsx("input", {"type": "text", "value": props.get("search_query", ""), "onChange": e => {
+  setTests((props["tests"] || []));
+  let total = (props["total"] || 0);
+  let page = (props["page"] || 0);
+  setPage_size((props["page_size"] || 25));
+  return __jacJsx("div", {}, [__jacJsx("div", {"className": "flex gap-3 items-center mb-4 flex-wrap"}, [__jacJsx("input", {"type": "text", "value": (props["search_query"] || ""), "onChange": e => {
     props["on_search"](e.target.value);
-  }, "placeholder": "Search tests...", "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm min-w-[200px]"}, []), __jacJsx("select", {"value": props.get("filter_level", ""), "onChange": e => {
+  }, "placeholder": "Search tests...", "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm min-w-[200px]"}, []), __jacJsx("select", {"value": (props["filter_level"] || ""), "onChange": e => {
     props["on_filter_level"](e.target.value);
-  }, "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [__jacJsx("option", {"value": ""}, ["All Levels"]), ["L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10"].map(lv => __jacJsx("option", {"key": lv, "value": lv}, [lv]))]), __jacJsx("select", {"value": props.get("filter_category", ""), "onChange": e => {
+  }, "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [__jacJsx("option", {"value": ""}, ["All Levels"]), ["L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10"].map(lv => __jacJsx("option", {"key": lv, "value": lv}, [lv]))]), __jacJsx("select", {"value": (props["filter_category"] || ""), "onChange": e => {
     props["on_filter_category"](e.target.value);
-  }, "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [__jacJsx("option", {"value": ""}, ["All Categories"])]), __jacJsx("label", {"className": "flex items-center gap-2 text-text-muted text-sm"}, [__jacJsx("input", {"type": "checkbox", "checked": props.get("show_deleted", false), "onChange": props.get("on_toggle_deleted", e => {})}, []), "Show Deleted"]), __jacJsx("button", {"onClick": e => {
+  }, "className": "px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [__jacJsx("option", {"value": ""}, ["All Categories"])]), __jacJsx("label", {"className": "flex items-center gap-2 text-text-muted text-sm"}, [__jacJsx("input", {"type": "checkbox", "checked": (props["show_deleted"] || false), "onChange": props["on_toggle_deleted"]}, []), "Show Deleted"]), __jacJsx("button", {"onClick": e => {
     props["on_edit"]({});
-  }, "className": "btn btn-primary btn-sm ml-auto"}, ["New Test"])]), ((props.get("editing_test") === null) ? __jacJsx(TestEditor, {"test": props.get("editing_test", {}), "on_save": props.get("on_save"), "on_cancel": props.get("on_cancel_edit")}, []) : __jacJsx("span", {}, [])), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden"}, [__jacJsx("table", {"className": "w-full"}, [__jacJsx("thead", {}, [__jacJsx("tr", {"className": "border-b border-terminal-border"}, [__jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["ID"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Task"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Level"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Category"]), __jacJsx("th", {"className": "px-3 py-2 text-right text-xs text-text-muted uppercase"}, ["Points"]), __jacJsx("th", {"className": "px-3 py-2 text-right text-xs text-text-muted uppercase"}, ["Actions"])])]), __jacJsx("tbody", {}, [enumerate(tests).map(x => __jacJsx("tr", {"key": t.get("test_id", String(i)), "className": ("border-b border-terminal-border " + (t.get("deleted", false) ? "opacity-50" : ""))}, [__jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-xs font-mono"}, [t.get("test_id", "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-primary text-sm truncate max-w-xs"}, [t.get("task", "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-sm"}, [t.get("level", "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-sm"}, [t.get("category", "")]), __jacJsx("td", {"className": "px-3 py-2 text-right text-text-secondary text-sm font-mono"}, [String(t.get("points", 0))]), __jacJsx("td", {"className": "px-3 py-2 text-right"}, [__jacJsx("div", {"className": "flex gap-1 justify-end"}, [__jacJsx("button", {"onClick": e => {
+  }, "className": "btn btn-primary btn-sm ml-auto"}, ["New Test"])]), ((props["editing_test"] !== null) ? __jacJsx(TestEditor, {"test": (props["editing_test"] || {}), "on_save": props["on_save"], "on_cancel": props["on_cancel_edit"]}, []) : __jacJsx("span", {}, [])), __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden"}, [__jacJsx("table", {"className": "w-full"}, [__jacJsx("thead", {}, [__jacJsx("tr", {"className": "border-b border-terminal-border"}, [__jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["ID"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Task"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Level"]), __jacJsx("th", {"className": "px-3 py-2 text-left text-xs text-text-muted uppercase"}, ["Category"]), __jacJsx("th", {"className": "px-3 py-2 text-right text-xs text-text-muted uppercase"}, ["Points"]), __jacJsx("th", {"className": "px-3 py-2 text-right text-xs text-text-muted uppercase"}, ["Actions"])])]), __jacJsx("tbody", {}, [tests.map(t => __jacJsx("tr", {"key": (t["test_id"] || String(tests.indexOf(t))), "className": ("border-b border-terminal-border " + ((t["deleted"] || false) ? "opacity-50" : ""))}, [__jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-xs font-mono"}, [(t["test_id"] || "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-primary text-sm truncate max-w-xs"}, [(t["task"] || "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-sm"}, [(t["level"] || "")]), __jacJsx("td", {"className": "px-3 py-2 text-text-secondary text-sm"}, [(t["category"] || "")]), __jacJsx("td", {"className": "px-3 py-2 text-right text-text-secondary text-sm font-mono"}, [String((t["points"] || 0))]), __jacJsx("td", {"className": "px-3 py-2 text-right"}, [__jacJsx("div", {"className": "flex gap-1 justify-end"}, [__jacJsx("button", {"onClick": e => {
     props["on_edit"](t);
-  }, "className": "text-terminal-accent text-xs hover:underline"}, ["Edit"]), (t.get("deleted", false) ? __jacJsx("button", {"onClick": e => {
-    props["on_restore"](t.get("test_id", ""));
+  }, "className": "text-terminal-accent text-xs hover:underline"}, ["Edit"]), ((t["deleted"] || false) ? __jacJsx("button", {"onClick": e => {
+    props["on_restore"]((t["test_id"] || ""));
   }, "className": "text-green-400 text-xs hover:underline"}, ["Restore"]) : __jacJsx("button", {"onClick": e => {
-    props["on_delete"](t.get("test_id", ""));
+    props["on_delete"]((t["test_id"] || ""));
   }, "className": "text-red-400 text-xs hover:underline"}, ["Delete"]))])])]))])])]), ((total > page_size) ? __jacJsx("div", {"className": "flex justify-center gap-4 mt-4"}, [__jacJsx("button", {"onClick": e => {
     props["on_page_change"](max(0, (page - 1)));
   }, "disabled": (page === 0), "className": "btn btn-secondary btn-sm"}, ["Previous"]), __jacJsx("span", {"className": "text-text-muted text-sm self-center"}, ["Page ", String((page + 1)), "of ", String((((total + page_size) - 1) + page_size))]), __jacJsx("button", {"onClick": e => {
@@ -157,14 +157,14 @@ function DefinitionsTab(props) {
   }, "disabled": (((page + 1) * page_size) >= total), "className": "btn btn-secondary btn-sm"}, ["Next"])]) : __jacJsx("span", {}, []))]);
 }
 function TestEditor(props) {
-  let test_data = props.get("test", {});
-  const [task_val, setTask_val] = useState(test_data.get("task", ""));
-  const [level_val, setLevel_val] = useState(test_data.get("level", "L1"));
-  const [category_val, setCategory_val] = useState(test_data.get("category", ""));
-  const [points_val, setPoints_val] = useState(test_data.get("points", 1));
-  const [prompt_val, setPrompt_val] = useState(test_data.get("prompt", ""));
-  const [ref_code_val, setRef_code_val] = useState(test_data.get("reference_code", ""));
-  return __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-accent/30 rounded-lg p-4 mb-4"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-3"}, [(test_data.get("id") ? "Edit Test" : "New Test")]), __jacJsx("div", {"className": "grid grid-cols-2 gap-3"}, [__jacJsx("div", {}, [__jacJsx("label", {"className": "block text-xs text-text-muted mb-1"}, ["Task"]), __jacJsx("input", {"type": "text", "value": task_val, "onChange": e => {
+  let test_data = (props["test"] || {});
+  const [task_val, setTask_val] = useState((test_data["task"] || ""));
+  const [level_val, setLevel_val] = useState((test_data["level"] || "L1"));
+  const [category_val, setCategory_val] = useState((test_data["category"] || ""));
+  const [points_val, setPoints_val] = useState((test_data["points"] || 1));
+  const [prompt_val, setPrompt_val] = useState((test_data["prompt"] || ""));
+  const [ref_code_val, setRef_code_val] = useState((test_data["reference_code"] || ""));
+  return __jacJsx("div", {"className": "bg-terminal-surface border border-terminal-accent/30 rounded-lg p-4 mb-4"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-3"}, [(test_data["id"] ? "Edit Test" : "New Test")]), __jacJsx("div", {"className": "grid grid-cols-2 gap-3"}, [__jacJsx("div", {}, [__jacJsx("label", {"className": "block text-xs text-text-muted mb-1"}, ["Task"]), __jacJsx("input", {"type": "text", "value": task_val, "onChange": e => {
     setTask_val(e.target.value);
   }, "className": "w-full px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, [])]), __jacJsx("div", {"className": "flex gap-3"}, [__jacJsx("div", {"className": "flex-1"}, [__jacJsx("label", {"className": "block text-xs text-text-muted mb-1"}, ["Level"]), __jacJsx("select", {"value": level_val, "onChange": e => {
     setLevel_val(e.target.value);
@@ -176,25 +176,25 @@ function TestEditor(props) {
     setPrompt_val(e.target.value);
   }, "rows": "3", "className": "w-full px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm font-mono"}, [])]), __jacJsx("div", {"className": "col-span-2"}, [__jacJsx("label", {"className": "block text-xs text-text-muted mb-1"}, ["Reference Code"]), __jacJsx("textarea", {"value": ref_code_val, "onChange": e => {
     setRef_code_val(e.target.value);
-  }, "rows": "4", "className": "w-full px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm font-mono"}, [])])]), __jacJsx("div", {"className": "flex gap-2 mt-3 justify-end"}, [__jacJsx("button", {"onClick": props.get("on_cancel"), "className": "btn btn-ghost btn-sm"}, ["Cancel"]), __jacJsx("button", {"onClick": e => {
-    props["on_save"]({"id": test_data.get("id", ""), "task": task_val, "level": level_val, "category": category_val, "points": points_val, "prompt": prompt_val, "reference_code": ref_code_val});
+  }, "rows": "4", "className": "w-full px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm font-mono"}, [])])]), __jacJsx("div", {"className": "flex gap-2 mt-3 justify-end"}, [__jacJsx("button", {"onClick": props["on_cancel"], "className": "btn btn-ghost btn-sm"}, ["Cancel"]), __jacJsx("button", {"onClick": e => {
+    props["on_save"]({"id": (test_data["id"] || ""), "task": task_val, "level": level_val, "category": category_val, "points": points_val, "prompt": prompt_val, "reference_code": ref_code_val});
   }, "className": "btn btn-primary btn-sm"}, ["Save"])])]);
 }
 function PublicSuiteTab(props) {
-  setPublic_test_ids(props.get("public_test_ids", []));
-  setBenchmark_models(props.get("benchmark_models", []));
+  setPublic_test_ids((props["public_test_ids"] || []));
+  setBenchmark_models((props["benchmark_models"] || []));
   return __jacJsx("div", {"className": "grid grid-cols-1 lg:grid-cols-2 gap-6"}, [__jacJsx("div", {}, [__jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-4"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-3"}, ["Public Test IDs (", String(public_test_ids.length), ")"]), __jacJsx("p", {"className": "text-text-muted text-xs mb-3"}, ["Tests included in the public benchmark suite."]), __jacJsx("div", {"className": "max-h-96 overflow-y-auto space-y-1"}, [public_test_ids.map(tid => __jacJsx("div", {"key": tid, "className": "flex items-center justify-between py-1 px-2 bg-terminal-bg rounded"}, [__jacJsx("span", {"className": "text-text-secondary text-xs font-mono"}, [tid]), __jacJsx("button", {"onClick": e => {
     props["on_toggle_test"](tid);
-  }, "className": "text-red-400 text-xs"}, ["Remove"])]))])])]), __jacJsx("div", {}, [__jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-4"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-3"}, ["Benchmark Models (", String(benchmark_models.length), ")"]), __jacJsx("div", {"className": "flex gap-2 mb-4"}, [__jacJsx("input", {"type": "text", "value": props.get("new_model_id", ""), "onChange": e => {
+  }, "className": "text-red-400 text-xs"}, ["Remove"])]))])])]), __jacJsx("div", {}, [__jacJsx("div", {"className": "bg-terminal-surface border border-terminal-border rounded-lg p-4"}, [__jacJsx("h3", {"className": "text-text-primary font-medium mb-3"}, ["Benchmark Models (", String(benchmark_models.length), ")"]), __jacJsx("div", {"className": "flex gap-2 mb-4"}, [__jacJsx("input", {"type": "text", "value": (props["new_model_id"] || ""), "onChange": e => {
     props["on_model_id_change"](e.target.value);
-  }, "placeholder": "model-id", "className": "flex-1 px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, []), __jacJsx("input", {"type": "text", "value": props.get("new_model_name", ""), "onChange": e => {
+  }, "placeholder": "model-id", "className": "flex-1 px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, []), __jacJsx("input", {"type": "text", "value": (props["new_model_name"] || ""), "onChange": e => {
     props["on_model_name_change"](e.target.value);
   }, "placeholder": "Display Name", "className": "flex-1 px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"}, []), __jacJsx("button", {"onClick": e => {
     props["on_add_model"]();
-  }, "className": "btn btn-primary btn-sm"}, ["Add"])]), __jacJsx("div", {"className": "space-y-2"}, [benchmark_models.map(m => __jacJsx("div", {"key": m.get("model_id", ""), "className": "flex items-center justify-between py-2 px-3 bg-terminal-bg rounded"}, [__jacJsx("div", {}, [__jacJsx("div", {"className": "text-text-primary text-sm"}, [m.get("display_name", m.get("model_id", ""))]), __jacJsx("div", {"className": "text-text-muted text-xs font-mono"}, [m.get("model_id", "")])]), __jacJsx("div", {"className": "flex gap-2 items-center"}, [__jacJsx("button", {"onClick": e => {
-    props["on_toggle_model"](m.get("model_id", ""));
-  }, "className": (m.get("active", true) ? "px-2 py-1 text-xs rounded bg-green-600/20 text-green-400" : "px-2 py-1 text-xs rounded bg-terminal-border text-text-muted")}, [(m.get("active", true) ? "Active" : "Inactive")]), __jacJsx("button", {"onClick": e => {
-    props["on_remove_model"](m.get("model_id", ""));
+  }, "className": "btn btn-primary btn-sm"}, ["Add"])]), __jacJsx("div", {"className": "space-y-2"}, [benchmark_models.map(m => __jacJsx("div", {"key": (m["model_id"] || ""), "className": "flex items-center justify-between py-2 px-3 bg-terminal-bg rounded"}, [__jacJsx("div", {}, [__jacJsx("div", {"className": "text-text-primary text-sm"}, [((m["display_name"] || m["model_id"]) || "")]), __jacJsx("div", {"className": "text-text-muted text-xs font-mono"}, [(m["model_id"] || "")])]), __jacJsx("div", {"className": "flex gap-2 items-center"}, [__jacJsx("button", {"onClick": e => {
+    props["on_toggle_model"]((m["model_id"] || ""));
+  }, "className": (m["active"] ? "px-2 py-1 text-xs rounded bg-green-600/20 text-green-400" : "px-2 py-1 text-xs rounded bg-terminal-border text-text-muted")}, [(m["active"] ? "Active" : "Inactive")]), __jacJsx("button", {"onClick": e => {
+    props["on_remove_model"]((m["model_id"] || ""));
   }, "className": "text-red-400 text-xs"}, ["Remove"])])]))])])])]);
 }
 export {DefinitionsTab, OverviewTab, PublicSuiteTab, TestEditor, TestsView};

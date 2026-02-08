@@ -11,7 +11,7 @@ import from utils.logger { log_info, log_debug, log_error }
 
 glob running_benchmarks: dict = {};
 
-walker RunBenchmark {
+walker : pub RunBenchmark {
     has model: str;
     has variant: str;
     has max_tokens: int = 16000;
@@ -19,10 +19,6 @@ walker RunBenchmark {
     has custom_batch_sizes: list = [];
     has api_key: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can execute with `root entry {
         if not self.api_key {
             report {"error": "API key required"};
@@ -183,14 +179,10 @@ walker RunBenchmark {
     }
 }
 
-walker EvaluateResult {
+walker : pub EvaluateResult {
     has run_id: str;
     has force: bool = False;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can evaluate with `root entry {
         target: ResultNode | None = None;
         for rnode in [->:HasResult:->(`?ResultNode)] {
@@ -273,15 +265,11 @@ walker EvaluateResult {
     }
 }
 
-walker RerunBatch {
+walker : pub RerunBatch {
     has run_id: str;
     has batch_num: int;
     has api_key: str = "";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can execute with `root entry {
         if not self.api_key {
             report {"error": "API key required"};
@@ -349,13 +337,9 @@ walker RerunBatch {
     }
 }
 
-walker EvaluateCollection {
+walker : pub EvaluateCollection {
     has collection_name: str;
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can evaluate with `root entry {
         import from models.nodes { CollectionNode }
         import from models.edges { HasCollection, InCollection }

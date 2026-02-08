@@ -11,7 +11,7 @@ def:pub BenchmarkView(props: dict) -> any {
     has completed_runs: list = [];
 
     async def run_benchmark() -> None {
-        api_key: str = props.get("api_key", "");
+        api_key: str = (props["api_key"] or "");
         if not api_key or not selected_model or not selected_variant {
             return;
         }
@@ -28,7 +28,7 @@ def:pub BenchmarkView(props: dict) -> any {
             );
             if result.reports {
                 data: dict = result.reports[0];
-                run_id = data.get("run_id", "");
+                run_id = (data["run_id"] or "");
                 completed_runs.append(data);
             }
         }
@@ -50,8 +50,8 @@ def:pub BenchmarkView(props: dict) -> any {
                         className="px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm min-w-[200px]"
                     >
                         <option value="">Select model...</option>
-                        {[<option key={m["id"]} value={m["id"]}>{m.get("name", m["id"])}</option>
-                          for m in props.get("models", [])]}
+                        {[<option key={m["id"]} value={m["id"]}>{(m["name"] or m["id"])}</option>
+                          for m in (props["models"] or [])]}
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ def:pub BenchmarkView(props: dict) -> any {
                     >
                         <option value="">Select variant...</option>
                         {[<option key={v["variant_name"]} value={v["variant_name"]}>{v["variant_name"]}</option>
-                          for v in props.get("variants", [])]}
+                          for v in (props["variants"] or [])]}
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
@@ -112,13 +112,13 @@ def:pub BenchmarkView(props: dict) -> any {
             <div className="px-4 py-3 border-b border-terminal-border">
                 <h3 className="text-text-primary font-medium">Completed Runs</h3>
             </div>
-            {[<div key={String(i)} className="px-4 py-3 border-b border-terminal-border flex items-center justify-between">
+            {[<div key={String(completed_runs.indexOf(run))} className="px-4 py-3 border-b border-terminal-border flex items-center justify-between">
                 <div>
-                    <span className="text-text-primary text-sm font-mono">{run.get("run_id", "")}</span>
-                    <span className="text-text-muted text-xs ml-3">{run.get("status", "")}</span>
+                    <span className="text-text-primary text-sm font-mono">{(run["run_id"] or "")}</span>
+                    <span className="text-text-muted text-xs ml-3">{(run["status"] or "")}</span>
                 </div>
               </div>
-              for (i, run) in enumerate(completed_runs)
+              for run in completed_runs
             ]}
           </div>)
         if completed_runs.length > 0

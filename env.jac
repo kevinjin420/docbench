@@ -1,4 +1,7 @@
 import os;
+import from dotenv { load_dotenv }
+
+glob _dotenv_loaded: bool = load_dotenv() or True;
 
 glob DATABASE_URL: str = os.getenv("DATABASE_URL", "");
 glob LOCAL_DATABASE_URL: str = os.getenv("LOCAL_DATABASE_URL", "");

@@ -19,8 +19,8 @@ def:pub PublicBenchmarkView(props: dict) -> any {
         test_result: any = root spawn GetPublicTests();
         if test_result.reports {
             data: dict = test_result.reports[0];
-            public_tests = data.get("tests", []);
-            test_count = data.get("count", 0);
+            public_tests = (data["tests"] or []);
+            test_count = (data["count"] or 0);
         }
     }
 
@@ -36,14 +36,14 @@ def:pub PublicBenchmarkView(props: dict) -> any {
         vresult: any = root spawn ValidateURL(url=doc_url);
         if vresult.reports {
             data: dict = vresult.reports[0];
-            url_valid = data.get("valid", False);
-            url_error = data.get("error", "");
+            url_valid = (data["valid"] or False);
+            url_error = (data["error"] or "");
         }
         is_validating = False;
     }
 
     async def run_benchmark() -> None {
-        api_key: str = props.get("api_key", "");
+        api_key: str = (props["api_key"] or "");
         if not api_key {
             url_error = "API key required. Configure it in the header.";
             return;
@@ -63,7 +63,7 @@ def:pub PublicBenchmarkView(props: dict) -> any {
                 is_running = False;
                 return;
             }
-            run_id = data.get("run_id", "");
+            run_id = (data["run_id"] or "");
             await poll_status();
         }
     }
@@ -73,13 +73,13 @@ def:pub PublicBenchmarkView(props: dict) -> any {
             status_result: any = root spawn GetPublicBenchmarkStatus(run_id=run_id);
             if status_result.reports {
                 data: dict = status_result.reports[0];
-                status: str = data.get("status", "");
-                progress = data.get("progress", "");
+                status: str = (data["status"] or "");
+                progress = (data["progress"] or "");
                 if status == "completed" {
-                    result = data.get("result", {});
+                    result = (data["result"] or {});
                     is_running = False;
                 } elif status == "failed" {
-                    url_error = data.get("error", "Benchmark failed");
+                    url_error = (data["error"] or "Benchmark failed");
                     is_running = False;
                 }
             }
@@ -100,7 +100,7 @@ def:pub PublicBenchmarkView(props: dict) -> any {
         );
         if sub_result.reports {
             data: dict = sub_result.reports[0];
-            if data.get("success") {
+            if data["success"] {
                 submitted = True;
             }
         }
@@ -174,20 +174,20 @@ def:pub PublicBenchmarkView(props: dict) -> any {
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-text-primary">Results</h3>
                 <span className="text-3xl font-bold text-terminal-accent font-mono">
-                    {String(result.get("percentage", 0)) + "%"}
+                    {String(result["percentage"] or 0) + "%"}
                 </span>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
-                    <div className="text-lg font-mono text-text-primary">{String(result.get("total_score", 0))}</div>
+                    <div className="text-lg font-mono text-text-primary">{String(result["total_score"] or 0)}</div>
                     <div className="text-xs text-text-muted">Total Score</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-lg font-mono text-text-primary">{String(result.get("max_score", 0))}</div>
+                    <div className="text-lg font-mono text-text-primary">{String(result["max_score"] or 0)}</div>
                     <div className="text-xs text-text-muted">Max Score</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-lg font-mono text-text-primary">{String(result.get("models_completed", 0)) + "/" + String(result.get("models_total", 0))}</div>
+                    <div className="text-lg font-mono text-text-primary">{String(result["models_completed"] or 0) + "/" + String(result["models_total"] or 0)}</div>
                     <div className="text-xs text-text-muted">Models</div>
                 </div>
             </div>

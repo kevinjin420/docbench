@@ -44,8 +44,8 @@ def:pub TestsView() -> any {
         );
         if result.reports {
             data: dict = result.reports[0];
-            tests = data.get("tests", []);
-            total_tests = data.get("total", 0);
+            tests = (data["tests"] or []);
+            total_tests = (data["total"] or 0);
         }
         is_loading = False;
     }
@@ -54,11 +54,11 @@ def:pub TestsView() -> any {
         result: any = root spawn AdminGetPublicTests();
         if result.reports {
             data: dict = result.reports[0];
-            public_test_ids = data.get("test_ids", []);
+            public_test_ids = (data["test_ids"] or []);
         }
         model_result: any = root spawn AdminListModels();
         if model_result.reports {
-            benchmark_models = model_result.reports[0].get("models", []);
+            benchmark_models = (model_result.reports[0]["models"] or []);
         }
     }
 
@@ -74,7 +74,7 @@ def:pub TestsView() -> any {
     }
 
     async def save_test(test_data: dict) -> None {
-        if test_data.get("id") {
+        if test_data["id"] {
             result: any = root spawn AdminUpdateTest(
                 test_id=test_data["id"],
                 updates=test_data
@@ -176,30 +176,30 @@ def:pub TestsView() -> any {
 }
 
 def:pub OverviewTab(props: dict) -> any {
-    stats: dict = props.get("stats", {});
-    levels: list = stats.get("by_level", []);
-    categories: list = stats.get("by_category", []);
+    stats: dict = (props["stats"] or {});
+    levels: list = (stats["by_level"] or []);
+    categories: list = (stats["by_category"] or []);
 
     return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-terminal-accent font-mono">{String(stats.get("total", 0))}</div>
+            <div className="text-3xl font-bold text-terminal-accent font-mono">{String(stats["total"] or 0)}</div>
             <div className="text-text-muted text-sm mt-1">Total Tests</div>
         </div>
         <div className="bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-text-primary font-mono">{String(stats.get("active", 0))}</div>
+            <div className="text-3xl font-bold text-text-primary font-mono">{String(stats["active"] or 0)}</div>
             <div className="text-text-muted text-sm mt-1">Active</div>
         </div>
         <div className="bg-terminal-surface border border-terminal-border rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-red-400 font-mono">{String(stats.get("deleted", 0))}</div>
+            <div className="text-3xl font-bold text-red-400 font-mono">{String(stats["deleted"] or 0)}</div>
             <div className="text-text-muted text-sm mt-1">Deleted</div>
         </div>
 
         <div className="md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6">
             <h3 className="text-text-primary font-medium mb-4">By Level</h3>
             <div className="grid grid-cols-5 gap-3">
-                {[<div key={l.get("level", "")} className="text-center">
-                    <div className="text-lg font-mono text-text-primary">{String(l.get("count", 0))}</div>
-                    <div className="text-xs text-text-muted">{l.get("level", "")}</div>
+                {[<div key={(l["level"] or "")} className="text-center">
+                    <div className="text-lg font-mono text-text-primary">{String(l["count"] or 0)}</div>
+                    <div className="text-xs text-text-muted">{(l["level"] or "")}</div>
                   </div>
                   for l in levels
                 ]}
@@ -209,9 +209,9 @@ def:pub OverviewTab(props: dict) -> any {
         <div className="md:col-span-3 bg-terminal-surface border border-terminal-border rounded-lg p-6">
             <h3 className="text-text-primary font-medium mb-4">By Category</h3>
             <div className="grid grid-cols-3 gap-3">
-                {[<div key={c.get("category", "")} className="flex justify-between items-center py-1 border-b border-terminal-border">
-                    <span className="text-text-secondary text-sm">{c.get("category", "")}</span>
-                    <span className="text-text-primary font-mono text-sm">{String(c.get("count", 0))}</span>
+                {[<div key={(c["category"] or "")} className="flex justify-between items-center py-1 border-b border-terminal-border">
+                    <span className="text-text-secondary text-sm">{(c["category"] or "")}</span>
+                    <span className="text-text-primary font-mono text-sm">{String(c["count"] or 0)}</span>
                   </div>
                   for c in categories
                 ]}
@@ -221,22 +221,22 @@ def:pub OverviewTab(props: dict) -> any {
 }
 
 def:pub DefinitionsTab(props: dict) -> any {
-    tests: list = props.get("tests", []);
-    total: int = props.get("total", 0);
-    page: int = props.get("page", 0);
-    page_size: int = props.get("page_size", 25);
+    tests: list = (props["tests"] or []);
+    total: int = (props["total"] or 0);
+    page: int = (props["page"] or 0);
+    page_size: int = (props["page_size"] or 25);
 
     return <div>
         <div className="flex gap-3 items-center mb-4 flex-wrap">
             <input
                 type="text"
-                value={props.get("search_query", "")}
+                value={(props["search_query"] or "")}
                 onChange={lambda e: any -> None { props["on_search"](e.target.value); }}
                 placeholder="Search tests..."
                 className="px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm min-w-[200px]"
             />
             <select
-                value={props.get("filter_level", "")}
+                value={(props["filter_level"] or "")}
                 onChange={lambda e: any -> None { props["on_filter_level"](e.target.value); }}
                 className="px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"
             >
@@ -246,7 +246,7 @@ def:pub DefinitionsTab(props: dict) -> any {
                 ]}
             </select>
             <select
-                value={props.get("filter_category", "")}
+                value={(props["filter_category"] or "")}
                 onChange={lambda e: any -> None { props["on_filter_category"](e.target.value); }}
                 className="px-3 py-2 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"
             >
@@ -255,8 +255,8 @@ def:pub DefinitionsTab(props: dict) -> any {
             <label className="flex items-center gap-2 text-text-muted text-sm">
                 <input
                     type="checkbox"
-                    checked={props.get("show_deleted", False)}
-                    onChange={props.get("on_toggle_deleted", lambda e: any -> None {})}
+                    checked={(props["show_deleted"] or False)}
+                    onChange={props["on_toggle_deleted"]}
                 />
                 Show Deleted
             </label>
@@ -269,10 +269,10 @@ def:pub DefinitionsTab(props: dict) -> any {
         </div>
 
         {(<TestEditor
-            test={props.get("editing_test", {})}
-            on_save={props.get("on_save")}
-            on_cancel={props.get("on_cancel_edit")}
-          />) if props.get("editing_test") is not None
+            test={(props["editing_test"] or {})}
+            on_save={props["on_save"]}
+            on_cancel={props["on_cancel_edit"]}
+          />) if props["editing_test"] != null
             else (<span></span>)
         }
 
@@ -289,12 +289,12 @@ def:pub DefinitionsTab(props: dict) -> any {
                     </tr>
                 </thead>
                 <tbody>
-                    {[<tr key={t.get("test_id", String(i))} className={"border-b border-terminal-border " + (("opacity-50") if t.get("deleted", False) else (""))}>
-                        <td className="px-3 py-2 text-text-secondary text-xs font-mono">{t.get("test_id", "")}</td>
-                        <td className="px-3 py-2 text-text-primary text-sm truncate max-w-xs">{t.get("task", "")}</td>
-                        <td className="px-3 py-2 text-text-secondary text-sm">{t.get("level", "")}</td>
-                        <td className="px-3 py-2 text-text-secondary text-sm">{t.get("category", "")}</td>
-                        <td className="px-3 py-2 text-right text-text-secondary text-sm font-mono">{String(t.get("points", 0))}</td>
+                    {[<tr key={(t["test_id"] or String(tests.indexOf(t)))} className={"border-b border-terminal-border " + (("opacity-50") if (t["deleted"] or False) else (""))}>
+                        <td className="px-3 py-2 text-text-secondary text-xs font-mono">{(t["test_id"] or "")}</td>
+                        <td className="px-3 py-2 text-text-primary text-sm truncate max-w-xs">{(t["task"] or "")}</td>
+                        <td className="px-3 py-2 text-text-secondary text-sm">{(t["level"] or "")}</td>
+                        <td className="px-3 py-2 text-text-secondary text-sm">{(t["category"] or "")}</td>
+                        <td className="px-3 py-2 text-right text-text-secondary text-sm font-mono">{String(t["points"] or 0)}</td>
                         <td className="px-3 py-2 text-right">
                             <div className="flex gap-1 justify-end">
                                 <button
@@ -304,13 +304,13 @@ def:pub DefinitionsTab(props: dict) -> any {
                                     Edit
                                 </button>
                                 {(<button
-                                    onClick={lambda e: any -> None { props["on_restore"](t.get("test_id", "")); }}
+                                    onClick={lambda e: any -> None { props["on_restore"]((t["test_id"] or "")); }}
                                     className="text-green-400 text-xs hover:underline"
                                   >
                                     Restore
-                                  </button>) if t.get("deleted", False)
+                                  </button>) if (t["deleted"] or False)
                                     else (<button
-                                        onClick={lambda e: any -> None { props["on_delete"](t.get("test_id", "")); }}
+                                        onClick={lambda e: any -> None { props["on_delete"]((t["test_id"] or "")); }}
                                         className="text-red-400 text-xs hover:underline"
                                       >
                                         Delete
@@ -319,7 +319,7 @@ def:pub DefinitionsTab(props: dict) -> any {
                             </div>
                         </td>
                       </tr>
-                      for (i, t) in enumerate(tests)
+                      for t in tests
                     ]}
                 </tbody>
             </table>
@@ -350,17 +350,17 @@ def:pub DefinitionsTab(props: dict) -> any {
 }
 
 def:pub TestEditor(props: dict) -> any {
-    test_data: dict = props.get("test", {});
-    has task_val: str = test_data.get("task", "");
-    has level_val: str = test_data.get("level", "L1");
-    has category_val: str = test_data.get("category", "");
-    has points_val: int = test_data.get("points", 1);
-    has prompt_val: str = test_data.get("prompt", "");
-    has ref_code_val: str = test_data.get("reference_code", "");
+    test_data: dict = (props["test"] or {});
+    has task_val: str = (test_data["task"] or "");
+    has level_val: str = (test_data["level"] or "L1");
+    has category_val: str = (test_data["category"] or "");
+    has points_val: int = (test_data["points"] or 1);
+    has prompt_val: str = (test_data["prompt"] or "");
+    has ref_code_val: str = (test_data["reference_code"] or "");
 
     return <div className="bg-terminal-surface border border-terminal-accent/30 rounded-lg p-4 mb-4">
         <h3 className="text-text-primary font-medium mb-3">
-            {("Edit Test") if test_data.get("id") else ("New Test")}
+            {("Edit Test") if test_data["id"] else ("New Test")}
         </h3>
         <div className="grid grid-cols-2 gap-3">
             <div>
@@ -426,7 +426,7 @@ def:pub TestEditor(props: dict) -> any {
         </div>
         <div className="flex gap-2 mt-3 justify-end">
             <button
-                onClick={props.get("on_cancel")}
+                onClick={props["on_cancel"]}
                 className="btn btn-ghost btn-sm"
             >
                 Cancel
@@ -434,7 +434,7 @@ def:pub TestEditor(props: dict) -> any {
             <button
                 onClick={lambda e: any -> None {
                     props["on_save"]({
-                        "id": test_data.get("id", ""),
+                        "id": (test_data["id"] or ""),
                         "task": task_val,
                         "level": level_val,
                         "category": category_val,
@@ -452,8 +452,8 @@ def:pub TestEditor(props: dict) -> any {
 }
 
 def:pub PublicSuiteTab(props: dict) -> any {
-    public_test_ids: list = props.get("public_test_ids", []);
-    benchmark_models: list = props.get("benchmark_models", []);
+    public_test_ids: list = (props["public_test_ids"] or []);
+    benchmark_models: list = (props["benchmark_models"] or []);
 
     return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
@@ -488,14 +488,14 @@ def:pub PublicSuiteTab(props: dict) -> any {
                 <div className="flex gap-2 mb-4">
                     <input
                         type="text"
-                        value={props.get("new_model_id", "")}
+                        value={(props["new_model_id"] or "")}
                         onChange={lambda e: any -> None { props["on_model_id_change"](e.target.value); }}
                         placeholder="model-id"
                         className="flex-1 px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"
                     />
                     <input
                         type="text"
-                        value={props.get("new_model_name", "")}
+                        value={(props["new_model_name"] or "")}
                         onChange={lambda e: any -> None { props["on_model_name_change"](e.target.value); }}
                         placeholder="Display Name"
                         className="flex-1 px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm"
@@ -508,22 +508,22 @@ def:pub PublicSuiteTab(props: dict) -> any {
                     </button>
                 </div>
                 <div className="space-y-2">
-                    {[<div key={m.get("model_id", "")} className="flex items-center justify-between py-2 px-3 bg-terminal-bg rounded">
+                    {[<div key={(m["model_id"] or "")} className="flex items-center justify-between py-2 px-3 bg-terminal-bg rounded">
                         <div>
-                            <div className="text-text-primary text-sm">{m.get("display_name", m.get("model_id", ""))}</div>
-                            <div className="text-text-muted text-xs font-mono">{m.get("model_id", "")}</div>
+                            <div className="text-text-primary text-sm">{(m["display_name"] or m["model_id"] or "")}</div>
+                            <div className="text-text-muted text-xs font-mono">{(m["model_id"] or "")}</div>
                         </div>
                         <div className="flex gap-2 items-center">
                             <button
-                                onClick={lambda e: any -> None { props["on_toggle_model"](m.get("model_id", "")); }}
-                                className={("px-2 py-1 text-xs rounded bg-green-600/20 text-green-400") if m.get("active", True)
+                                onClick={lambda e: any -> None { props["on_toggle_model"]((m["model_id"] or "")); }}
+                                className={("px-2 py-1 text-xs rounded bg-green-600/20 text-green-400") if m["active"]
                                     else ("px-2 py-1 text-xs rounded bg-terminal-border text-text-muted")
                                 }
                             >
-                                {("Active") if m.get("active", True) else ("Inactive")}
+                                {("Active") if m["active"] else ("Inactive")}
                             </button>
                             <button
-                                onClick={lambda e: any -> None { props["on_remove_model"](m.get("model_id", "")); }}
+                                onClick={lambda e: any -> None { props["on_remove_model"]((m["model_id"] or "")); }}
                                 className="text-red-400 text-xs"
                             >
                                 Remove

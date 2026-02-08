@@ -16,7 +16,7 @@ def:pub VariantsView(props: dict) -> any {
         is_loading = True;
         result: any = root spawn ListVariants();
         if result.reports {
-            variants = result.reports[0].get("variants", []);
+            variants = (result.reports[0]["variants"] or []);
         }
         is_loading = False;
     }
@@ -95,7 +95,7 @@ def:pub VariantsView(props: dict) -> any {
                 {[<div key={v["variant_name"]} className="px-4 py-3 border-b border-terminal-border flex items-center justify-between">
                     <div>
                         <div className="text-text-primary font-medium">{v["variant_name"]}</div>
-                        <div className="text-text-muted text-xs truncate max-w-md">{v.get("url", "")}</div>
+                        <div className="text-text-muted text-xs truncate max-w-md">{(v["url"] or "")}</div>
                     </div>
                     <button
                         onClick={lambda e: any -> None { remove_variant(v["variant_name"]); }}

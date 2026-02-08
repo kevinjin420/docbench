@@ -2,13 +2,9 @@ import from models.nodes { ResultNode, CollectionNode }
 import from models.edges { HasResult, HasCollection, InCollection }
 import from services.graph_service { collections_bar_chart, evaluation_runs_chart, comparison_chart }
 
-walker GraphCollections {
+walker : pub GraphCollections {
     has format: str = "svg";
 
-    obj __specs__ {
-        static has methods: list = ["get", "post"];
-        static has auth: bool = True;
-    }
     can generate with `root entry {
         collections_data: list = [];
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
@@ -45,14 +41,10 @@ walker GraphCollections {
     }
 }
 
-walker GraphEvaluation {
+walker : pub GraphEvaluation {
     has collection_name: str;
     has format: str = "svg";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can generate with `root entry {
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
             if cnode.name == self.collection_name {
@@ -77,15 +69,11 @@ walker GraphEvaluation {
     }
 }
 
-walker GraphCompare {
+walker : pub GraphCompare {
     has stash1: str;
     has stash2: str;
     has format: str = "svg";
 
-    obj __specs__ {
-        static has methods: list = ["post"];
-        static has auth: bool = True;
-    }
     can generate with `root entry {
         stash1_data: dict = {};
         stash2_data: dict = {};
