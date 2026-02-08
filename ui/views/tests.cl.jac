@@ -124,15 +124,15 @@ def:pub TestsView() -> any {
 
         <div className="flex gap-1 mb-6 border-b border-terminal-border">
             {[<button
-                key={tab}
-                onClick={lambda e: any -> None { active_tab = tab; }}
-                className={("px-4 py-2 text-sm font-medium text-terminal-accent border-b-2 border-terminal-accent") if active_tab == tab
+                key={item[0]}
+                onClick={lambda e: any -> None { active_tab = item[0]; }}
+                className={("px-4 py-2 text-sm font-medium text-terminal-accent border-b-2 border-terminal-accent") if active_tab == item[0]
                     else ("px-4 py-2 text-sm font-medium text-text-muted hover:text-text-secondary")
                 }
               >
-                {label}
+                {item[1]}
               </button>
-              for (tab, label) in [("overview", "Overview"), ("definitions", "Test Definitions"), ("public", "Public Suite")]
+              for item in [["overview", "Overview"], ["definitions", "Test Definitions"], ["public", "Public Suite"]]
             ]}
         </div>
 
@@ -327,7 +327,7 @@ def:pub DefinitionsTab(props: dict) -> any {
 
         {(<div className="flex justify-center gap-4 mt-4">
             <button
-                onClick={lambda e: any -> None { props["on_page_change"](max(0, page - 1)); }}
+                onClick={lambda e: any -> None { props["on_page_change"](Math.max(0, page - 1)); }}
                 disabled={page == 0}
                 className="btn btn-secondary btn-sm"
             >
@@ -400,7 +400,7 @@ def:pub TestEditor(props: dict) -> any {
                         type="number"
                         min="1"
                         value={String(points_val)}
-                        onChange={lambda e: any -> None { points_val = int(e.target.value) if e.target.value else 1; }}
+                        onChange={lambda e: any -> None { points_val = parseInt(e.target.value) if e.target.value else 1; }}
                         className="w-full px-2 py-1 bg-terminal-bg border border-terminal-border rounded text-text-primary text-sm text-center"
                     />
                 </div>

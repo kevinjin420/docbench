@@ -18,7 +18,9 @@ def:pub BenchmarkView(props: dict) -> any {
         is_running = True;
         progress = "Starting...";
 
-        for i in range(queue_size) {
+        i = 0;
+        while i < queue_size {
+            i += 1;
             result: any = root spawn RunBenchmark(
                 model=selected_model,
                 variant=selected_variant,

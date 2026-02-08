@@ -44,7 +44,7 @@ def:pub LeaderboardView() -> any {
 
         {(<div className="grid grid-cols-3 gap-4 mb-8">
             {[<PodiumCard entry={entries[i]} rank={i + 1} key={String(i)} />
-              for i in range(min(3, entries.length))]}
+              for i in [0, 1, 2] if i < entries.length]}
           </div>) if entries.length >= 3 else (<span></span>)}
 
         <div className="bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden">
@@ -93,7 +93,7 @@ def:pub LeaderboardView() -> any {
 
         {(<div className="flex justify-center gap-4 mt-6">
             <button
-                onClick={lambda e: any -> None { current_page = max(0, current_page - 1); fetch_entries(); }}
+                onClick={lambda e: any -> None { current_page = Math.max(0, current_page - 1); fetch_entries(); }}
                 disabled={current_page == 0}
                 className="btn btn-secondary btn-sm"
             >
