@@ -1,7 +1,7 @@
 import requests;
-import:jac from env, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_AUTHORIZE_URL, GITHUB_TOKEN_URL, GITHUB_API_URL;
-import:jac from utils.auth, create_jwt, verify_jwt;
-import:jac from utils.logger, log_error;
+import from env { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_AUTHORIZE_URL, GITHUB_TOKEN_URL, GITHUB_API_URL }
+import from utils.auth { create_jwt, verify_jwt }
+import from utils.logger { log_error }
 
 def get_github_authorize_url(redirect_uri: str) -> tuple {
     import from urllib.parse { urlencode }

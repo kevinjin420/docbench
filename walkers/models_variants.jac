@@ -1,12 +1,12 @@
-import:jac from models.nodes, VariantNode;
-import:jac from models.edges, HasVariant;
-import:jac from services.llm_service, fetch_available_models;
+import from models.nodes { VariantNode }
+import from models.edges { HasVariant }
+import from services.llm_service { fetch_available_models }
 
 walker ListModels {
     has api_key: str = "";
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can fetch with `root entry {
@@ -21,7 +21,7 @@ walker ListModels {
 
 walker ListVariants {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can gather with `root entry {
@@ -41,7 +41,7 @@ walker CreateVariant {
     has url: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can create with `root entry {
@@ -66,7 +66,7 @@ walker DeleteVariant {
     has variant_name: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can remove with `root entry {

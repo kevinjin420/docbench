@@ -1,10 +1,10 @@
-import:jac from models.nodes, ResultNode, CollectionNode, TestDefNode;
-import:jac from models.edges, HasResult, HasCollection, InCollection, HasTest;
-import:jac from services.evaluator, get_test_stats;
+import from models.nodes { ResultNode, CollectionNode, TestDefNode }
+import from models.edges { HasResult, HasCollection, InCollection, HasTest }
+import from services.evaluator { get_test_stats }
 
 walker GetStats {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -29,7 +29,7 @@ walker CompareStashes {
     has stash2: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can compare with `root entry {
@@ -40,7 +40,7 @@ walker CompareStashes {
                     cat_scores: dict = {};
                     file_count: int = 0;
 
-                    for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+                    for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                         file_count += 1;
                         scores.append(rnode.percentage);
                         if rnode.evaluation_results {

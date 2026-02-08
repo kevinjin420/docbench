@@ -3,7 +3,7 @@ import os;
 import time;
 import openai;
 import requests;
-import:jac from utils.logger, log_info, log_debug, log_error;
+import from utils.logger { log_info, log_debug, log_error }
 
 glob models_cache: dict = {};
 

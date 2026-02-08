@@ -1,0 +1,10 @@
+include ui.app;
+include ui.views.home;
+include ui.views.leaderboard;
+include ui.views.public_benchmark;
+include ui.views.benchmark;
+include ui.views.file_manager;
+include ui.views.variants;
+include ui.views.tests;
+include ui.views.users;
+include ui.views.auth_callback;

@@ -1,4 +1,4 @@
-include:jac llm_service;
-include:jac evaluator;
-include:jac oauth_service;
-include:jac graph_service;
+include services.llm_service;
+include services.evaluator;
+include services.oauth_service;
+include services.graph_service;

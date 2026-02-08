@@ -2,8 +2,8 @@ import json;
 import os;
 import subprocess;
 import tempfile;
-import:jac from utils.syntax, SyntaxChecker, patch_missing_braces;
-import:jac from utils.logger, log_info, log_debug, log_error;
+import from utils.syntax { SyntaxChecker, patch_missing_braces }
+import from utils.logger { log_info, log_debug, log_error }
 
 glob MAX_WORKERS: int = os.cpu_count() or 4;
 

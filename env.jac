@@ -11,7 +11,7 @@ glob FLASK_SECRET_KEY: str = os.getenv("FLASK_SECRET_KEY", "flask-secret");
 
 glob OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "");
 glob FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5555");
-glob API_PORT: int = int(os.getenv("API_PORT", "5050"));
+glob API_PORT: int = int(os.getenv("API_PORT", "5000"));
 
 glob GITHUB_AUTHORIZE_URL: str = "https://github.com/login/oauth/authorize";
 glob GITHUB_TOKEN_URL: str = "https://github.com/login/oauth/access_token";

@@ -1,14 +1,14 @@
 import time;
 import csv;
 import io;
-import:jac from models.nodes, ResultNode, CollectionNode;
-import:jac from models.edges, HasResult, HasCollection, InCollection;
+import from models.nodes { ResultNode, CollectionNode }
+import from models.edges { HasResult, HasCollection, InCollection }
 
 walker ListTestFiles {
     has limit: int = 100;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -28,20 +28,20 @@ walker ListTestFiles {
                 "evaluation_status": rnode.evaluation_status
             });
         }
-        files.sort(key=lambda x: -x["created_at"]);
+        files.sort(key=lambda x: dict -> float : -x["created_at"]);
         report {"files": files[:self.limit]};
     }
 }
 
 walker ListStashes {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
         stashes: list = [];
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
-            result_count: int = len(cnode [->:InCollection:->(`?ResultNode)]);
+            result_count: int = len([cnode ->:InCollection:->(`?ResultNode)]);
             stashes.append({
                 "name": cnode.name,
                 "description": cnode.description,
@@ -49,7 +49,7 @@ walker ListStashes {
                 "result_count": result_count
             });
         }
-        stashes.sort(key=lambda x: -x["created_at"]);
+        stashes.sort(key=lambda x: dict -> float : -x["created_at"]);
         report {"stashes": stashes};
     }
 }
@@ -58,14 +58,14 @@ walker GetStashFiles {
     has stash_name: str;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
             if cnode.name == self.stash_name {
                 files: list = [];
-                for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+                for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                     files.append({
                         "run_id": rnode.run_id,
                         "model": rnode.model,
@@ -91,7 +91,7 @@ walker CreateStash {
     has description: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can create with `root entry {
@@ -131,7 +131,7 @@ walker StashSelected {
     has name: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can create with `root entry {
@@ -167,13 +167,13 @@ walker DeleteStash {
     has stash_name: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can remove with `root entry {
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
             if cnode.name == self.stash_name {
-                for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+                for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                     cnode del--> rnode;
                     del rnode;
                 }
@@ -191,7 +191,7 @@ walker DeleteFile {
     has run_id: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can remove with `root entry {
@@ -209,7 +209,7 @@ walker DeleteFile {
 
 walker CleanResults {
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can clean with `root entry {
@@ -227,7 +227,7 @@ walker ExportCSV {
     has collections: list = [];
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can export with `root entry {
@@ -239,7 +239,7 @@ walker ExportCSV {
             if self.collections and cnode.name not in self.collections {
                 continue;
             }
-            for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+            for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                 writer.writerow([
                     cnode.name, rnode.run_id, rnode.model, rnode.variant,
                     rnode.total_score, rnode.max_score, rnode.percentage, rnode.created_at

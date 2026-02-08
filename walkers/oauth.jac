@@ -1,15 +1,15 @@
 import time;
-import:jac from models.nodes, UserNode, AdminEmailNode;
-import:jac from models.edges, HasUser, HasAdminEmail;
-import:jac from services.oauth_service, get_github_authorize_url, exchange_github_code;
-import:jac from utils.auth, create_jwt, verify_jwt;
-import:jac from env, FRONTEND_URL;
+import from models.nodes { UserNode, AdminEmailNode }
+import from models.edges { HasUser, HasAdminEmail }
+import from services.oauth_service { get_github_authorize_url, exchange_github_code }
+import from utils.auth { create_jwt, verify_jwt }
+import from env { FRONTEND_URL }
 
 walker GitHubLogin {
     has redirect_uri: str = "";
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can login with `root entry {
@@ -27,7 +27,7 @@ walker GitHubCallback {
     has redirect_uri: str = "";
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can callback with `root entry {
@@ -101,7 +101,7 @@ walker GetCurrentUser {
     has token: str = "";
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can fetch with `root entry {
@@ -134,7 +134,7 @@ walker VerifyToken {
     has token: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = False;
     }
     can verify with `root entry {

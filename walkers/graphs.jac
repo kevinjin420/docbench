@@ -1,12 +1,12 @@
-import:jac from models.nodes, ResultNode, CollectionNode;
-import:jac from models.edges, HasResult, HasCollection, InCollection;
-import:jac from services.graph_service, collections_bar_chart, evaluation_runs_chart, comparison_chart;
+import from models.nodes { ResultNode, CollectionNode }
+import from models.edges { HasResult, HasCollection, InCollection }
+import from services.graph_service { collections_bar_chart, evaluation_runs_chart, comparison_chart }
 
 walker GraphCollections {
     has format: str = "svg";
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can generate with `root entry {
@@ -15,7 +15,7 @@ walker GraphCollections {
             scores: list = [];
             model: str = "";
             variant: str = "";
-            for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+            for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                 if rnode.percentage > 0 {
                     scores.append(rnode.percentage);
                     model = rnode.model;
@@ -50,14 +50,14 @@ walker GraphEvaluation {
     has format: str = "svg";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can generate with `root entry {
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
             if cnode.name == self.collection_name {
                 runs_data: list = [];
-                for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+                for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                     runs_data.append({
                         "name": rnode.run_id,
                         "percentage": rnode.percentage
@@ -83,7 +83,7 @@ walker GraphCompare {
     has format: str = "svg";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can generate with `root entry {
@@ -95,7 +95,7 @@ walker GraphCompare {
             if cnode.name == self.stash1 or cnode.name == self.stash2 {
                 scores: list = [];
                 cat_scores: dict = {};
-                for rnode in cnode [->:InCollection:->(`?ResultNode)] {
+                for rnode in [cnode ->:InCollection:->(`?ResultNode)] {
                     scores.append(rnode.percentage);
                     if rnode.evaluation_results {
                         for (cat, cdata) in rnode.evaluation_results.get("category_breakdown", {}).items() {

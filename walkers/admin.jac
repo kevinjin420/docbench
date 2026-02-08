@@ -1,12 +1,12 @@
 import time;
 import json;
-import:jac from models.nodes, TestDefNode, PublicTestConfigNode, BenchmarkModelNode, LeaderboardNode, UserNode, AdminEmailNode, ResultNode, RunNode, CollectionNode;
-import:jac from models.edges, HasTest, HasPublicConfig, HasBenchmarkModel, HasEntry, HasUser, HasAdminEmail, HasResult, HasRun, HasCollection;
-import:jac from services.evaluator, get_test_stats;
+import from models.nodes { TestDefNode, PublicTestConfigNode, BenchmarkModelNode, LeaderboardNode, UserNode, AdminEmailNode, ResultNode, RunNode, CollectionNode }
+import from models.edges { HasTest, HasPublicConfig, HasBenchmarkModel, HasEntry, HasUser, HasAdminEmail, HasResult, HasRun, HasCollection }
+import from services.evaluator { get_test_stats }
 
 walker AdminGetPublicTests {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -48,7 +48,7 @@ walker AdminSetPublicTests {
     has test_ids: list = [];
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can set_tests with `root entry {
@@ -69,7 +69,7 @@ walker AdminAddPublicTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can add with `root entry {
@@ -90,7 +90,7 @@ walker AdminRemovePublicTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can remove with `root entry {
@@ -110,7 +110,7 @@ walker AdminHideEntry {
     has entry_id: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can hide with `root entry {
@@ -129,7 +129,7 @@ walker AdminUnhideEntry {
     has entry_id: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can unhide with `root entry {
@@ -146,7 +146,7 @@ walker AdminUnhideEntry {
 
 walker AdminGetStats {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -170,7 +170,7 @@ walker AdminGetStats {
 
 walker AdminListUsers {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -195,7 +195,7 @@ walker AdminSetAdmin {
     has is_admin: bool;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can set_admin with `root entry {
@@ -212,7 +212,7 @@ walker AdminSetAdmin {
 
 walker AdminListEmails {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -232,7 +232,7 @@ walker AdminAddEmail {
     has email: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can add with `root entry {
@@ -251,7 +251,7 @@ walker AdminRemoveEmail {
     has email_id: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can remove with `root entry {
@@ -269,7 +269,7 @@ walker AdminRemoveEmail {
 
 walker AdminListModels {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -284,7 +284,7 @@ walker AdminListModels {
                 "added_at": bm.added_at
             });
         }
-        models.sort(key=lambda x: -x["priority"]);
+        models.sort(key=lambda x: dict -> float : -x["priority"]);
         report {"models": models};
     }
 }
@@ -295,7 +295,7 @@ walker AdminAddModel {
     has priority: int = 0;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can add with `root entry {
@@ -320,7 +320,7 @@ walker AdminRemoveModel {
     has model_id: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can remove with `root entry {
@@ -341,7 +341,7 @@ walker AdminToggleModel {
     has is_active: bool;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can toggle with `root entry {
@@ -364,7 +364,7 @@ walker AdminGetTests {
     has include_inactive: bool = False;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {
@@ -406,7 +406,7 @@ walker AdminGetTests {
                 "updated_at": tnode.updated_at
             });
         }
-        tests.sort(key=lambda x: (x["level"], x["category"], x["id"]));
+        tests.sort(key=lambda x: dict -> tuple : (x["level"], x["category"], x["id"]));
         report {"tests": tests, "count": len(tests)};
     }
 }
@@ -428,7 +428,7 @@ walker AdminCreateTest {
     has completion_hint: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can create with `root entry {
@@ -457,7 +457,7 @@ walker AdminGetTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can fetch with `root entry {
@@ -494,7 +494,7 @@ walker AdminUpdateTest {
     has updates: dict = {};
 
     obj __specs__ {
-        static has methods: list = ["PUT"];
+        static has methods: list = ["put", "post"];
         static has auth: bool = True;
     }
     can update with `root entry {
@@ -526,7 +526,7 @@ walker AdminDeleteTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can soft_delete with `root entry {
@@ -546,7 +546,7 @@ walker AdminRestoreTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can restore with `root entry {
@@ -566,7 +566,7 @@ walker AdminHardDeleteTest {
     has test_id: str;
 
     obj __specs__ {
-        static has methods: list = ["DELETE"];
+        static has methods: list = ["delete", "post"];
         static has auth: bool = True;
     }
     can hard_delete with `root entry {
@@ -586,7 +586,7 @@ walker AdminBulkCreate {
     has tests: list = [];
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can bulk_create with `root entry {
@@ -629,7 +629,7 @@ walker AdminBulkCreate {
 
 walker AdminExportTests {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can export with `root entry {
@@ -653,7 +653,7 @@ walker AdminExportTests {
             if tnode.completion_hint { test_data["completion_hint"] = tnode.completion_hint; }
             tests.append(test_data);
         }
-        tests.sort(key=lambda x: (x["level"], x["category"], x["id"]));
+        tests.sort(key=lambda x: dict -> tuple : (x["level"], x["category"], x["id"]));
         report tests;
     }
 }
@@ -662,7 +662,7 @@ walker AdminImportTests {
     has tests: list = [];
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can import_tests with `root entry {
@@ -724,7 +724,7 @@ walker AdminImportTests {
 
 walker AdminTestStats {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = True;
     }
     can gather with `root entry {

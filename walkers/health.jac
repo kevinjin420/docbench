@@ -1,9 +1,9 @@
-import:jac from models.nodes, RunNode;
-import:jac from models.edges, HasRun;
+import from models.nodes { RunNode }
+import from models.edges { HasRun }
 
 walker HealthCheck {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can check with `root entry {
@@ -13,7 +13,7 @@ walker HealthCheck {
 
 walker GetRunning {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can gather with `root entry {
@@ -36,12 +36,12 @@ walker ClearDatabase {
     has nuke: bool = False;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can clear with `root entry {
-        import:jac from models.nodes, ResultNode, CollectionNode;
-        import:jac from models.edges, HasResult, HasCollection, HasRun;
+        import from models.nodes { ResultNode, CollectionNode }
+        import from models.edges { HasResult, HasCollection, HasRun }
 
         for result_node in [->:HasResult:->] {
             here del--> result_node;

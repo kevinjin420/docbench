@@ -1,7 +1,7 @@
 import json;
 
-include:jac from models.nodes, TestDefNode, AdminEmailNode, BenchmarkModelNode, PublicTestConfigNode;
-include:jac from models.edges, HasTest, HasAdminEmail, HasBenchmarkModel, HasPublicConfig;
+import from models.nodes { TestDefNode, AdminEmailNode, BenchmarkModelNode, PublicTestConfigNode }
+import from models.edges { HasTest, HasAdminEmail, HasBenchmarkModel, HasPublicConfig }
 
 walker SeedTests {
     """Load test definitions from tests.json into graph nodes."""

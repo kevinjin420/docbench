@@ -1,6 +1,6 @@
 import jwt;
 import time;
-import:jac from env, JWT_SECRET_KEY;
+import from env { JWT_SECRET_KEY }
 
 glob JWT_ALGORITHM: str = "HS256";
 glob JWT_EXPIRY_HOURS: int = 168;

@@ -1,26 +1,22 @@
 import io;
 import matplotlib;
-matplotlib.use("Agg");
 import matplotlib.pyplot as plt;
 import numpy as np;
 
-plt.rcParams.update({
-    "font.size": 10,
-    "font.family": "sans-serif",
-    "figure.figsize": (10, 6),
-    "figure.dpi": 150,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "axes.facecolor": "#ffffff",
-    "figure.facecolor": "#ffffff",
-    "text.color": "#333333",
-    "axes.labelcolor": "#333333",
-    "axes.edgecolor": "#cccccc",
-    "xtick.color": "#333333",
-    "ytick.color": "#333333",
-    "grid.color": "#e0e0e0",
-    "grid.alpha": 0.5
-});
+glob CHART_INITIALIZED: bool = False;
+
+def init_charts() -> None {
+    if not CHART_INITIALIZED {
+        matplotlib.use("Agg");
+        plt.rcParams.update({"font.size": 10, "font.family": "sans-serif",
+            "figure.dpi": 150, "axes.spines.top": False, "axes.spines.right": False,
+            "axes.facecolor": "#ffffff", "figure.facecolor": "#ffffff",
+            "text.color": "#333333", "axes.labelcolor": "#333333",
+            "axes.edgecolor": "#cccccc", "xtick.color": "#333333",
+            "ytick.color": "#333333", "grid.color": "#e0e0e0", "grid.alpha": 0.5});
+        CHART_INITIALIZED = True;
+    }
+}
 
 def fig_to_bytes(fig: any, fmt: str = "svg") -> bytes {
     buf: any = io.BytesIO();
@@ -31,15 +27,14 @@ def fig_to_bytes(fig: any, fmt: str = "svg") -> bytes {
 }
 
 def collections_bar_chart(collections_data: list, fmt: str = "svg") -> bytes {
+    init_charts();
     if not collections_data {
         return b"";
     }
 
-    sorted_data: list = sorted(collections_data, key=lambda x: (
-        x.get("model", ""),
-        x.get("variant", ""),
-        -x.get("average_score", 0)
-    ));
+    sorted_data: list = sorted(collections_data, key=lambda x: any -> any :
+        (x.get("model", ""), x.get("variant", ""), -x.get("average_score", 0))
+    );
 
     labels: list = [];
     scores: list = [];
@@ -76,9 +71,9 @@ def collections_bar_chart(collections_data: list, fmt: str = "svg") -> bytes {
     ax.set_ylim(0, 100);
     ax.yaxis.grid(True, linestyle="--", alpha=0.7);
 
-    for (bar, score_val, std) in zip(bars, scores, std_devs) {
+    for (bar_item, score_val, std) in zip(bars, scores, std_devs) {
         ax.annotate(f"{score_val:.1f}",
-                   xy=(bar.get_x() + bar.get_width() / 2, bar.get_height() + std),
+                   xy=(bar_item.get_x() + bar_item.get_width() / 2, bar_item.get_height() + std),
                    xytext=(0, 3), textcoords="offset points",
                    ha="center", va="bottom", fontsize=8, color="#333333");
     }
@@ -88,6 +83,7 @@ def collections_bar_chart(collections_data: list, fmt: str = "svg") -> bytes {
 }
 
 def evaluation_runs_chart(runs_data: list, title: str = "Evaluation Results", fmt: str = "svg") -> bytes {
+    init_charts();
     if not runs_data {
         return b"";
     }
@@ -115,9 +111,9 @@ def evaluation_runs_chart(runs_data: list, title: str = "Evaluation Results", fm
     ax.yaxis.grid(True, linestyle="--", alpha=0.7);
     ax.legend(loc="upper right", fontsize=9);
 
-    for (bar, score_val) in zip(bars, scores) {
+    for (bar_item, score_val) in zip(bars, scores) {
         ax.annotate(f"{score_val:.1f}%",
-                   xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                   xy=(bar_item.get_x() + bar_item.get_width() / 2, bar_item.get_height()),
                    xytext=(0, 3), textcoords="offset points",
                    ha="center", va="bottom", fontsize=9, color="#333333", fontweight="bold");
     }
@@ -127,6 +123,7 @@ def evaluation_runs_chart(runs_data: list, title: str = "Evaluation Results", fm
 }
 
 def comparison_chart(stash1: dict, stash2: dict, categories: list, fmt: str = "svg") -> bytes {
+    init_charts();
     if not stash1 or not stash2 {
         return b"";
     }
@@ -149,10 +146,10 @@ def comparison_chart(stash1: dict, stash2: dict, categories: list, fmt: str = "s
     ax1.set_ylim(0, 100);
     ax1.yaxis.grid(True, linestyle="--", alpha=0.7);
 
-    for (bar, score_val, std) in zip(bars, avgs, stds) {
+    for (bar_item, score_val, std) in zip(bars, avgs, stds) {
         label: str = f"{score_val:.1f}%\n(SD: {std:.1f})";
         ax1.annotate(label,
-                    xy=(bar.get_x() + bar.get_width() / 2, bar.get_height() + std),
+                    xy=(bar_item.get_x() + bar_item.get_width() / 2, bar_item.get_height() + std),
                     xytext=(0, 5), textcoords="offset points",
                     ha="center", va="bottom", fontsize=9, color="#333333");
     }

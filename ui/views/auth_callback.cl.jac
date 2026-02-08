@@ -1,33 +1,30 @@
-cl {
-    def:pub AuthCallbackView() -> any {
-        has status: str = "Processing login...";
+import from react { useEffect }
 
-        can with entry {
-            params: any = URLSearchParams(window.location.search);
-            token: str = params.get("token") or "";
-            error: str = params.get("error") or "";
-            return_url: str = params.get("return_url") or "/";
+def:pub AuthCallbackView() -> any {
+    has status: str = "Processing login...";
 
-            if error {
-                status = f"Login failed: {error}";
-                return;
-            }
+    useEffect(lambda -> None {
+        params = URLSearchParams(window.location.search);
+        token = params.get("token") or "";
+        error = params.get("error") or "";
+        return_url = params.get("return_url") or "/";
 
-            if token {
-                localStorage.setItem("auth_token", token);
-                window.location.href = return_url;
-            } else {
-                status = "No token received. Please try again.";
-            }
+        if error {
+            status = "Login failed: " + error;
+        } elif token {
+            localStorage.setItem("auth_token", token);
+            window.location.href = return_url;
+        } else {
+            status = "No token received. Please try again.";
         }
+    }, []);
 
-        return <div class="flex items-center justify-center min-h-[60vh]">
-            <div class="bg-terminal-surface border border-terminal-border rounded-lg p-8 text-center max-w-sm">
-                <p class="text-text-primary">{status}</p>
-                <a href="/" class="text-terminal-accent text-sm mt-4 inline-block hover:underline">
-                    Return Home
-                </a>
-            </div>
-        </div>;
-    }
+    return <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-terminal-surface border border-terminal-border rounded-lg p-8 text-center max-w-sm">
+            <p className="text-text-primary">{status}</p>
+            <a href="/" className="text-terminal-accent text-sm mt-4 inline-block hover:underline">
+                Return Home
+            </a>
+        </div>
+    </div>;
 }

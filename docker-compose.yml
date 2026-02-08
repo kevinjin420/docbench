@@ -2,7 +2,8 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "5000:5000"
+      - "5555:5555"
     env_file:
       - .env
     volumes:

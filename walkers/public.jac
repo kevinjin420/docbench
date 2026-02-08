@@ -5,17 +5,17 @@ import uuid;
 import threading;
 import traceback;
 import requests;
-import:jac from models.nodes, ResultNode, RunNode, TestDefNode, PublicTestConfigNode, BenchmarkModelNode, LeaderboardNode, UserNode;
-import:jac from models.edges, HasResult, HasRun, HasTest, HasPublicConfig, HasBenchmarkModel, HasEntry, SubmittedBy;
-import:jac from services.llm_service, run_public_benchmark, fetch_doc_content, create_openrouter_client;
-import:jac from services.evaluator, evaluate_responses;
-import:jac from utils.rate_limit, is_rate_allowed;
-import:jac from utils.logger, log_info, log_error;
-import:jac from walkers.benchmarks, running_benchmarks;
+import from models.nodes { ResultNode, RunNode, TestDefNode, PublicTestConfigNode, BenchmarkModelNode, LeaderboardNode, UserNode }
+import from models.edges { HasResult, HasRun, HasTest, HasPublicConfig, HasBenchmarkModel, HasEntry, SubmittedBy }
+import from services.llm_service { run_public_benchmark, fetch_doc_content, create_openrouter_client }
+import from services.evaluator { evaluate_responses }
+import from utils.rate_limit { is_rate_allowed }
+import from utils.logger { log_info, log_error }
+import from walkers.benchmarks { running_benchmarks }
 
 walker GetPublicTests {
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can gather with `root entry {
@@ -46,7 +46,7 @@ walker ValidateURL {
     has url: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = False;
     }
     can validate with `root entry {
@@ -99,7 +99,7 @@ walker RunPublicBenchmark {
     has api_key: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = False;
     }
     can execute with `root entry {
@@ -323,7 +323,7 @@ walker GetPublicBenchmarkStatus {
     has run_id: str;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can check with `root entry {
@@ -356,7 +356,7 @@ walker SubmitToLeaderboard {
     has submitter_email: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = False;
     }
     can submit with `root entry {
@@ -435,7 +435,7 @@ walker GetLeaderboard {
     has offset: int = 0;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can gather with `root entry {
@@ -456,7 +456,7 @@ walker GetLeaderboard {
                 });
             }
         }
-        entries.sort(key=lambda x: -x["percentage"]);
+        entries.sort(key=lambda x: dict -> float : -x["percentage"]);
 
         limit_val: int = min(self.limit, 100);
         total: int = len(entries);
@@ -470,7 +470,7 @@ walker GetLeaderboardEntry {
     has entry_id: str;
 
     obj __specs__ {
-        static has methods: list = ["GET"];
+        static has methods: list = ["get", "post"];
         static has auth: bool = False;
     }
     can fetch with `root entry {

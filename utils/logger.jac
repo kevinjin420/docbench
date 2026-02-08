@@ -1,4 +1,4 @@
-import:jac from env, VERBOSITY;
+import from env { VERBOSITY }
 
 def log_info(message: str, min_verbosity: int = 1) -> None {
     if VERBOSITY >= min_verbosity {

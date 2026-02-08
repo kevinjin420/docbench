@@ -6,5 +6,4 @@ if command -v conda &> /dev/null; then
     conda activate jac 2>/dev/null || true
 fi
 
-echo "Starting Jaseci DocBench..."
-jac start main.jac
+jac start main.jac --port 5555 --api_port 5000 --dev

@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 5000 5555
 
-CMD ["jac", "start", "main.jac"]
+CMD ["jac", "start", "main.jac", "--port", "5555", "--api_port", "5000"]

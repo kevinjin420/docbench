@@ -45,8 +45,8 @@ node VariantNode {
 
 node UserNode {
     has email: str;
-    has name: str = "";
     has github_id: str;
+    has name: str = "";
     has is_admin: bool = False;
     has created_at: float = 0.0;
     has last_login_at: float = 0.0;

@@ -1,0 +1,22 @@
+{
+  "name": "jaseci-docbench",
+  "version": "0.1.0",
+  "description": "Benchmark LLM models on Jac programming language code generation",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "vite build --config .jac/client/configs/vite.config.js",
+    "dev": "vite dev --config .jac/client/configs/vite.config.js",
+    "preview": "vite preview --config .jac/client/configs/vite.config.js"
+  },
+  "dependencies": {
+    "jac-client-node": "1.0.6",
+    "tailwindcss": "4.1.18",
+    "@tailwindcss/postcss": "4.1.18"
+  },
+  "devDependencies": {
+    "@jac-client/dev-deps": "2.0.0",
+    "vite": "6.4.1",
+    "@vitejs/plugin-react": "4.2.1"
+  }
+}

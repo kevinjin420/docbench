@@ -3,11 +3,11 @@ import time;
 import uuid;
 import threading;
 import traceback;
-import:jac from models.nodes, ResultNode, RunNode, VariantNode, TestDefNode;
-import:jac from models.edges, HasResult, HasRun, HasVariant, HasTest;
-import:jac from services.llm_service, run_benchmark_concurrent, rerun_single_batch, fetch_doc_content;
-import:jac from services.evaluator, evaluate_responses;
-import:jac from utils.logger, log_info, log_debug, log_error;
+import from models.nodes { ResultNode, RunNode, VariantNode, TestDefNode }
+import from models.edges { HasResult, HasRun, HasVariant, HasTest }
+import from services.llm_service { run_benchmark_concurrent, rerun_single_batch, fetch_doc_content }
+import from services.evaluator { evaluate_responses }
+import from utils.logger { log_info, log_debug, log_error }
 
 glob running_benchmarks: dict = {};
 
@@ -20,7 +20,7 @@ walker RunBenchmark {
     has api_key: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can execute with `root entry {
@@ -188,7 +188,7 @@ walker EvaluateResult {
     has force: bool = False;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can evaluate with `root entry {
@@ -279,7 +279,7 @@ walker RerunBatch {
     has api_key: str = "";
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can execute with `root entry {
@@ -353,12 +353,12 @@ walker EvaluateCollection {
     has collection_name: str;
 
     obj __specs__ {
-        static has methods: list = ["POST"];
+        static has methods: list = ["post"];
         static has auth: bool = True;
     }
     can evaluate with `root entry {
-        import:jac from models.nodes, CollectionNode;
-        import:jac from models.edges, HasCollection, InCollection;
+        import from models.nodes { CollectionNode }
+        import from models.edges { HasCollection, InCollection }
 
         target_coll: CollectionNode | None = None;
         for cnode in [->:HasCollection:->(`?CollectionNode)] {
@@ -392,7 +392,7 @@ walker EvaluateCollection {
         }
 
         evaluated: dict = {};
-        for rnode in target_coll [->:InCollection:->(`?ResultNode)] {
+        for rnode in [target_coll ->:InCollection:->(`?ResultNode)] {
             needs_eval: bool = not rnode.evaluation_results or "category_breakdown" not in rnode.evaluation_results;
             if needs_eval {
                 eval_result: dict = evaluate_responses(rnode.responses, tests);
