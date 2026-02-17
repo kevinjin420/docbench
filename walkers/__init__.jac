@@ -1,0 +1,9 @@
+include walkers.health;
+include walkers.models_api;
+include walkers.files;
+include walkers.results;
+include walkers.graphs;
+include walkers.oauth;
+include walkers.benchmark;
+include walkers.public_api;
+include walkers.admin;

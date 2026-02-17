@@ -352,6 +352,13 @@ class BenchmarkRunService:
 class DocumentationService:
     """Service for managing documentation variants"""
 
+    HARDCODED_VARIANTS = [
+        {
+            "name": "latest",
+            "url": "https://github.com/jaseci-labs/jaseci-llmdocs/releases/latest/download/jac-llmdocs.md",
+        },
+    ]
+
     @staticmethod
     def create_variant(variant_name: str, url: str):
         """Create or update a documentation variant"""
@@ -374,31 +381,59 @@ class DocumentationService:
         """Get documentation content by fetching from URL"""
         import requests
 
-        with get_db() as session:
-            variant = session.query(DocumentationVariant).filter_by(
-                variant_name=variant_name
-            ).first()
+        url = None
+        for hv in DocumentationService.HARDCODED_VARIANTS:
+            if hv["name"] == variant_name:
+                url = hv["url"]
+                break
 
-            if not variant:
-                return None
+        if not url:
+            with get_db() as session:
+                variant = session.query(DocumentationVariant).filter_by(
+                    variant_name=variant_name
+                ).first()
+                if not variant:
+                    return None
+                url = variant.url
 
-            try:
-                response = requests.get(variant.url, timeout=30)
-                response.raise_for_status()
-                return response.text
-            except Exception as e:
-                print(f"Error fetching variant {variant_name} from {variant.url}: {e}")
-                return None
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            print(f"Error fetching variant {variant_name} from {url}: {e}")
+            return None
 
     @staticmethod
     def get_all_variants() -> List[Dict[str, Any]]:
         """Get all documentation variants with size information"""
         import requests
 
+        result = []
+        hardcoded_names = set()
+
+        for hv in DocumentationService.HARDCODED_VARIANTS:
+            hardcoded_names.add(hv["name"])
+            size_bytes = 0
+            try:
+                response = requests.head(hv["url"], timeout=5, allow_redirects=True)
+                content_length = response.headers.get('Content-Length')
+                if content_length:
+                    size_bytes = int(content_length)
+            except Exception:
+                pass
+            result.append({
+                'name': hv["name"],
+                'url': hv["url"],
+                'size_bytes': size_bytes,
+                'size_kb': round(size_bytes / 1024, 1) if size_bytes else 0
+            })
+
         with get_db() as session:
             variants = session.query(DocumentationVariant).all()
-            result = []
             for v in variants:
+                if v.variant_name in hardcoded_names:
+                    continue
                 size_bytes = 0
                 try:
                     response = requests.head(v.url, timeout=5, allow_redirects=True)
@@ -407,14 +442,13 @@ class DocumentationService:
                         size_bytes = int(content_length)
                 except Exception:
                     pass
-
                 result.append({
                     'name': v.variant_name,
                     'url': v.url,
                     'size_bytes': size_bytes,
                     'size_kb': round(size_bytes / 1024, 1) if size_bytes else 0
                 })
-            return result
+        return result
 
     @staticmethod
     def delete_variant(variant_name: str) -> bool:
