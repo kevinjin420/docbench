@@ -6,7 +6,7 @@ export function RunView() {
   const [apiKey, setApiKey] = useState(
     () => localStorage.getItem("docbench_api_key") || ""
   );
-  const [model, setModel] = useState(() => localStorage.getItem("docbench_model") || "openai/gpt-4o");
+  const [model, setModel] = useState(() => localStorage.getItem("docbench_model") || "google/gemini-3-flash-preview");
   const [suite, setSuite] = useState(() => localStorage.getItem("docbench_suite") || "standard");
   const [suites, setSuites] = useState<string[]>([]);
   const [docUrl, setDocUrl] = useState(() => localStorage.getItem("docbench_doc_url") || "");
@@ -71,7 +71,7 @@ export function RunView() {
       </div>
       <div className="form-row">
         <label>model</label>
-        <input type="text" value={model} onChange={(e) => setModel(e.target.value)} placeholder="openai/gpt-4o" />
+        <input type="text" value={model} onChange={(e) => setModel(e.target.value)} placeholder="google/gemini-3-flash-preview" />
       </div>
       <div className="form-cols">
         <div className="form-row">

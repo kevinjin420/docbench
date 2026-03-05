@@ -4,9 +4,13 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import openai
+from openrouter import OpenRouter
+from openrouter.components.responseformatjsonschema import (
+    JSONSchemaConfig,
+    ResponseFormatJSONSchema,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,21 +33,21 @@ Return a JSON object mapping each test ID to Jac code. Use \\n for newlines and 
 """
 
 
-def _build_response_schema(tests: List[Dict]) -> Dict:
+def _build_response_schema(tests: List[Dict]) -> ResponseFormatJSONSchema:
     properties = {t["id"]: {"type": "string"} for t in tests}
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "benchmark_responses",
-            "strict": True,
-            "schema": {
+    return ResponseFormatJSONSchema(
+        type="json_schema",
+        json_schema=JSONSchemaConfig(
+            name="benchmark_responses",
+            strict=True,
+            schema={
                 "type": "object",
                 "properties": properties,
                 "required": [t["id"] for t in tests],
                 "additionalProperties": False,
             },
-        },
-    }
+        ),
+    )
 
 
 def _format_tests_for_prompt(tests: List[Dict]) -> str:
@@ -73,7 +77,7 @@ def _format_tests_for_prompt(tests: List[Dict]) -> str:
 
 
 def _run_single_batch(
-    client: openai.OpenAI,
+    client: OpenRouter,
     model: str,
     doc_content: str,
     batch: List[Dict],
@@ -93,20 +97,22 @@ def _run_single_batch(
         try:
             if attempt > 0:
                 time.sleep(2 ** attempt)
-            response = client.chat.completions.create(
+            response = client.chat.send(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=schema,
+                http_referer="https://github.com/jaseci-llmdocs",
+                x_title="Jaseci DocBench",
             )
             parsed = json.loads(response.choices[0].message.content.strip())
             logger.info(f"Batch {batch_num} completed ({len(parsed)} responses)")
             return batch_num, parsed, None
-        except Exception as e:
+        except Exception as exc:
             if attempt >= max_retries - 1:
-                logger.error(f"Batch {batch_num} failed after {max_retries} attempts: {e}")
-                return batch_num, {}, str(e)
+                logger.error(f"Batch {batch_num} failed after {max_retries} attempts: {exc}")
+                return batch_num, {}, str(exc)
     return batch_num, {}, "Unknown error"
 
 
@@ -120,14 +126,7 @@ def call_llm(
     temperature: float = 0.1,
 ) -> Dict[str, str]:
     """Send all tests to the LLM in batches and return {test_id: code} responses."""
-    client = openai.OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=api_key,
-        default_headers={
-            "HTTP-Referer": "https://github.com/jaseci-llmdocs",
-            "X-Title": "Jaseci DocBench",
-        },
-    )
+    client = OpenRouter(api_key=api_key)
 
     num_batches = (len(suite) + batch_size - 1) // batch_size
     batches = []

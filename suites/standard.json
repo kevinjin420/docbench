@@ -896,7 +896,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test visit_traverses {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L5_visit_02",
@@ -934,7 +934,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test here_keyword_works {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L5_visit_04",
@@ -972,7 +972,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test walker_has_attribute {\n    w = Explorer();\n    assert w.visited_count == 0;\n}"
+    "test_harness": "test {\n    w = Explorer();\n    assert w.visited_count == 0;\n}"
   },
   {
     "id": "L5_walker_02",
@@ -994,7 +994,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test walker_has_entry_exit {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L5_walker_03",
@@ -1014,7 +1014,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test walker_spawns_on_root {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L6_async_01",
@@ -1153,7 +1153,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test filter_by_attribute {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L6_filter_02",
@@ -1277,7 +1277,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test report_collects_data {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L6_skip_02",
@@ -1351,7 +1351,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test ai_function_exists {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L7_ai_byllm_02",
@@ -1726,7 +1726,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test walker_has_specs {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L8_cloud_specs_02",
@@ -2086,7 +2086,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test python_import_works {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L9_import_03",
@@ -2650,7 +2650,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test social_network_exists {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L10_int_social_02",
@@ -2892,7 +2892,7 @@
       "var "
     ],
     "type": "functional",
-    "test_harness": "test dfs_walker_exists {\n    assert True;\n}"
+    "test_harness": "test {\n    assert True;\n}"
   },
   {
     "id": "L10_search_02",
