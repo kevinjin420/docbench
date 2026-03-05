@@ -50,13 +50,10 @@ htmlcov/
 .DS_Store
 .claude
 
-# Node.js (for control-panel if applicable)
+# Node.js
 node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
+bun.lock
 
 # Logs
 *.log

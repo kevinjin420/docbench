@@ -1,0 +1,635 @@
+@use './styles/variables' as v;
+@import url("tailwindcss");
+
+// ==========================================================================
+// BASE
+// ==========================================================================
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: v.$mono;
+  font-size: 13px;
+  background: v.$bg;
+  color: v.$fg;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(v.$accent, 0.2); color: v.$accent; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: v.$fg4; border-radius: 2px; &:hover { background: v.$fg3; } }
+
+input, select, textarea, button { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+.dim { color: v.$fg3; }
+.c-pass { color: v.$green; }
+.c-partial { color: v.$yellow; }
+.c-fail { color: v.$red; }
+.flex-push { margin-left: auto; }
+
+// ==========================================================================
+// LAYOUT
+// ==========================================================================
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  gap: 24px;
+  border-bottom: 1px solid v.$border;
+  margin-bottom: 24px;
+}
+
+.brand {
+  font-size: 14px;
+  font-weight: 600;
+  color: v.$accent;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+
+  a {
+    color: v.$fg3;
+    text-decoration: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    border-radius: v.$r;
+    transition: color 0.1s;
+
+    &:hover { color: v.$fg; }
+    &.active { color: v.$accent; }
+  }
+}
+
+// ==========================================================================
+// FORM
+// ==========================================================================
+
+.section-label {
+  font-size: 11px;
+  color: v.$fg3;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  > label {
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: v.$fg3;
+    text-align: right;
+  }
+
+  > input, > select {
+    flex: 1;
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    padding: 7px 10px;
+    border-radius: v.$r;
+    font-size: 13px;
+    transition: border-color 0.1s;
+
+    &:focus { outline: none; border-color: v.$fg3; }
+    &::placeholder { color: v.$fg4; }
+    &:disabled { opacity: 0.4; }
+  }
+
+  > select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+}
+
+.form-cols {
+  display: flex;
+  gap: 12px;
+
+  .form-row { flex: 1; }
+}
+
+.doc-row {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+
+  input[type="url"] {
+    flex: 1;
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    padding: 7px 10px;
+    border-radius: v.$r;
+    font-size: 13px;
+    transition: border-color 0.1s;
+
+    &:focus { outline: none; border-color: v.$fg3; }
+    &:disabled { opacity: 0.4; }
+    &::placeholder { color: v.$fg4; }
+  }
+}
+
+.upload-btn {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: v.$bg2;
+  border: 1px solid v.$border;
+  border-radius: v.$r;
+  color: v.$fg3;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover { color: v.$fg2; border-color: v.$border-hi; }
+}
+
+.clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  background: v.$bg2;
+  border: 1px solid v.$border;
+  border-radius: v.$r;
+  color: v.$fg3;
+  font-size: 12px;
+
+  &:hover { color: v.$red; border-color: rgba(v.$red, 0.3); }
+}
+
+.exec-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: v.$bg1;
+  border: 1px solid v.$accent;
+  border-radius: v.$r;
+  color: v.$accent;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) {
+    background: v.$accent;
+    color: v.$bg;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+    border-color: v.$fg3;
+    color: v.$fg3;
+  }
+}
+
+// ==========================================================================
+// ALERTS
+// ==========================================================================
+
+.err {
+  color: v.$red;
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 0;
+}
+
+.msg {
+  color: v.$green;
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 0;
+}
+
+// ==========================================================================
+// OUTPUT / RESULTS
+// ==========================================================================
+
+.output {
+  margin-top: 24px;
+  border-top: 1px solid v.$border;
+  padding-top: 20px;
+}
+
+.output-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.model-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: v.$fg;
+}
+
+.score-line {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid v.$border;
+}
+
+.score-big {
+  font-size: 28px;
+  font-weight: 700;
+  color: v.$accent;
+  letter-spacing: -0.03em;
+}
+
+// ==========================================================================
+// BREAKDOWNS
+// ==========================================================================
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.breakdown-col {
+  .section-label { margin-bottom: 8px; }
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bar-label {
+  font-size: 12px;
+  color: v.$fg2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar {
+  height: 3px;
+  background: v.$bg2;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: v.$accent;
+  border-radius: 1px;
+  transition: width 0.4s ease;
+}
+
+.bar-val {
+  font-size: 11px;
+  color: v.$fg3;
+  text-align: right;
+}
+
+// ==========================================================================
+// TEST LIST
+// ==========================================================================
+
+.test-list {
+  border: 1px solid v.$border;
+  border-radius: v.$r;
+  overflow: hidden;
+}
+
+.test-item {
+  &:not(:last-child) {
+    border-bottom: 1px solid v.$border;
+  }
+}
+
+.test-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.05s;
+
+  &:hover { background: v.$bg1; }
+}
+
+.status {
+  width: 20px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+
+  &.s-pass { color: v.$green; }
+  &.s-fail { color: v.$red; }
+  &.s-partial { color: v.$yellow; }
+}
+
+.test-name {
+  font-size: 12px;
+  color: v.$fg2;
+}
+
+.test-body {
+  padding: 8px 10px 10px 38px;
+  background: v.$bg1;
+
+  pre {
+    background: v.$bg;
+    border: 1px solid v.$border;
+    padding: 10px;
+    border-radius: v.$r;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.7;
+    max-height: 280px;
+    overflow-y: auto;
+    color: v.$fg2;
+  }
+}
+
+.tag-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.tag-miss {
+  color: v.$yellow;
+  background: rgba(v.$yellow, 0.1);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.tag-forbid {
+  color: v.$red;
+  background: rgba(v.$red, 0.1);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.raw {
+  margin-top: 16px;
+
+  summary {
+    cursor: pointer;
+    color: v.$fg4;
+    font-size: 12px;
+    &:hover { color: v.$fg3; }
+  }
+
+  pre {
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    padding: 12px;
+    border-radius: v.$r;
+    font-size: 11px;
+    line-height: 1.6;
+    margin-top: 6px;
+    max-height: 400px;
+    overflow: auto;
+    color: v.$fg3;
+  }
+}
+
+// ==========================================================================
+// ADMIN
+// ==========================================================================
+
+.auth-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  input {
+    flex: 1;
+    min-width: 200px;
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    padding: 7px 10px;
+    border-radius: v.$r;
+
+    &:focus { outline: none; border-color: v.$fg3; }
+  }
+
+  button {
+    background: v.$bg1;
+    border: 1px solid v.$accent;
+    color: v.$accent;
+    padding: 7px 14px;
+    border-radius: v.$r;
+    font-size: 13px;
+
+    &:hover { background: v.$accent; color: v.$bg; }
+  }
+
+  .err { width: 100%; }
+}
+
+.admin-layout {
+  display: flex;
+  gap: 16px;
+  min-height: calc(100vh - 100px);
+}
+
+.admin-side {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: v.$fg4;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: v.$r;
+
+  &:hover { color: v.$red; }
+}
+
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: v.$r;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.05s;
+
+  &:hover { background: v.$bg1; }
+  &.active { background: v.$bg2; color: v.$accent; }
+}
+
+.side-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-del {
+  background: none;
+  border: none;
+  color: v.$fg4;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 2px;
+
+  &:hover { color: v.$red; background: rgba(v.$red, 0.1); }
+}
+
+.side-create {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+
+  input {
+    flex: 1;
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    padding: 5px 8px;
+    border-radius: v.$r;
+    font-size: 12px;
+
+    &:focus { outline: none; border-color: v.$fg3; }
+  }
+
+  button {
+    background: v.$bg2;
+    border: 1px solid v.$border;
+    color: v.$fg3;
+    padding: 5px 10px;
+    border-radius: v.$r;
+    font-size: 14px;
+
+    &:hover { color: v.$accent; border-color: v.$accent; }
+  }
+}
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editor-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.editor-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 6px;
+
+  button {
+    background: v.$bg1;
+    border: 1px solid v.$border;
+    color: v.$fg2;
+    padding: 5px 12px;
+    border-radius: v.$r;
+    font-size: 12px;
+
+    &:hover { border-color: v.$border-hi; color: v.$fg; }
+  }
+
+  .btn-save {
+    border-color: v.$green;
+    color: v.$green;
+
+    &:hover { background: v.$green; color: v.$bg; }
+  }
+}
+
+.vld {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: v.$r;
+  margin-bottom: 8px;
+
+  &.vld-ok { color: v.$green; background: rgba(v.$green, 0.08); }
+  &.vld-err { color: v.$red; background: rgba(v.$red, 0.08); }
+}
+
+.monaco-wrap {
+  flex: 1;
+  min-height: 500px;
+  border: 1px solid v.$border;
+  border-radius: v.$r;
+  overflow: hidden;
+
+  &:focus-within { border-color: v.$fg3; }
+}
+
+.editor-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed v.$border;
+  border-radius: v.$r;
+}
+
+// ==========================================================================
+// RESPONSIVE
+// ==========================================================================
+
+@media (max-width: 700px) {
+  .app { padding: 0 12px 40px; }
+  .form-cols { flex-direction: column; gap: 0; }
+  .breakdown-grid { grid-template-columns: 1fr; gap: 16px; }
+  .admin-layout { flex-direction: column; }
+  .admin-side { width: 100%; }
+}

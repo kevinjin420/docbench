@@ -1,0 +1,10 @@
+{
+  "admin_tokens": {
+    "admin": "admin"
+  },
+  "defaults": {
+    "max_tokens": 16000,
+    "batch_size": 45,
+    "temperature": 0.1
+  }
+}
