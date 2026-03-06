@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List
+from typing import Callable, Dict, List, Optional
 
 from openrouter import OpenRouter
 from openrouter.components.responseformatjsonschema import (
@@ -124,6 +124,7 @@ def call_llm(
     max_tokens: int = 16000,
     batch_size: int = 45,
     temperature: float = 0.1,
+    on_batch_complete: Optional[Callable] = None,
 ) -> Dict[str, str]:
     """Send all tests to the LLM in batches and return {test_id: code} responses."""
     client = OpenRouter(api_key=api_key)
@@ -153,6 +154,8 @@ def call_llm(
                 errors.append(f"Batch {batch_num}: {error}")
             else:
                 responses.update(batch_responses)
+            if on_batch_complete:
+                on_batch_complete(batch_num, num_batches, error)
 
     if not responses:
         raise RuntimeError(f"All batches failed: {'; '.join(errors)}")

@@ -1,6 +1,13 @@
-import { useState, useEffect } from "react";
-import { listSuites, runBenchmark } from "./api";
+import { useState, useEffect, useRef } from "react";
+import { listSuites } from "./api";
 import type { BenchmarkResult } from "./types";
+
+interface ProgressState {
+  stage: string;
+  batchesDone: number;
+  totalBatches: number;
+  totalTests: number;
+}
 
 export function RunView() {
   const [apiKey, setApiKey] = useState(
@@ -16,6 +23,8 @@ export function RunView() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<BenchmarkResult | null>(null);
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
+  const [progress, setProgress] = useState<ProgressState | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     listSuites().then(setSuites).catch((err) => setError(String(err)));
@@ -35,19 +44,92 @@ export function RunView() {
     setRunning(true);
     setError("");
     setResult(null);
+    setProgress({ stage: "connecting", batchesDone: 0, totalBatches: 0, totalTests: 0 });
+
+    const abort = new AbortController();
+    abortRef.current = abort;
+
     try {
-      const res = await runBenchmark({
-        api_key: apiKey, model, suite,
-        doc_url: docUrl || undefined,
-        doc_file: docFile || undefined,
-        max_tokens: maxTokens,
+      let body: BodyInit;
+      const headers: Record<string, string> = {};
+
+      if (docFile) {
+        const form = new FormData();
+        form.append("api_key", apiKey);
+        form.append("model", model);
+        form.append("suite", suite);
+        if (docUrl) form.append("doc_url", docUrl);
+        form.append("max_tokens", String(maxTokens));
+        form.append("doc_file", docFile);
+        body = form;
+      } else {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify({
+          api_key: apiKey, model, suite,
+          doc_url: docUrl || undefined,
+          max_tokens: maxTokens,
+        });
+      }
+
+      const response = await fetch("/api/run", {
+        method: "POST", headers, body,
+        signal: abort.signal,
       });
-      if (res.error) setError(res.error);
-      else setResult(res);
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Request failed: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let batchesDone = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const event = JSON.parse(line.slice(6));
+
+          if (event.type === "status") {
+            setProgress((prev) => ({
+              stage: event.stage,
+              batchesDone: prev?.batchesDone ?? 0,
+              totalBatches: event.total_batches ?? prev?.totalBatches ?? 0,
+              totalTests: event.total_tests ?? prev?.totalTests ?? 0,
+            }));
+          } else if (event.type === "batch") {
+            batchesDone++;
+            setProgress((prev) => ({
+              stage: "llm_calling",
+              batchesDone,
+              totalBatches: event.total_batches,
+              totalTests: prev?.totalTests ?? 0,
+            }));
+          } else if (event.type === "result") {
+            setResult(event as BenchmarkResult);
+          } else if (event.type === "error") {
+            setError(event.error);
+          }
+        }
+      }
     } catch (err) {
-      setError(String(err));
+      if ((err as Error).name !== "AbortError") {
+        setError(String(err));
+      }
     } finally {
       setRunning(false);
+      setProgress(null);
+      abortRef.current = null;
     }
   }
 
@@ -57,6 +139,17 @@ export function RunView() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  }
+
+  function stageLabel(p: ProgressState): string {
+    switch (p.stage) {
+      case "connecting": return "connecting...";
+      case "validating": return `validating suite (${p.totalTests} tests)`;
+      case "fetching_docs": return "fetching documentation...";
+      case "llm_calling": return `api: batch ${p.batchesDone}/${p.totalBatches}`;
+      case "evaluating": return "evaluating responses...";
+      default: return p.stage;
+    }
   }
 
   const pass = result?.results.filter((t) => t.score === t.max_score).length ?? 0;
@@ -103,6 +196,20 @@ export function RunView() {
       <button className="exec-btn" onClick={handleRun} disabled={running}>
         {running ? "> running..." : "> execute"}
       </button>
+
+      {progress && (
+        <div className="progress-bar">
+          <div className="progress-label">{stageLabel(progress)}</div>
+          {progress.totalBatches > 0 && (
+            <div className="progress-track">
+              <div
+                className="progress-fill"
+                style={{ width: `${(progress.batchesDone / progress.totalBatches) * 100}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {error && <div className="err">{error}</div>}
 

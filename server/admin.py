@@ -3,18 +3,18 @@
 import json
 from pathlib import Path
 
-from flask import Blueprint, request, jsonify
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 from pipeline.validate import load_suite, validate_suite, list_suites, SUITES_DIR
-from .auth import require_admin
-
-admin = Blueprint("admin", __name__)
+from .auth import check_admin
 
 
-@admin.route("/api/admin/suites", methods=["GET"])
-@require_admin
-def admin_list_suites():
-    """List all suites with metadata."""
+async def admin_list_suites(request: Request):
+    admin_name, error = check_admin(request)
+    if error:
+        return error
     result = []
     for name in list_suites():
         suite = load_suite(name)
@@ -23,65 +23,67 @@ def admin_list_suites():
             "total_tests": len(suite),
             "total_points": sum(t.get("points", 0) for t in suite),
         })
-    return jsonify(result)
+    return JSONResponse(result)
 
 
-@admin.route("/api/admin/suites/<name>", methods=["POST"])
-@require_admin
-def admin_create_suite(name: str):
-    """Create or overwrite a test suite."""
-    data = request.json
+async def admin_create_suite(request: Request):
+    admin_name, error = check_admin(request)
+    if error:
+        return error
+    name = request.path_params["name"]
+    data = await request.json()
     if not data or not isinstance(data, list):
-        return jsonify({"error": "Body must be a JSON array of test definitions"}), 400
-
+        return JSONResponse(
+            {"error": "Body must be a JSON array of test definitions"}, status_code=400
+        )
     SUITES_DIR.mkdir(parents=True, exist_ok=True)
     path = SUITES_DIR / f"{name}.json"
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
+    return JSONResponse({"status": "created", "name": name, "total_tests": len(data)})
 
-    return jsonify({"status": "created", "name": name, "total_tests": len(data)})
 
-
-@admin.route("/api/admin/suites/<name>", methods=["DELETE"])
-@require_admin
-def admin_delete_suite(name: str):
-    """Delete a custom suite. Cannot delete 'standard'."""
+async def admin_delete_suite(request: Request):
+    admin_name, error = check_admin(request)
+    if error:
+        return error
+    name = request.path_params["name"]
     if name == "standard":
-        return jsonify({"error": "Cannot delete the standard suite"}), 400
-
+        return JSONResponse({"error": "Cannot delete the standard suite"}, status_code=400)
     path = SUITES_DIR / f"{name}.json"
     if not path.exists():
-        return jsonify({"error": f"Suite '{name}' not found"}), 404
-
+        return JSONResponse({"error": f"Suite '{name}' not found"}, status_code=404)
     path.unlink()
-    return jsonify({"status": "deleted", "name": name})
+    return JSONResponse({"status": "deleted", "name": name})
 
 
-@admin.route("/api/admin/suites/<name>/validate", methods=["POST"])
-@require_admin
-def admin_validate_suite(name: str):
-    """Validate a suite against the current jac version."""
+async def admin_validate_suite(request: Request):
+    admin_name, error = check_admin(request)
+    if error:
+        return error
+    name = request.path_params["name"]
     try:
         suite = load_suite(name)
     except FileNotFoundError:
-        return jsonify({"error": f"Suite '{name}' not found"}), 404
-
+        return JSONResponse({"error": f"Suite '{name}' not found"}, status_code=404)
     result = validate_suite(suite)
-    return jsonify(result)
+    return JSONResponse(result)
 
 
-@admin.route("/api/admin/suites/<name>/tests", methods=["PUT"])
-@require_admin
-def admin_update_tests(name: str):
-    """Update specific tests in a suite (merge by test ID)."""
-    updates = request.json
+async def admin_update_tests(request: Request):
+    admin_name, error = check_admin(request)
+    if error:
+        return error
+    name = request.path_params["name"]
+    updates = await request.json()
     if not updates or not isinstance(updates, list):
-        return jsonify({"error": "Body must be a JSON array of test definitions"}), 400
-
+        return JSONResponse(
+            {"error": "Body must be a JSON array of test definitions"}, status_code=400
+        )
     try:
         suite = load_suite(name)
     except FileNotFoundError:
-        return jsonify({"error": f"Suite '{name}' not found"}), 404
+        return JSONResponse({"error": f"Suite '{name}' not found"}, status_code=404)
 
     suite_by_id = {t["id"]: t for t in suite}
     added, updated = 0, 0
@@ -100,5 +102,13 @@ def admin_update_tests(name: str):
     path = SUITES_DIR / f"{name}.json"
     with open(path, "w") as f:
         json.dump(new_suite, f, indent=2)
+    return JSONResponse({"status": "updated", "added": added, "updated": updated, "total": len(new_suite)})
 
-    return jsonify({"status": "updated", "added": added, "updated": updated, "total": len(new_suite)})
+
+admin_routes = [
+    Route("/api/admin/suites", admin_list_suites, methods=["GET"]),
+    Route("/api/admin/suites/{name}", admin_create_suite, methods=["POST"]),
+    Route("/api/admin/suites/{name}", admin_delete_suite, methods=["DELETE"]),
+    Route("/api/admin/suites/{name}/validate", admin_validate_suite, methods=["POST"]),
+    Route("/api/admin/suites/{name}/tests", admin_update_tests, methods=["PUT"]),
+]
